@@ -5,7 +5,7 @@ requires = ['botocore>=0.8.2',
             'requests>=1.2.0']
 
 args = dict(
-    name='BotoFlow',
+    name='awsflow',
     version='1.0-preview',
     author='Amazon.com',
     description="The The AWS Flow Framework is a programming framework that "
