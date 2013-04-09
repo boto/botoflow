@@ -20,9 +20,13 @@ class SWFOp(object):
             if _type in swf_exceptions._swf_fault_exception:
                 exception = swf_exceptions._swf_fault_exception[_type]
 
-        error = exception(response_data.get('message'),
-                          'No error provided by SWF: {0}'
-                          .format(response_data))
+        if exception == swf_exceptions.SWFResponseError:
+            error = exception(response_data.get('message'),
+                              'No error provided by SWF: {0}'
+                              .format(response_data))
+        else:
+            error = exception(response_data.get('message'),
+                              response_data)
         raise error  # exception from SWF Service
 
 
