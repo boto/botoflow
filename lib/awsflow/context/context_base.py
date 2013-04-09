@@ -26,7 +26,7 @@ class ContextBase(object):
     # Python has no good support for class properties
     @classmethod
     def get_context(cls):
-        context = cls.thread_local.current_context
+        context = cls.thread_local.flow_current_context
         if DEBUG:
             log.debug("Current context: %s", context)
         return context
@@ -35,4 +35,4 @@ class ContextBase(object):
     def set_context(cls, context):
         if DEBUG:
             log.debug("Setting context: %s", context)
-        cls.thread_local.current_context = context
+        cls.thread_local.flow_current_context = context
