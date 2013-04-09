@@ -46,7 +46,7 @@ class activity_options(object):
 
         for key, val in six.iteritems(kwargs):
             if key == 'task_list':
-                self._overrides[key] = val
+                self._overrides[key] = {'name': val}
             elif key in self.keys:
                 if val is None:
                     self._overrides[key] = 'NONE'
