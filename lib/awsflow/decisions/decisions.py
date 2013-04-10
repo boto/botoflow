@@ -66,8 +66,8 @@ class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
                  input=None,
                  tag_list=None,
                  task_list=None,
-                 start_to_close_timeout=None,
-                 workflow_type_version=None):
+                 task_start_to_close_timeout=None,
+                 version=None):
         """
         closes the workflow execution and starts a new workflow execution of
         the same type using the same workflow id and a unique run Id. A
@@ -88,10 +88,10 @@ class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
             attrs['tag_list'] = tag_list
         if task_list is not None:
             attrs['task_list'] = task_list
-        if start_to_close_timeout is not None:
-            attrs['start_to_close_timeout'] = start_to_close_timeout
-        if workflow_type_version is not None:
-            attrs['workflow_type_version'] = workflow_type_version
+        if task_start_to_close_timeout is not None:
+            attrs['task_start_to_close_timeout'] = task_start_to_close_timeout
+        if version is not None:
+            attrs['workflow_type_version'] = version
 
 
 class FailWorkflowExecution(WorkflowDecisionBase):

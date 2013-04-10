@@ -514,12 +514,12 @@ class Decider(object):
         workflow_instance._workflow_result = wait_child_workflow_complete()
         return wait_workflow_start()
 
-    def _continue_as_new_workflow_execution(self, input):
+    def _continue_as_new_workflow_execution(self, **kwargs):
         """
         ContinueAsNewWorkflowExecution closes the workflow execution and
         starts a new workflow execution of the same type using the same
         workflow id and a unique run Id. A WorkflowExecutionContinuedAsNew
         event is recorded in the history.
         """
-        decision = ContinueAsNewWorkflowExecution(input=input)
+        decision = ContinueAsNewWorkflowExecution(**kwargs)
         self._continue_as_new_on_completion = decision

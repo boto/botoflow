@@ -47,6 +47,10 @@ class BaseFlowType(object):
 
 class WorkflowType(BaseFlowType):
 
+    _continue_as_new_keys = ['task_start_to_close_timeout', 'child_policy',
+                             'task_list', 'execution_start_to_close_timeout',
+                             'version', 'input']
+
     def __init__(self,
                  version,
                  execution_start_to_close_timeout,
@@ -107,6 +111,17 @@ class WorkflowType(BaseFlowType):
 
         return decision_dict
 
+    def to_continue_as_new_dict(self, input, worker_task_list):
+        decision_dict = self.to_decision_dict(
+            input, worker_task_list=worker_task_list)
+        continue_as_new_dict = {}
+        for key in self._continue_as_new_keys:
+            try:
+                continue_as_new_dict[key] = decision_dict[key]
+            except KeyError:
+                pass
+        return continue_as_new_dict
+
     def to_registration_options_dict(self, domain, worker_task_list):
         if self.skip_registration:
             return None
@@ -150,9 +165,11 @@ class WorkflowType(BaseFlowType):
             if context.decider.execution_started:
 
                 if context.workflow == _instance:
-                    serialized_input = self.data_converter.dumps([args, kwargs])
+                    continue_as_new_dict = self.to_continue_as_new_dict(
+                        [args, kwargs], context.decider.task_list)
+
                     return context.decider._continue_as_new_workflow_execution(
-                        serialized_input)
+                        **continue_as_new_dict)
                 else:
                     # create an instance with our new workflow execution info
                     # but don't set the workflow_id and run_id as we don't yet

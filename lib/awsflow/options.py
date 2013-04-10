@@ -84,10 +84,24 @@ class workflow_options(object):
                     arg_sum = yield ChildWorkflow.execute(arg1, arg2)
                 raise Return(arg_sum)
     """
+    keys = frozenset(('workflow_id', 'version',
+                      'execution_start_to_close_timeout', 'task_list',
+                      'task_start_to_close_timeout', 'child_policy',
+                      'name', 'data_converter'))
 
     def __init__(self, **kwargs):
-        # TODO actively validate the keys
-        self._overrides = kwargs
+        self._overrides = dict()
+
+        for key, val in six.iteritems(kwargs):
+            if key == 'task_list':
+                self._overrides[key] = {'name': val}
+            elif key in self.keys:
+                if val is None:
+                    self._overrides[key] = 'NONE'
+                else:
+                    self._overrides[key] = str(val)
+            else:
+                raise AttributeError("Unknown keyword argument: %s" % key)
 
     def __enter__(self):
         context = get_context()
