@@ -27,7 +27,7 @@ class AsyncContext(object):
     # Python has no good support for class properties
     @classmethod
     def get_async_context(cls):
-        context = cls.thread_local.async_core_current_context
+        context = cls.thread_local.async_current_context
         if DEBUG:
             log.debug("Current async context: %r", context)
         return context
