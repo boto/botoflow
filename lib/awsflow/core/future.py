@@ -21,6 +21,13 @@ from weakref import WeakSet
 from .async_task import AsyncTask
 from .base_future import BaseFuture, Return
 
+try:  # PY3k
+    import collections.abc
+    Iterable = collections.abc.Iterable
+except ImportError:
+    Iterable = collections.Iterable
+
+
 log = logging.getLogger(__name__)
 
 # change this to enable a ton of debug printing
@@ -146,7 +153,7 @@ class Future(BaseFuture):
                     task.cancellable = False
                     covalue.add_task(task)
                     return
-                elif isinstance(covalue, (types.ListType, types.TupleType)):
+                elif isinstance(covalue, Iterable):
                     all_future = AllFuture(*covalue)
                     task = AsyncTask(self._on_future_completion,
                                      (all_future, coroutine),

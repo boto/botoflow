@@ -87,7 +87,7 @@ def log_task_context(context, logger):
 
 
 def _log_task_context(context, logger, indent=0):
-    logger.debug(" " * indent, repr(context))
+    logger.debug(" " * indent + '%r', context)
     indent += 2
     if not hasattr(context, 'children'):
         return

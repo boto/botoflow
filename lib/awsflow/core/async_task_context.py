@@ -115,10 +115,6 @@ class AsyncTaskContext(AbstractAsyncTaskContext):
             else:
                 self._execute_finally()
 
-        if DEBUG:
-            log.debug("--------------------AFTER REMOVE---------------------")
-            log_task_context(self, log)
-
     def handle_exception(self, exception, tb_list=None):
         if DEBUG:
             log.debug("Handling exception %r %r", self, exception)

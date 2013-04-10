@@ -13,7 +13,6 @@
 
 import copy
 import json
-import types
 
 import six
 
@@ -103,7 +102,7 @@ class _FlowObjEncoder(json.JSONEncoder):
             flow_dict = obj.__getstate__()
         else:
             # do not pickle metaclasses
-            if isinstance(obj, types.TypeType):
+            if isinstance(obj, type):
                 clsname = "%s:%s" % (obj.__module__, obj.__name__)
                 return {'__class': clsname}
             else:

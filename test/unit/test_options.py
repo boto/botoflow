@@ -15,7 +15,7 @@ class TestOptions(unittest.TestCase):
         self.assertFalse(context._activity_options_overrides)
         with activity_options(task_list='Test'):
             self.assertEqual(context._activity_options_overrides['task_list'],
-                             'Test')
+                             {'name':'Test'})
         self.assertFalse(context._activity_options_overrides)
 
     def test_workflow_overrides(self):
