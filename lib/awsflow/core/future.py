@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 
 import sys
-import types
 import threading
 import logging
 
@@ -25,6 +24,7 @@ try:  # PY3k
     import collections.abc
     Iterable = collections.abc.Iterable
 except ImportError:
+    import collections
     Iterable = collections.Iterable
 
 
