@@ -105,11 +105,10 @@ class WorkflowType(BaseFlowType):
         # apply any overrides
         context = get_context()
 
-        decision_dict = dict(
-            decision_dict.items()
-            + context._workflow_options_overrides.items())
-
-        return decision_dict
+        _decision_dict = {}
+        _decision_dict.update(decision_dict)
+        _decision_dict.update(context._workflow_options_overrides.items())
+        return _decision_dict
 
     def to_continue_as_new_dict(self, input, worker_task_list):
         decision_dict = self.to_decision_dict(
@@ -286,12 +285,12 @@ class ActivityType(BaseFlowType):
         decision_dict = self.to_decision_dict()
 
         # apply any options overrides
-        decision_dict = dict(
-            decision_dict.items()
-            + context._activity_options_overrides.items())
+        _decision_dict = {}
+        _decision_dict.update(decision_dict)
+        _decision_dict.update(context._activity_options_overrides.items())
 
         return context.decider._handle_execute_activity(
-            self, decision_dict, args, kwargs)
+            self, _decision_dict, args, kwargs)
 
 
 class SignalType(BaseFlowType):

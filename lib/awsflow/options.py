@@ -14,6 +14,7 @@
 import six
 
 from .context import get_context
+from .utils import str_or_NONE
 
 
 class activity_options(object):
@@ -46,12 +47,9 @@ class activity_options(object):
 
         for key, val in six.iteritems(kwargs):
             if key == 'task_list':
-                self._overrides[key] = {'name': val}
+                self._overrides[key] = {'name': str_or_NONE(val)}
             elif key in self.keys:
-                if val is None:
-                    self._overrides[key] = 'NONE'
-                else:
-                    self._overrides[key] = str(val)
+                self._overrides[key] = str_or_NONE(val)
             else:
                 raise AttributeError("Unknown keyword argument: %s" % key)
 
@@ -94,12 +92,9 @@ class workflow_options(object):
 
         for key, val in six.iteritems(kwargs):
             if key == 'task_list':
-                self._overrides[key] = {'name': val}
+                self._overrides[key] = {'name': str_or_NONE(val)}
             elif key in self.keys:
-                if val is None:
-                    self._overrides[key] = 'NONE'
-                else:
-                    self._overrides[key] = str(val)
+                self._overrides[key] = str_or_NONE(val)
             else:
                 raise AttributeError("Unknown keyword argument: %s" % key)
 
