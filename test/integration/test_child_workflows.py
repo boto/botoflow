@@ -21,9 +21,7 @@ class MasterWorkflow(WorkflowDefinition):
     @execute(version='1.2', execution_start_to_close_timeout=60)
     def execute(self, arg1, arg2):
         instance = yield ChildWorkflow.execute(arg1, arg2)
-        print "XXX"*4, instance.workflow_execution
         arg_sum = yield instance.workflow_result
-        print "XXX"*4, instance.workflow_execution
         raise Return(arg_sum)
 
 class ChildWorkflow(WorkflowDefinition):

@@ -69,7 +69,7 @@ def extract_tb(limit=None):
     """
 
     try:
-        prev_tb = sys.exc_traceback
+        prev_tb = sys.exc_info()[2]
     except AttributeError:
         pass
 

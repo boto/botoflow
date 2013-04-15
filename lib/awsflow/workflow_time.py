@@ -13,6 +13,8 @@
 
 __all__ = ('time', 'sleep')
 
+import six
+
 from .core import async, Future, CancelledError
 from .context import get_context, DecisionContext
 from .decisions import StartTimer
@@ -62,7 +64,7 @@ def sleep(seconds):
     timer_future = Future()
 
     handler = _handle_timer_event(decision_id, timer_future)
-    handler.next()  # arm
+    six.next(handler)  # arm
     decider._open_timers[decision_id] = dict(future=timer_future,
                                              handler=handler)
 

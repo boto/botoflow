@@ -14,6 +14,8 @@
 import copy
 import logging
 
+import six
+
 from ..utils import extract_workflows_dict
 from ..decider import Decider
 from ..swf_exceptions import TypeAlreadyExistsError
@@ -92,7 +94,7 @@ class WorkflowWorker(BaseWorker):
         self._workflows = extract_workflows_dict(self._workflow_definitions)
 
         if register:
-            for _, workflow_type, _ in self._workflows.itervalues():
+            for _, workflow_type, _ in six.itervalues(self._workflows):
                 self._register_workflow_type(workflow_type)
 
     def _register_workflow_type(self, workflow_type):

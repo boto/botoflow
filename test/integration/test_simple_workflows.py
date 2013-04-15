@@ -340,7 +340,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, repeat, arg1):
-                for i in xrange(repeat):
+                for i in range(repeat):
                     yield BunchOfActivities.sum(i, arg1)
                 raise Return(repeat)
 
@@ -353,7 +353,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             instance = NextPageTokenWorkflow.execute(repeat=21, arg1=1)
             self.workflow_execution = instance.workflow_execution
 
-        for i in xrange(21):
+        for i in range(21):
             wf_worker.run_once()
             act_worker.run_once()
 

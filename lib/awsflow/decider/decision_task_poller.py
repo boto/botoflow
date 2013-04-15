@@ -13,14 +13,13 @@
 
 import sys
 import time
-import collections
 
 import six
 
 from ..history_events import swf_event_to_object
 
 
-class EventsIterator(collections.Iterator):
+class EventsIterator(six.Iterator):
 
     def __init__(self, poller, decision_dict):
         self.poller = poller
@@ -28,7 +27,7 @@ class EventsIterator(collections.Iterator):
         self.cur_event_pos = -1
         self.event_len = len(decision_dict['events'])
 
-    def next(self):
+    def __next__(self):
         self.cur_event_pos += 1
         if self.cur_event_pos >= self.event_len:
             if 'nextPageToken' in self.decision_dict:

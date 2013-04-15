@@ -452,7 +452,7 @@ class Decider(object):
         activity_future = Future()
         handler = self._handle_activity_event(activity_type, activity_id,
                                               activity_future)
-        handler.next()  # arm
+        six.next(handler)  # arm
         self._open_activities[activity_id] = {'future': activity_future,
                                               'handler': handler}
 
@@ -488,7 +488,7 @@ class Decider(object):
         handler = self._handle_child_workflow_event(workflow_type,
                                                     workflow_id,
                                                     workflow_future)
-        handler.next()  # arm
+        six.next(handler)  # arm
         self._open_child_workflows[workflow_id] = {
             'future': workflow_future, 'handler': handler,
             'workflow_instance': workflow_instance,

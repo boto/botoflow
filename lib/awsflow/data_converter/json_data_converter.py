@@ -118,7 +118,10 @@ class _FlowObjEncoder(json.JSONEncoder):
 
         # extra special love for exceptions :(
         if issubclass(obj_cls, BaseException):
-            retval['__exc'] = [obj.args, obj.message]
+            if six.PY3:
+                retval['__exc'] = [obj.args, None]
+            else:
+                retval['__exc'] = [obj.args, obj.message]
 
         return retval
 
@@ -167,7 +170,8 @@ def _flow_obj_decoder(dct):
 
     if '__exc' in dct:
         obj.args = dct['__exc'][0]
-        obj.message = dct['__exc'][1]
+        if dct['__exc'][1] is not None:
+            obj.message = dct['__exc'][1]
 
     return obj
 

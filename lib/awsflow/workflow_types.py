@@ -185,6 +185,10 @@ class WorkflowType(BaseFlowType):
     def __hash__(self):
         return hash("{0}{1}".format(self.name, self.version))
 
+    def __repr__(self):
+        return "<{} (name={}, version={})>".format(self.__class__.__name__,
+                                                   self.name, self.version)
+
 
 class ActivityType(BaseFlowType):
 

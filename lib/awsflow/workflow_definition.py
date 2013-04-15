@@ -15,7 +15,8 @@ import six
 
 
 class _WorkflowDefinitionMeta(type):
-    def __init__(cls, name, bases, dct):
+    def __new__(cls, name, bases, dct):
+        newdct = dict(dct)
         # find the workflows/signals and add them to our class
         _workflow_types = []
         signals = {}
@@ -31,35 +32,20 @@ class _WorkflowDefinitionMeta(type):
                         _workflow_types.append((
                             func.swf_options['workflow_type'], func.__name__))
 
-        super(_WorkflowDefinitionMeta, cls).__init__(name, bases, dct)
-        # this is important, we don't want to spoil the base class with
-        # attributes as otherwise they would propagate to subclasses
-        if cls.__name__ == 'WorkflowDefinition':
-            return
-
-        if not hasattr(cls, '_workflow_signals'):
-            setattr(cls, '_workflow_signals', signals)
-        else:
-            cls._workflow_signals.update(signals)
+        newdct['_workflow_signals'] = signals
 
         workflow_types = {}
         for workflow_type, func_name in _workflow_types:
-            workflow_type._reset_name(cls.__name__)
+            workflow_type._reset_name(name)
             workflow_types[workflow_type] = func_name
 
         if not hasattr(cls, '_workflow_types'):
-            setattr(cls, '_workflow_types', workflow_types)
-        else:
-            cls._workflow_types.update(workflow_types)
+            newdct['_workflow_types'] = workflow_types
 
-        # XXX need to rethink this: a base might, or might not have @execute,
-        # so somehow we need to apply this only to the leafmost class
-        # if len(cls._workflow_types) < 1:
-        #     raise TypeError("WorkflowDefinition must have at least one "
-        #                     "method decorated with @execute")
+        return type.__new__(cls, name, bases, newdct)
 
 
-class WorkflowDefinition(object):
+class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
     """Every workflow implementation needs to be a subclass of this class.
 
     Usually there should be no need to instantiate the class manually, as
@@ -96,8 +82,6 @@ class WorkflowDefinition(object):
     return keyword, the return value is "raised" like this: `raise
     Return("Value")`.
     """
-
-    __metaclass__ = _WorkflowDefinitionMeta
 
     def __init__(self, workflow_execution):
         self.workflow_execution = workflow_execution

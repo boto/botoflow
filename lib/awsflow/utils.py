@@ -39,8 +39,8 @@ def str_or_NONE(value):
 
 def random_sha1_hash():
     hash = hashlib.sha1()
-    hash.update(str(time.time))
-    hash.update(str(random.random()))
+    hash.update(six.b(str(time.time())))
+    hash.update(six.b(str(random.random())))
     return hash.hexdigest()
 
 
