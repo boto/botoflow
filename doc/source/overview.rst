@@ -92,8 +92,9 @@ You can start an instance of this workflow using the following code snippet:
 .. code-block:: python
 
     swf_endpoint = botocore.session.get_session().get_service('swf').get_endpoint('us-east-1')
-    worker = WorkflowWorker(swf_endpoint, 'domain1', "tasklist1", HelloWorldWorkflow)
-    with worker: HelloWorldWorkflow.hello_world()
+
+    with WorkflowStarter(swf_endpoint, 'domain1', "tasklist1"):
+        HelloWorldWorkflow.hello_world()  # starts the workflow
 
 Here we use botocore SWF endpoint *(we use it for authentication as well as
 low-level communication with SWF service)* and pass it to our WorkflowWorker,
@@ -136,7 +137,7 @@ activity at that point in the code (in this case to pass the name to
 
 
 AWS Flow Framework in Python and Amazon Simple Workflow Service
------------------------------------------------------
+---------------------------------------------------------------
 
 AWS Flow Framework in Python uses the Amazon Simple Workflow Service (SWF) to schedule
 tasks for execution by remote components, to get their results back, and to
