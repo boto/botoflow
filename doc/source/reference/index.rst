@@ -20,3 +20,5 @@ API Reference
    utils
    workers
    workflow_definition
+   workflow_starter
+   workflow_types
