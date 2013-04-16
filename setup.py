@@ -2,7 +2,8 @@ from setuptools import setup, find_packages
 
 
 requires = ['botocore>=0.8.2',
-            'requests>=1.2.0']
+            'requests>=1.2.0',
+            'six>=1.2.0']
 
 args = dict(
     name='awsflow',
