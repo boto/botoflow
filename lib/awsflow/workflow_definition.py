@@ -11,14 +11,57 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+from copy import copy
+
 import six
 
 
 class _WorkflowDefinitionMeta(type):
     def __new__(cls, name, bases, dct):
         newdct = dict(dct)
-        # find the workflows/signals and add them to our class
-        _workflow_types = []
+
+        # copy workflow and signal methods from our bases if we don't have a
+        # method with the same name. This is needed to make sure subclassing
+        # works well as these methods contain metadata that will change between
+        # super and subclass
+        _workflow_types, _signals = _WorkflowDefinitionMeta \
+            ._extract_workflows_and_signals(newdct)
+
+        for base in bases:
+            base_workflow_types, base_signals = _WorkflowDefinitionMeta \
+                ._extract_workflows_and_signals(base.__dict__)
+
+            # signals first
+            for signal_name, val_func in six.iteritems(base_signals):
+                if signal_name not in _signals and \
+                   val_func[1].__name__ not in newdct:
+
+                    newdct[val_func[1].__name__] = copy(val_func[0])
+                    _signals[signal_name] = val_func
+
+            for workflow_type, val_func in six.iteritems(
+                base_workflow_types):
+                if workflow_type not in _workflow_types and \
+                   val_func[1].__name__ not in newdct:
+
+                    newdct[val_func[1].__name__] = copy(val_func[0])
+                    _workflow_types[workflow_type] = val_func
+
+        newdct['_workflow_signals'] = _signals
+
+        workflow_types = {}
+        for workflow_type, workflow_func in six.iteritems(_workflow_types):
+            workflow_type._reset_name(name, force=True)
+            workflow_types[workflow_type] = workflow_func[1].__name__
+
+        if not hasattr(cls, '_workflow_types'):
+            newdct['_workflow_types'] = workflow_types
+
+        return type.__new__(cls, name, bases, newdct)
+
+    @staticmethod
+    def _extract_workflows_and_signals(dct):
+        workflow_types = {}
         signals = {}
 
         for val in six.itervalues(dct):
@@ -27,22 +70,12 @@ class _WorkflowDefinitionMeta(type):
                 if hasattr(func, 'swf_options'):
                     if 'signal_type' in func.swf_options:
                         signal_type = func.swf_options['signal_type']
-                        signals[signal_type.name] = func
+                        signals[signal_type.name] = (val, func)
                     elif 'workflow_type' in func.swf_options:
-                        _workflow_types.append((
-                            func.swf_options['workflow_type'], func.__name__))
+                        workflow_types[
+                            func.swf_options['workflow_type']] = (val, func)
 
-        newdct['_workflow_signals'] = signals
-
-        workflow_types = {}
-        for workflow_type, func_name in _workflow_types:
-            workflow_type._reset_name(name)
-            workflow_types[workflow_type] = func_name
-
-        if not hasattr(cls, '_workflow_types'):
-            newdct['_workflow_types'] = workflow_types
-
-        return type.__new__(cls, name, bases, newdct)
+        return workflow_types, signals
 
 
 class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):

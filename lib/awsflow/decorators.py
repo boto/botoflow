@@ -38,25 +38,40 @@ def _set_swf_options(obj, opts_key, options):
     return obj
 
 
-def workflow(name, data_converter=None, description=None):
-    """
+def workflow(name):
+    """Using this decorator you can override the workflow name (class name) to
+    use.
+
+    This cam be very useful, when you're writing a newer version of the same
+    workflow, but you want to write it in a new class.
+
+    .. code-block:: python
+
+        class ExampleWorkflow(WorkflowDefinition):
+
+            @execute(version='1.0', execution_start_to_close_timeout=1*MINUTES)
+            def example_start(self, a, b):
+                pass
+
+        @workflow(name='ExampleWorkflow')
+        class ExampleWorkflowV2(ExampleWorkflow):
+
+            @execute(version='2.0', execution_start_to_close_timeout=1*MINUTES)
+            def example_start_v2(self, a, b, c):
+                pass
+
+    Now you have two classes that handle *ExampleWorkflow*, but with version
+    1.0 and version 2.0, which you can start by caling corresponding
+    example_start() and example_start_v2()
+
     :param str name: Specifies the name of the workflow type. If not set, the
         name will be defaulted to the workflow definition class name.
-    :param data_converter: Specifies the type of the DataConverter to use for
-        serializing/deserializing data when sending requests to and receiving
-        results from workflow executions of this workflow type.  Set to `None`
-        by default, which indicates that the JsonDataConverter should be used.
-    :type data_converter: :py:class:`~awsflow.data_converter.abstract_data_converter.AbstractDataConverter`
-    :param description: Textual description of the workflow definition. By
-        default will use the docstring of the workflow definition class if
-        available. The maximum length is 1024 characters, so a long docstring
-        will be truncated to that length.
-    :type description: str or None
+
     """
     def _workflow(cls):
-        # XXX we'll need to reset the cls._workflow_types as this decorator
-        # runs after the metaclass
-        raise NotImplementedError
+        for workflow_type in cls._workflow_types:
+            workflow_type._reset_name(name, force=True)
+        return cls
     return _workflow
 
 
@@ -65,6 +80,8 @@ def execute(version,
             task_list=USE_WORKER_TASK_LIST,
             task_start_to_close_timeout=30,  # as in java flow
             child_policy=CHILD_TERMINATE,
+            data_converter=None,
+            description=None,
             skip_registration=False):
     """Use this decorator indicates the entry point of the workflow.
 
@@ -93,6 +110,16 @@ def execute(version,
     :param str child_policy: Specifies the policy to use for the child
         workflows if an execution of this type is terminated. The default value
         is :py:data:`~awsflow.constants.CHILD_TERMINATE`.
+    :param data_converter: Specifies the type of the DataConverter to use for
+        serializing/deserializing data when sending requests to and receiving
+        results from workflow executions of this workflow type.  Set to `None`
+        by default, which indicates that the JsonDataConverter should be used.
+    :type data_converter: :py:class:`~awsflow.data_converter.abstract_data_converter.AbstractDataConverter`
+    :param description: Textual description of the workflow definition. By
+        default will use the docstring of the workflow definition class if
+        available. The maximum length is 1024 characters, so a long docstring
+        will be truncated to that length.
+    :type description: str or None
     :param bool skip_registartion: Indicates that the workflow type should not
         be registered with Amazon SWF.
     """
@@ -102,9 +129,15 @@ def execute(version,
         execution_start_to_close_timeout=execution_start_to_close_timeout,
         task_start_to_close_timeout=30,
         child_policy=CHILD_TERMINATE,
+        data_converter=data_converter,
+        description=description,
         skip_registration=False)
 
     def _execute(func):
+        # set description
+        if _workflow_type.description is None:
+            _workflow_type.description = func.__doc__
+
         _set_swf_options(func, 'workflow_type', _workflow_type)
         return decorator_descriptors.WorkflowExecuteFunc(func)
 

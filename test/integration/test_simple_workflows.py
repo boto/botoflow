@@ -5,7 +5,7 @@ import unittest
 
 from awsflow import (WorkflowDefinition, execute, Return, async, activity, ThreadedWorkflowWorker,
                       ThreadedActivityWorker, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
-                      workflow_types, logging_filters, WorkflowStarter)
+                      workflow_types, logging_filters, WorkflowStarter, workflow)
 
 from awsflow.exceptions import ActivityTaskFailedError
 from utils import SWFMixIn
@@ -475,6 +475,99 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
             hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'TestExecution')
+
+    def test_subclassed_workflow(self):
+        class SuperClassWorkflow(WorkflowDefinition):
+            @execute(version='1.0', execution_start_to_close_timeout=60)
+            def execute(self):
+                pass
+
+        class SubClassWorkflow(SuperClassWorkflow):
+            @execute(version='1.0', execution_start_to_close_timeout=60)
+            def execute(self):
+                pass
+
+        worker = WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, SubClassWorkflow)
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = SubClassWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        worker.run_once()
+        time.sleep(2)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist['events']), 5)
+
+    def test_subclassed_workflow_no_exec(self):
+        class SuperClassWorkflow(WorkflowDefinition):
+            @execute(version='1.0', execution_start_to_close_timeout=60)
+            def execute(self):
+                pass
+
+        class SubClassWorkflow(SuperClassWorkflow):
+            pass
+
+        worker = WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, SubClassWorkflow)
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = SubClassWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        worker.run_once()
+        time.sleep(2)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist['events']), 5)
+
+    def test_subclassed_workflow_multiver(self):
+        class MultiverWorkflow(WorkflowDefinition):
+            @execute(version='1.0', execution_start_to_close_timeout=60)
+            def start_wf(self):
+                pass
+
+        @workflow(name='MultiverWorkflow')
+        class SubMultiverWorkflow(MultiverWorkflow):
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def start_wf(self):
+                pass
+
+            @execute(version='1.2', execution_start_to_close_timeout=60)
+            def start_wf_v2(self):
+                pass
+
+
+        worker = WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, SubMultiverWorkflow)
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = SubMultiverWorkflow.start_wf()
+            self.workflow_execution = instance.workflow_execution
+
+        worker.run_once()
+        time.sleep(2)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist['events']), 5)
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = SubMultiverWorkflow.start_wf_v2()
+            self.workflow_execution = instance.workflow_execution
+
+        worker.run_once()
+        time.sleep(2)
+
+        hist = self.get_workflow_execution_history()
+        print hist
+        self.assertEqual(len(hist['events']), 5)
+        self.assertEqual({'name': 'MultiverWorkflow', 'version': '1.2'},
+                         hist['events'][0]
+                         ['workflowExecutionStartedEventAttributes']
+                         ['workflowType'])
+
+
 
 if __name__ == '__main__':
     unittest.main()

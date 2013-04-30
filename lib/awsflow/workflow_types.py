@@ -18,7 +18,7 @@ import abc
 
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .utils import str_or_NONE
-from .data_converter import JSONDataConverter
+from .data_converter import AbstractDataConverter, JSONDataConverter
 from .workflow_execution import WorkflowExecution
 from .context import (get_context, DecisionContext,
                       StartWorkflowContext, ActivityContext)
@@ -71,11 +71,22 @@ class WorkflowType(BaseFlowType):
         self.description = description
         self.skip_registration = skip_registration
         self.workflow_id = None
+        self.data_converter = data_converter
 
-        if data_converter is None:
-            self.data_converter = JSONDataConverter()
-        else:
-            self.data_converter = data_converter
+    @property
+    def data_converter(self):
+        return self._data_converter
+
+    @data_converter.setter
+    def data_converter(self, converter):
+        if converter is None:  # set the default
+            self._data_converter = JSONDataConverter()
+            return
+
+        if isinstance(converter, AbstractDataConverter):
+            self._data_converter = converter
+        raise TypeError("Converter {0!r} must be a subclass of {1}"
+                        .format(converter, AbstractDataConverter.__name__))
 
     def to_decision_dict(self, input, workflow_id=None, worker_task_list=None, domain=None):
         task_list = self.task_list
@@ -200,7 +211,7 @@ class ActivityType(BaseFlowType):
                  schedule_to_start_timeout=None,
                  start_to_close_timeout=None,
                  schedule_to_close_timeout=None,
-                 description="",
+                 description=None,
                  data_converter=None,
                  skip_registration=False):
 

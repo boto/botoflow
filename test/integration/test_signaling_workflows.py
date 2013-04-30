@@ -43,7 +43,7 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
 
             # wait and signal the workflow
             time.sleep(1)
-            instance.signal("Signalled")
+            instance.signal("Signaled")
 
         for i in range(2):
             wf_worker.run_once()
@@ -54,7 +54,7 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist['events']), 11)
         self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'Signalled')
+            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'Signaled')
 
 
 if __name__ == '__main__':

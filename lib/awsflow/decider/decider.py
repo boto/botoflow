@@ -366,7 +366,7 @@ class Decider(object):
         if sys.version_info[0:2] == (2, 6):
             kwargs = dict([(str(k), v) for k, v in six.iteritems(kwargs)])
 
-        context.workflow._workflow_signals[signal_name](
+        context.workflow._workflow_signals[signal_name][1](
             context.workflow, *args, **kwargs)
 
     def _handle_workflow_execution_started(self, event):
