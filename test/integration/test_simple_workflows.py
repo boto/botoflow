@@ -303,6 +303,52 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 9)
 
+    def test_try_except_with_timer(self):
+        class TryExceptFinallyWorkflow(WorkflowDefinition):
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self, arg1, arg2):
+                @async
+                def do_try_except():
+                    arg_sum = 0
+                    try:
+                        arg_sum += yield BunchOfActivities.sum(arg1, arg2)
+                        yield BunchOfActivities.throw()
+                    except ActivityTaskFailedError as err:
+                        if isinstance(err.cause, ValueError) \
+                           and str(err.cause) == 'Hello-Error':
+
+                            if err.event_id != 13 or err.activity_id != '2':
+                                raise RuntimeError("Test Failed")
+                            arg_sum += yield BunchOfActivities.sum(arg1, arg2)
+                    yield workflow_time.sleep(1)
+
+                result = yield do_try_except()
+                raise Return(result)
+
+        wf_worker = WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, TryExceptFinallyWorkflow)
+        act_worker = ActivityWorker(
+            self.endpoint, self.domain, self.task_list, BunchOfActivities())
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = TryExceptFinallyWorkflow.execute(arg1=1, arg2=2)
+            self.workflow_execution = instance.workflow_execution
+
+        for i in range(3):
+            wf_worker.run_once()
+            act_worker.run_once()
+
+        wf_worker.run_once()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist['events']), 28)
+        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(self.serializer.loads(
+            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 9)
+
+
     def test_two_activities(self):
         class BunchOfActivitiesWorkflow(WorkflowDefinition):
 
@@ -566,7 +612,6 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                          hist['events'][0]
                          ['workflowExecutionStartedEventAttributes']
                          ['workflowType'])
-
 
 
 if __name__ == '__main__':

@@ -59,7 +59,6 @@ class Decider(object):
         self.workflows = workflows
 
         self._poller = _Poller(worker, domain, task_list, identity)
-        self._eventloop = AsyncEventLoop()
 
         self._reset()
 
@@ -75,6 +74,7 @@ class Decider(object):
         self._event_to_id_table = {}
         self._decision_task_token = None
         self._continue_as_new_on_completion = None
+        self._eventloop = AsyncEventLoop()
 
     def get_next_id(self):
         self._decision_id += 1
