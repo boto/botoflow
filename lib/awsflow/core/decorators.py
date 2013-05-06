@@ -143,13 +143,22 @@ class AsyncDecorator(object):
         return future
 
 
+
 def _async(daemon=False):
 
-    def __async(func):
-        return AsyncDecorator(func, daemon)
+    # This is a specially constructed decorator that can accept act with or
+    # without parentheses the same: @async == @async()
 
+    def __async(func=None):
+        def ___async(func):
+            return AsyncDecorator(func, daemon)
+
+        if func is None:
+            return ___async
+        else:
+            return ___async(func)
     return __async
 
 # shortcuts
-async = _async(False)
-async_daemon = _async(True)
+async = _async(daemon=False)
+async_daemon = _async(daemon=True)

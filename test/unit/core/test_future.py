@@ -43,6 +43,30 @@ class TestAsync(unittest.TestCase):
         self.assertTrue(isinstance(future, BaseFuture))
         self.assertEqual(4, self.counter)
 
+    def test_simple_async_with_parens(self):
+        @async()
+        def count():
+            self.counter += 1
+
+        @async()
+        def count_generator():
+            if False: yield
+            self.counter += 1
+
+        @async()
+        def main():
+            future = count_generator()
+            for i in range(3):
+                yield count()
+            yield future
+
+        ev = AsyncEventLoop()
+        with ev:
+            future = main()
+        ev.execute_all_tasks()
+        self.assertTrue(isinstance(future, BaseFuture))
+        self.assertEqual(4, self.counter)
+
     def test_simple_class(self):
 
         class Main(object):
