@@ -60,21 +60,28 @@ class _FlowObjEncoder(json.JSONEncoder):
 
         # handle subclasses of dict
         # issubclass(dict, dict) -> True (!)
-        elif obj_type != dict and issubclass(obj_type, dict):
-            flow_dict = None
-
-            if hasattr(obj, '__getstate__'):
-                flow_dict = obj.__getstate__()
-            else:
+        elif issubclass(obj_type, dict):
+            if obj_type == dict:
                 flow_dict = copy.copy(obj)
+                for key, val in six.iteritems(flow_dict):
+                    flow_dict[key] = self._flowify_obj(val)
 
-            for key, val in six.iteritems(flow_dict):
-                flow_dict[key] = self._flowify_obj(val)
+                return flow_dict
+            else:
+                flow_dict = None
 
-            flow_dict_class = "%s:%s" % (obj_type.__module__,
-                                         obj_type.__name__)
+                if hasattr(obj, '__getstate__'):
+                    flow_dict = obj.__getstate__()
+                else:
+                    flow_dict = copy.copy(obj)
 
-            return {'__dictclass': [flow_dict_class, flow_dict]}
+                for key, val in six.iteritems(flow_dict):
+                    flow_dict[key] = self._flowify_obj(val)
+
+                flow_dict_class = "%s:%s" % (obj_type.__module__,
+                                             obj_type.__name__)
+
+                return {'__dictclass': [flow_dict_class, flow_dict]}
 
         # namedtuple (!)
         # http://bugs.python.org/issue7796
