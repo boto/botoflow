@@ -257,6 +257,48 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist['events'][4]['timerStartedEventAttributes']['startToFireTimeout'], '2')
         self.assertEqual(hist['events'][5]['eventType'], 'TimerFired')
 
+    def test_one_activity_default_task_list(self):
+        class OneActivityCustomTaskList(object):
+
+            @activity(version='1.0', task_list='abracadabra')
+            def sum(self, x, y):
+                return x + y
+
+        class OneActivityDefaultTaskListWorkflow(WorkflowDefinition):
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self, arg1, arg2):
+                arg_sum = yield OneActivityCustomTaskList.sum(arg1, arg2)
+                raise Return(arg_sum)
+
+        wf_worker = WorkflowWorker(
+            self.endpoint, self.domain, self.task_list,
+            OneActivityDefaultTaskListWorkflow)
+
+        act_worker = ThreadedActivityWorker(
+            self.endpoint, self.domain, 'abracadabra',
+            OneActivityCustomTaskList())
+
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            instance = OneActivityDefaultTaskListWorkflow.execute(
+                arg1=1, arg2=2)
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        act_worker.start(1, 4)
+        act_worker.stop()
+        wf_worker.run_once()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist['events']), 11)
+        self.assertEqual(hist['events'][4]['activityTaskScheduledEventAttributes']
+                         ['taskList']['name'], 'abracadabra')
+        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(self.serializer.loads(
+            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+
     def test_try_except_finally_activity(self):
         class TryExceptFinallyWorkflow(WorkflowDefinition):
 
