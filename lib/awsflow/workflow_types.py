@@ -144,7 +144,7 @@ class WorkflowType(BaseFlowType):
             'domain': domain,
             'version': self.version,
             'name': self.name,
-            'task_list': {'name': str_or_NONE(task_list)},
+            'default_task_list': {'name': str_or_NONE(task_list)},
             'default_child_policy': str_or_NONE(self.child_policy),
             'default_execution_start_to_close_timeout': str_or_NONE(
                 self.execution_start_to_close_timeout),
@@ -270,7 +270,7 @@ class ActivityType(BaseFlowType):
             'domain': domain,
             'version': self.version,
             'name': self.name,
-            'task_list': {'name': str_or_NONE(task_list)},
+            'default_task_list': {'name': str_or_NONE(task_list)},
             'default_task_heartbeat_timeout': str_or_NONE(
                 self.heartbeat_timeout),
             'default_task_schedule_to_start_timeout': str_or_NONE(

@@ -260,7 +260,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
     def test_one_activity_default_task_list(self):
         class OneActivityCustomTaskList(object):
 
-            @activity(version='1.0', task_list='abracadabra')
+            @activity(version='1.1', task_list='abracadabra')
             def sum(self, x, y):
                 return x + y
 
