@@ -52,10 +52,10 @@ class _FlowObjEncoder(json.JSONEncoder):
         # handle subclasses of list
         # issubclass(list, list) -> True (!)
         elif issubclass(obj_type, list):
+            flow_list = [self._flowify_obj(o) for o in obj]
             if obj_type == list:
-                return [self._flowify_obj(o) for o in obj]
+                return flow_list
             else:
-                flow_list = [self._flowify_obj(o) for o in obj]
                 flow_list_class = "%s:%s" % (obj_type.__module__,
                                              obj_type.__name__)
                 return {'__listclass': [flow_list_class, flow_list]}
