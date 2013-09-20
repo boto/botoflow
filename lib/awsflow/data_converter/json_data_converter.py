@@ -49,8 +49,16 @@ class _FlowObjEncoder(json.JSONEncoder):
             clsname = "%s:%s" % (obj.__module__, obj.__name__)
             return {'__class': clsname}
 
-        elif obj_type == list:
-            return [self._flowify_obj(o) for o in obj]
+        # handle subclasses of list
+        # issubclass(list, list) -> True (!)
+        elif issubclass(obj_type, list):
+            if obj_type == list:
+                return [self._flowify_obj(o) for o in obj]
+            else:
+                flow_list = [self._flowify_obj(o) for o in obj]
+                flow_list_class = "%s:%s" % (obj_type.__module__,
+                                             obj_type.__name__)
+                return {'__listclass': [flow_list_class, flow_list]}
 
         elif obj_type == OrderedDict:
             flowified = []
@@ -149,6 +157,8 @@ def _flow_obj_decoder(dct):
         module_name, attr_name = str(dct['__obj'][0]).split(':', 1)
     elif '__class' in dct:
         module_name, attr_name = str(dct['__class']).split(':', 1)
+    elif '__listclass' in dct:
+        module_name, attr_name = str(dct['__listclass'][0]).split(':', 1)
     elif '__dictclass' in dct:
         module_name, attr_name = str(dct['__dictclass'][0]).split(':', 1)
     elif '__namedtuple' in dct:
@@ -170,6 +180,8 @@ def _flow_obj_decoder(dct):
     if hasattr(obj, '__setstate__'):
         obj.__setstate__(dct['__obj'][1])
 
+    elif '__listclass' in dct:
+        obj.extend(dct['__listclass'][1])
     elif '__dictclass' in dct:
         obj.update(dct['__dictclass'][1])
     else:

@@ -33,6 +33,11 @@ class DictSubclass(dict):
         return self['testval']
 
 
+class ListSubclass(list):
+
+    def secondval(self):
+        return self[1]
+
 NamedTuple = namedtuple('NamedTuple', 'a b')
 
 
@@ -116,6 +121,14 @@ class TestJSONDataConverter(unittest.TestCase):
         result = self.dumps_loads(subdct)
         self.assertEqual('test', result.myval())
         self.assertEqual(DictSubclass, type(result))
+
+    def test_list_subclass(self):
+        sublst = ListSubclass()
+        sublst.extend(('testone', 'testtwo'))
+
+        result = self.dumps_loads(sublst)
+        self.assertEqual('testtwo', result.secondval())
+        self.assertEqual(ListSubclass, type(result))
 
     def test_ordereddict(self):
         inner_dct = OrderedDict(((3, 'c'), (4, 'd')))
