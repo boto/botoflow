@@ -85,6 +85,7 @@ class WorkflowType(BaseFlowType):
 
         if isinstance(converter, AbstractDataConverter):
             self._data_converter = converter
+            return
         raise TypeError("Converter {0!r} must be a subclass of {1}"
                         .format(converter, AbstractDataConverter.__name__))
 
