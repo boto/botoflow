@@ -1,5 +1,6 @@
 import copy
 import unittest
+import zlib
 
 from collections import namedtuple, OrderedDict
 
@@ -100,6 +101,19 @@ class TestJSONDataConverter(unittest.TestCase):
     def test_class(self):
 
         self.assertEqual(SimpleObj, self.dumps_loads(SimpleObj))
+
+    def test_string(self):
+        self.assertEqual('test', self.dumps_loads('test'))
+
+    def test_unicode(self):
+        ustring = unichr(40960) + u'abcd' + unichr(1972)
+        self.assertEqual(ustring, self.dumps_loads(ustring))
+
+    def test_zlib(self):
+        # This test is really about ensuring that binary data isn't corrupted
+        data = 'compress me'
+        compressed = zlib.compress(data)
+        self.assertEqual(data, zlib.decompress(self.dumps_loads(compressed)))
 
     def test_states_objects(self):
         self.assertFalse('present' in \

@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+import base64
 import copy
 import json
 
@@ -37,6 +38,12 @@ class _FlowObjEncoder(json.JSONEncoder):
         obj_type = type(obj)
 
         if obj_type == str:
+            try:
+                obj.decode('utf8')
+            except UnicodeDecodeError:
+                # If it can't be decoded as Unicode, it's probably binary data,
+                # and the JSON Encoder won't cope, so we base64-encode it.
+                return {'__base64str': base64.b64encode(obj)}
             return obj
         elif obj_type == tuple:
             return {'__tuple': [self._flowify_obj(o) for o in obj]}
@@ -150,6 +157,8 @@ def _flow_obj_decoder(dct):
         return frozenset(dct['__frozenset'])
     elif '__ordereddict' in dct:
         return OrderedDict(dct['__ordereddict'])
+    elif '__base64str' in dct:
+        return base64.b64decode(dct['__base64str'])
 
     module_name, attr_name = None, None
 
