@@ -125,6 +125,7 @@ class ActivityWorker(BaseWorker):
             if activity_type.skip_registration:
                 log.debug("Skipping workflow '%s %s' registration",
                           activity_type.name, activity_type.version)
+                return
 
             kwargs = activity_type.to_registration_options_dict(
                 domain=self.domain, worker_task_list=self.task_list)
