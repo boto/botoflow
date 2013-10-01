@@ -29,12 +29,14 @@ class StateObj(object):
 
 
 class DictSubclass(dict):
+    attr = 'dictsubattr'
 
     def myval(self):
         return self['testval']
 
 
 class ListSubclass(list):
+    attr = 'listsubattr'
 
     def secondval(self):
         return self[1]
@@ -131,18 +133,37 @@ class TestJSONDataConverter(unittest.TestCase):
     def test_dict_subclass(self):
         subdct = DictSubclass()
         subdct['testval'] = 'test'
+        subdct.attr = 'testattr'
 
         result = self.dumps_loads(subdct)
         self.assertEqual('test', result.myval())
+        self.assertEqual('testattr', result.attr)
         self.assertEqual(DictSubclass, type(result))
 
     def test_list_subclass(self):
         sublst = ListSubclass()
         sublst.extend(('testone', 'testtwo'))
+        sublst.attr = 'testattr'
 
         result = self.dumps_loads(sublst)
         self.assertEqual('testtwo', result.secondval())
+        self.assertEqual('testattr', result.attr)
         self.assertEqual(ListSubclass, type(result))
+
+    def test_nested_subclass(self):
+        subdct = DictSubclass()
+        subdct['testval'] = 'test'
+        subdct.sublst = ListSubclass()
+        subdct.sublst.extend(('testone', 'testtwo'))
+
+        result = self.dumps_loads(subdct)
+        self.assertEqual('test', result.myval())
+        self.assertEqual(DictSubclass.attr, result.attr)
+        self.assertEqual(DictSubclass, type(result))
+
+        self.assertEqual('testtwo', result.sublst.secondval())
+        self.assertEqual(ListSubclass.attr, result.sublst.attr)
+        self.assertEqual(ListSubclass, type(result.sublst))
 
     def test_ordereddict(self):
         inner_dct = OrderedDict(((3, 'c'), (4, 'd')))

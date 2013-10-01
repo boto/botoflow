@@ -65,7 +65,10 @@ class _FlowObjEncoder(json.JSONEncoder):
             else:
                 flow_list_class = "%s:%s" % (obj_type.__module__,
                                              obj_type.__name__)
-                return {'__listclass': [flow_list_class, flow_list]}
+                return {
+                    '__listclass': [flow_list_class, flow_list],
+                    '__dict__': {key: self._flowify_obj(value)
+                                 for key, value in obj.__dict__.iteritems()}}
 
         elif obj_type == OrderedDict:
             flowified = []
@@ -96,7 +99,10 @@ class _FlowObjEncoder(json.JSONEncoder):
                 flow_dict_class = "%s:%s" % (obj_type.__module__,
                                              obj_type.__name__)
 
-                return {'__dictclass': [flow_dict_class, flow_dict]}
+                return {
+                    '__dictclass': [flow_dict_class, flow_dict],
+                    '__dict__': {key: self._flowify_obj(value)
+                                 for key, value in obj.__dict__.iteritems()}}
 
         # namedtuple (!)
         # http://bugs.python.org/issue7796
@@ -191,8 +197,10 @@ def _flow_obj_decoder(dct):
 
     elif '__listclass' in dct:
         obj.extend(dct['__listclass'][1])
+        obj.__dict__ = dct['__dict__']
     elif '__dictclass' in dct:
         obj.update(dct['__dictclass'][1])
+        obj.__dict__ = dct['__dict__']
     else:
         obj.__dict__ = dct['__obj'][1]
 
