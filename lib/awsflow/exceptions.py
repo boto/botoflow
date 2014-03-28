@@ -159,6 +159,59 @@ class ActivityTaskTimedOutError(ActivityTaskError):
                     self.timeout_type)
 
 
+class WorkflowError(DecisionException):
+    """Base class for exceptions used to report failure of the originating
+    workflow"""
+    def __init__(self, event_id, workflow_type, workflow_execution):
+        super(WorkflowError, self).__init__(event_id)
+
+        self.workflow_type = workflow_type
+        self.workflow_execution = workflow_execution
+
+    def __repr__(self):
+        return ("<%s at %s event_id=%s workflow_type=%s "
+                "workflow_execution=%s>") % (
+                    self.__class__.__name__, hex(id(self)),
+                    self.event_id, self.workflow_type,
+                    self.workflow_execution)
+
+
+class WorkflowFailedError(WorkflowError, DecisionExceptionWithTracebackMixIn):
+    """The workflow execution closed due to a failure.
+    """
+    def __init__(self, event_id, workflow_type, workflow_execution, cause,
+                 _traceback=None):
+        super(WorkflowFailedError, self).__init__(event_id, workflow_type,
+                                                  workflow_execution)
+        self.cause = cause
+        self._traceback = _traceback
+
+    def __repr__(self):
+        return ("<%s at %s event_id=%s workflow_type=%s "
+                "workflow_execution=%s cause=%r>") % (
+                    self.__class__.__name__, hex(id(self)),
+                    self.event_id, self.workflow_type,
+                    self.workflow_execution, self.cause)
+
+
+class WorkflowTimedOutError(WorkflowError):
+    """The workflow execution was closed because a time out was exceeded.
+    """
+
+    def __init__(self, event_id, workflow_type, workflow_execution):
+        super(WorkflowTimedOutError, self).__init__(event_id, workflow_type,
+                                                    workflow_execution)
+
+
+class WorkflowTerminatedError(WorkflowError):
+    """The workflow execution was terminated.
+    """
+
+    def __init__(self, event_id, workflow_type, workflow_execution):
+        super(WorkflowTerminatedError, self).__init__(event_id, workflow_type,
+                                                      workflow_execution)
+
+
 class ChildWorkflowError(DecisionException):
     """Base class for exceptions used to report failure of child workflow
     execution. The exception contains the Ids of the child workflow execution

@@ -7,7 +7,7 @@ from awsflow import (WorkflowDefinition, execute, Return, async, activity, Threa
                       ThreadedActivityWorker, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       workflow_types, logging_filters, WorkflowStarter, workflow)
 
-from awsflow.exceptions import ActivityTaskFailedError
+from awsflow.exceptions import ActivityTaskFailedError, WorkflowFailedError
 from utils import SWFMixIn
 from various_activities import BunchOfActivities
 
@@ -56,12 +56,19 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
         worker = WorkflowWorker(
             self.endpoint, 'mydomain2', 'testlist', NoActivitiesFailureWorkflow)
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list) as starter:
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
         worker.run_once()
         time.sleep(1)
+
+        try:
+            starter.wait_for_completion(instance, 1)
+        except WorkflowFailedError as err:
+            self.assertEqual(RuntimeError, type(err.cause))
+        else:
+            self.fail("Should never succeed")
 
         hist = self.get_workflow_execution_history()
         self.assertEqual(len(hist['events']), 5)
