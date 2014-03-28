@@ -25,7 +25,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1):
                 raise Return(arg1)
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.endpoint, self.domain, self.task_list) as starter:
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -37,6 +37,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         worker.stop()
         worker.join()
         time.sleep(2)
+
+        self.assertEqual("TestExecution", starter.wait_for_completion(instance, 1))
 
         hist = self.get_workflow_execution_history()
 

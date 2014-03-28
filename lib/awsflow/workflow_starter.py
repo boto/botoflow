@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
+import time
 import logging
 
 from .context import StartWorkflowContext, get_context, set_context
@@ -51,6 +52,10 @@ class WorkflowStarter(object):
         self._start_workflow_execution_op = SWFOp(endpoint, _op)
         _op = endpoint.service.get_operation("SignalWorkflowExecution")
         self._signal_workflow_execution_op = SWFOp(endpoint, _op)
+        _op = endpoint.service.get_operation("DescribeWorkflowExecution")
+        self._describe_workflow_execution_op = SWFOp(endpoint, _op)
+        _op = endpoint.service.get_operation("GetWorkflowExecutionHistory")
+        self._get_workflow_execution_history_op = SWFOp(endpoint, _op)
 
     def __enter__(self):
         try:
@@ -59,9 +64,56 @@ class WorkflowStarter(object):
             self._other_context = None
 
         set_context(StartWorkflowContext(self))
+        return self
 
     def __exit__(self, type, value, traceback):
         set_context(self._other_context)
+
+    def wait_for_completion(self, workflow_instance, poll_time, check_count=None):
+        attempt_nr = 0
+        while check_count is None or attempt_nr < check_count:
+            time.sleep(poll_time)
+
+            execution_status, close_status = self._get_workflow_execution_status(
+                workflow_instance.workflow_execution)
+
+            if execution_status == 'OPEN':
+                continue
+
+            if close_status == 'COMPLETED':
+                return self._load_workflow_execution_result(
+                    workflow_instance.workflow_execution,
+                    workflow_instance._data_converter)
+
+    def _get_workflow_execution_status(self, workflow_execution):
+        workflow_execution = self._describe_workflow_execution_op(
+            domain=self.domain,
+            execution={'workflow_id': workflow_execution.workflow_id,
+                       'run_id': workflow_execution.run_id})
+
+
+        execution_status = workflow_execution['executionInfo']['executionStatus']
+        if execution_status != 'OPEN':
+            return execution_status, workflow_execution['executionInfo']['closeStatus']
+        return execution_status, None
+
+    def _load_workflow_execution_result(self, workflow_execution, data_converter):
+        last_event = self._get_workflow_execution_history_op(
+            domain=self.domain,
+            execution={'workflow_id': workflow_execution.workflow_id,
+                       'run_id': workflow_execution.run_id})['events'][-1]
+
+        return data_converter.loads(
+            last_event['workflowExecutionCompletedEventAttributes']['result'])
+
+    def _load_failed_workflow_execution_result(self, workflow_execution, data_converter):
+        last_event = self._get_workflow_execution_history_op(
+            domain=self.domain,
+            execution={'workflow_id': workflow_execution.workflow_id,
+                       'run_id': workflow_execution.run_id})['events'][-1]
+
+        return data_converter.loads(
+            last_event['workflowExecutionFailedEventAttributes']['details'])
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):
         """Calls SWF to start the workflow using our workflow_type"""
