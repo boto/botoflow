@@ -25,7 +25,8 @@ import logging
 from .context import StartWorkflowContext, get_context, set_context
 from .workers.swf_op_callable import SWFOp
 from .utils import random_sha1_hash
-from .exceptions import WorkflowFailedError
+from .exceptions import (
+    WorkflowFailedError, WorkflowTimedOutError, WorkflowTerminatedError)
 
 log = logging.getLogger(__name__)
 
@@ -70,12 +71,17 @@ class WorkflowStarter(object):
     def __exit__(self, type, value, traceback):
         set_context(self._other_context)
 
-    def wait_for_completion(self, workflow_instance, poll_sleep_time, attempt_nr=None):
+    def wait_for_completion(self, workflow_instance, poll_sleep_time, attempt_count=None):
+        workflow_execution = workflow_instance.workflow_execution
+        data_converter = workflow_instance._data_converter
 
-        while attempt_nr is None or attempt_nr < attempt_nr:
+        attempt_nr = 0
+        while attempt_count is None or attempt_nr < attempt_count:
+            # we sleep first since there's usually not much point in trying
+            # to check for completion right after the workflow started
             time.sleep(poll_sleep_time)
-            if attempt_nr is not None:
-                attempt_nr += 1
+
+            attempt_nr += 1
 
             execution_status, close_status, workflow_type = self._get_workflow_execution_status(
                 workflow_instance.workflow_execution)
@@ -85,12 +91,21 @@ class WorkflowStarter(object):
 
             if close_status == 'COMPLETED':
                 return self._load_workflow_execution_result(
-                    workflow_instance.workflow_execution,
-                    workflow_instance._data_converter)
+                    workflow_execution,data_converter)
+
             elif close_status == 'FAILED':
                 return self._load_failed_workflow_execution_result(
-                    workflow_instance.workflow_execution, workflow_type,
-                    workflow_instance._data_converter)
+                    workflow_execution, workflow_type, data_converter)
+
+            elif close_status == 'TIMED_OUT':
+                last_event = self._get_last_event(workflow_execution)
+
+                raise WorkflowTimedOutError(last_event['eventId'], workflow_type,
+                                            workflow_execution)
+            elif close_status == 'TERMINATED':
+                last_event = self._get_last_event(workflow_execution)
+                raise WorkflowTerminatedError(last_event['eventId'], workflow_type,
+                                              workflow_execution)
 
     def _get_workflow_execution_status(self, workflow_execution):
         workflow_execution = self._describe_workflow_execution_op(
@@ -106,20 +121,14 @@ class WorkflowStarter(object):
         return execution_status, None, workflow_execution['executionInfo']['workflowType']
 
     def _load_workflow_execution_result(self, workflow_execution, data_converter):
-        last_event = self._get_workflow_execution_history_op(
-            domain=self.domain,
-            execution={'workflow_id': workflow_execution.workflow_id,
-                       'run_id': workflow_execution.run_id})['events'][-1]
+        last_event = self._get_last_event(workflow_execution)
 
         return data_converter.loads(
             last_event['workflowExecutionCompletedEventAttributes']['result'])
 
     def _load_failed_workflow_execution_result(self, workflow_execution, workflow_type,
                                                data_converter):
-        last_event = self._get_workflow_execution_history_op(
-            domain=self.domain,
-            execution={'workflow_id': workflow_execution.workflow_id,
-                       'run_id': workflow_execution.run_id})['events'][-1]
+        last_event = self._get_last_event(workflow_execution)
 
         exc, traceback = data_converter.loads(
             last_event['workflowExecutionFailedEventAttributes']['details'])
@@ -128,6 +137,13 @@ class WorkflowStarter(object):
         raise WorkflowFailedError(last_event['eventId'],
                                   (workflow_type['name'], workflow_type['version']),
                                   workflow_execution, exc, traceback)
+
+    def _get_last_event(self, workflow_execution):
+        last_event = self._get_workflow_execution_history_op(
+            domain=self.domain,
+            execution={'workflow_id': workflow_execution.workflow_id,
+                       'run_id': workflow_execution.run_id})['events'][-1]
+        return last_event
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):
         """Calls SWF to start the workflow using our workflow_type"""
