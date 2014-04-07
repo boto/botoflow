@@ -3,7 +3,7 @@ import logging
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, Return, async, activity, ThreadedWorkflowWorker,
+from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowWorker,
                       ThreadedActivityWorker, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       workflow_types, logging_filters, WorkflowStarter, workflow)
 
@@ -23,7 +23,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         class NoActivitiesWorkflow(WorkflowDefinition):
             @execute(version='1.2', execution_start_to_close_timeout=60)
             def execute(self, arg1):
-                raise Return(arg1)
+                return_(arg1)
 
         with WorkflowStarter(self.endpoint, self.domain, self.task_list) as starter:
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
@@ -82,7 +82,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             @execute(version='1.2', execution_start_to_close_timeout=60)
             def execute(self, arg1):
                 self.workflow_state = "Workflow Started"
-                raise Return(arg1)
+                return_(arg1)
 
         worker = ThreadedWorkflowWorker(
             self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow)
@@ -115,7 +115,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, arg1, arg2):
                 arg_sum = yield self.activities_client.sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityWorkflow)
@@ -148,7 +148,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 mytime = workflow_time.time()
                 yield BunchOfActivities.sum(arg1, arg2)
-                raise Return([mytime, workflow_time.time()])
+                return_([mytime, workflow_time.time()])
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityTimedWorkflow)
@@ -180,7 +180,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 # create an activity call dynamically
                 sum = workflow_types.ActivityType('1.1', name='BunchOfActivities.sum')
                 arg_sum = yield sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityTimedWorkflow)
@@ -209,7 +209,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 with activity_options(start_to_close_timeout=66):
                     arg_sum = yield BunchOfActivities.sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityWorkflow)
@@ -239,7 +239,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 yield workflow_time.sleep(2)
                 arg_sum = yield self.activities_client.sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityWithTimerWorkflow)
@@ -278,7 +278,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, arg1, arg2):
                 arg_sum = yield OneActivityCustomTaskList.sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list,
@@ -328,10 +328,10 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                             arg_sum += yield BunchOfActivities.sum(arg1, arg2)
                     finally:
                         arg_sum += yield BunchOfActivities.sum(arg1, arg2)
-                        raise Return(arg_sum)
+                        return_(arg_sum)
 
                 result = yield do_try_except()
-                raise Return(result)
+                return_(result)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, TryExceptFinallyWorkflow)
@@ -375,7 +375,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                     yield workflow_time.sleep(1)
 
                 result = yield do_try_except()
-                raise Return(result)
+                return_(result)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, TryExceptFinallyWorkflow)
@@ -407,7 +407,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 arg_sum = yield BunchOfActivities.sum(arg1, arg2)
                 arg_mul = yield BunchOfActivities.mul(arg1, arg2)
-                raise Return((arg_sum, arg_mul))
+                return_((arg_sum, arg_mul))
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, BunchOfActivitiesWorkflow)
@@ -439,7 +439,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, repeat, arg1):
                 for i in range(repeat):
                     yield BunchOfActivities.sum(i, arg1)
-                raise Return(repeat)
+                return_(repeat)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, NextPageTokenWorkflow)
@@ -475,7 +475,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 sum_future = BunchOfActivities.sum(arg1, arg2)
                 mul_future = BunchOfActivities.mul(arg1, arg2)
                 result = yield sum_future, mul_future
-                raise Return(result)
+                return_(result)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, AllFutureWorkflow)
@@ -517,7 +517,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 sleep1_future = SleepingActivities.sleep(arg1)
                 sleep2_future = SleepingActivities.sleep(arg2)
                 result = yield sleep1_future | sleep2_future
-                raise Return(result)
+                return_(result)
 
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, AnyFutureWorkflow)

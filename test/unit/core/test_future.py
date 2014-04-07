@@ -3,7 +3,7 @@ import logging
 
 from awsflow.core.async_event_loop import AsyncEventLoop
 from awsflow.core.decorators import async
-from awsflow.core.base_future import BaseFuture, Return
+from awsflow.core.base_future import BaseFuture, return_
 from awsflow.core.future import AllFuture, AnyFuture
 from awsflow.core.exceptions import CancellationError
 from awsflow.logging_filters import AWSFlowFilter
@@ -120,7 +120,7 @@ class TestAsync(unittest.TestCase):
         @async
         def returns():
             if False: yield
-            raise Return(1)
+            return_(1)
 
         @async
         def count_generator():
@@ -141,7 +141,7 @@ class TestAsync(unittest.TestCase):
     def test_raise_return(self):
         @async
         def returns():
-            raise Return("result")
+            return_("result")
 
         @async
         def main():

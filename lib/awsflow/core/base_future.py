@@ -43,6 +43,13 @@ class Return(BaseException):
         BaseException.__init__(self, *args)
 
 
+def return_(*args):
+    """
+    This mimics the semantics of PEP-380 (see Return for more details)
+    """
+    raise Return(*args)
+
+
 class BaseFuture(object):
     """
     This class mimics the BaseFuture from PEP-3148. It is not exactly same and

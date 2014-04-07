@@ -4,7 +4,7 @@ import time
 import unittest
 
 from awsflow import (workflow_time, WorkflowDefinition, WorkflowWorker,
-                     signal, execute, Return, WorkflowStarter,
+                     signal, execute, return_, WorkflowStarter,
                      Future)
 from awsflow.logging_filters import AWSFlowFilter
 from utils import SWFMixIn
@@ -24,7 +24,7 @@ class SignalledWorkflow(WorkflowDefinition):
     @execute(version='1.0', execution_start_to_close_timeout=60)
     def execute(self):
         yield workflow_time.sleep(4)
-        raise Return(self.msg)
+        return_(self.msg)
 
     @signal()
     def signal(self, msg):
@@ -45,7 +45,7 @@ class SignalledManyInputWorkflow(WorkflowDefinition):
             # reset the future
             self._wait_for_signal = Future()
 
-        raise Return(result)
+        return_(result)
 
     @signal()
     def add_data(self, input):

@@ -3,7 +3,7 @@ import logging
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, Return, WorkflowWorker,
+from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
                       ActivityWorker, WorkflowStarter)
 from awsflow.exceptions import ChildWorkflowTimedOutError
 from awsflow.logging_filters import AWSFlowFilter
@@ -22,13 +22,13 @@ class MasterWorkflow(WorkflowDefinition):
     def execute(self, arg1, arg2):
         instance = yield ChildWorkflow.execute(arg1, arg2)
         arg_sum = yield instance.workflow_result
-        raise Return(arg_sum)
+        return_(arg_sum)
 
 class ChildWorkflow(WorkflowDefinition):
     @execute(version='1.2', execution_start_to_close_timeout=60)
     def execute(self, arg1, arg2):
         arg_sum = yield BunchOfActivities.sum(arg1, arg2)
-        raise Return(arg_sum)
+        return_(arg_sum)
 
 
 class TimingOutMasterWorkflow(WorkflowDefinition):
@@ -38,8 +38,8 @@ class TimingOutMasterWorkflow(WorkflowDefinition):
             instance = yield TimingOutChildWorkflow.execute()
             yield instance.workflow_result
         except ChildWorkflowTimedOutError:
-            raise Return(1)
-        raise Return(2)
+            return_(1)
+        return_(2)
 
 
 class TimingOutChildWorkflow(WorkflowDefinition):

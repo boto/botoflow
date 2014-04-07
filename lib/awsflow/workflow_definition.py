@@ -104,7 +104,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
                 result = yield MyActivities.activity1(some_input)
 
                 # return the result from the workflow
-                raise Return(result)
+                return_(result)
 
             @signal()  # has to have () parentheses
             def signal1(self, signal_input):

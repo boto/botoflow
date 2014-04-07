@@ -34,7 +34,7 @@ class activity_options(object):
                 # context
                 with activity_options(start_to_close_timeout=2*MINUTES):
                     arg_sum = yield BunchOfActivities.sum(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
     """
 
     keys = frozenset(('version', 'name', 'heartbeat_timeout',
@@ -80,7 +80,7 @@ class workflow_options(object):
                 # starting this child workflow
                 with workflow_options(execution_start_to_close_timeout=4*MINUTES):
                     arg_sum = yield ChildWorkflow.execute(arg1, arg2)
-                raise Return(arg_sum)
+                return_(arg_sum)
     """
     keys = frozenset(('workflow_id', 'version',
                       'execution_start_to_close_timeout', 'task_list',

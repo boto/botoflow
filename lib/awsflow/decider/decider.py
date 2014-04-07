@@ -20,7 +20,7 @@ import six
 
 from ..context import get_context, set_context, DecisionContext
 from ..workflow_execution import WorkflowExecution
-from ..core import async, async_traceback, Future, Return, AsyncEventLoop
+from ..core import async, async_traceback, Future, return_, AsyncEventLoop
 from ..utils import pairwise
 from ..constants import USE_WORKER_TASK_LIST
 
@@ -461,7 +461,7 @@ class Decider(object):
             try:
                 result = yield activity_future
             # XXX handle CancellationError
-                raise Return(result)
+                return_(result)
             except GeneratorExit:
                 pass
 
@@ -498,7 +498,7 @@ class Decider(object):
         def wait_workflow_start():
             try:
                 _workflow_instance = yield workflow_started_future
-                raise Return(_workflow_instance)
+                return_(_workflow_instance)
             except GeneratorExit:
                 pass
 
@@ -507,7 +507,7 @@ class Decider(object):
             try:
                 result = yield workflow_future
             # XXX handle CancellationError
-                raise Return(result)
+                return_(result)
             except GeneratorExit:
                 pass
 

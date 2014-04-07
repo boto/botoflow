@@ -14,6 +14,6 @@
 from .decorators import async, async_daemon, task, daemon_task
 from .async_event_loop import AsyncEventLoop
 from .async_context import get_async_context
-from .base_future import BaseFuture, Return
+from .base_future import BaseFuture, Return, return_
 from .future import Future, AnyFuture, AllFuture
 from .exceptions import CancelledError
