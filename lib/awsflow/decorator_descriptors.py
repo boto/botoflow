@@ -16,6 +16,7 @@
 import functools
 from .context import get_context, StartWorkflowContext, DecisionContext
 from .core import async
+from .test import WorkflowTestingContext
 
 
 class SignalFunc(object):
@@ -77,6 +78,16 @@ class ActivityFunc(object):
         if isinstance(context, DecisionContext):
             # activity_type is callable, so no worries
             return activity_type
+        elif isinstance(context, WorkflowTestingContext):
+            # when you're unit-testing the workflow bits, you should not be
+            # calling the activities, ever (it won't work and
+            # produce a confusing message). Instead, we set the context to
+            # WorkflowTestingContext during the test and if an activity is
+            # called, we raise a better worded exception here.
+            raise NotImplementedError(
+                "Activity {0} must be stubbed/mocked when unit-testing "
+                "decider. You cannot run actual activities when testing "
+                "WorkflowDefinition/@async methods".format(activity_type.name))
 
         if instance is None:
             return self.func

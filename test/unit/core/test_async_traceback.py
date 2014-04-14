@@ -1,5 +1,6 @@
 import unittest
 import logging
+import pytest
 
 import six
 
@@ -11,6 +12,8 @@ from awsflow.logging_filters import AWSFlowFilter
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
 logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+
+pytestmark = pytest.mark.usefixtures('core_debug')
 
 
 class TestTraceback(unittest.TestCase):

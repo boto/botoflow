@@ -206,3 +206,21 @@ class BaseFuture(object):
                      self._state)
         raise RuntimeError("%s at %s in unexpected state: %s" % (
             self.__class__.__name__, hex(id(self)), self._state))
+
+    @classmethod
+    def with_result(cls, result):
+        future = cls()
+        future.set_result(result)
+        return future
+
+    @classmethod
+    def with_exception(cls, exception, traceback=None):
+        future = cls()
+        future.set_exception(exception, traceback)
+        return future
+
+    @classmethod
+    def with_cancel(cls):
+        future = cls()
+        future.cancel()
+        return future

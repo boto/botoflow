@@ -89,14 +89,6 @@ class AsyncDecorator(object):
             return
         future.set_exception(err)
 
-    def do_except(self, except_func):
-        self._except_func = [except_func]
-        return self
-
-    def do_finally(self, finally_func):
-        self._finally_func = [finally_func]
-        return self
-
     def __get__(self, instance, cls):
         """
         Follow the descriptor protocol to allow @async methods in objects
@@ -141,7 +133,6 @@ class AsyncDecorator(object):
 
         future.set_running_or_notify_cancel()
         return future
-
 
 
 def _async(daemon=False):

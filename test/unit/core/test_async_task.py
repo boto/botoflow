@@ -1,5 +1,6 @@
 import unittest
 import logging
+import pytest
 
 from awsflow.core.async_event_loop import AsyncEventLoop
 from awsflow.core.async_task import AsyncTask
@@ -11,6 +12,8 @@ from awsflow.logging_filters import AWSFlowFilter
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
 logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+
+pytestmark = pytest.mark.usefixtures('core_debug')
 
 
 class TestTask(unittest.TestCase):

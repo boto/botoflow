@@ -1,12 +1,10 @@
-import unittest
-
+import pytest
 from awsflow.core import async_event_loop
 
-class TestEventLoop(unittest.TestCase):
+pytestmark = pytest.mark.usefixtures('core_debug')
 
-    def test_smoke(self):
-        ev = async_event_loop.AsyncEventLoop()
-        self.assertFalse(ev.execute_all_tasks())
 
-if __name__ == '__main__':
-    unittest.main()
+def test_smoke():
+    ev = async_event_loop.AsyncEventLoop()
+    assert None == ev.execute_all_tasks()
+
