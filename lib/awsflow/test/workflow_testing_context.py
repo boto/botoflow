@@ -9,7 +9,10 @@ class WorkflowTestingContext(ContextBase):
         self._event_loop = AsyncEventLoop()
 
     def __enter__(self):
-        self._context = self.get_context()
+        try:
+            self._context = self.get_context()
+        except AttributeError:
+            self._context = None
         self.set_context(self)
         self._event_loop.__enter__()
 
