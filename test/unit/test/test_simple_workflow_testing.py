@@ -1,7 +1,7 @@
 import pytest
 from mock import patch
 
-from awsflow import WorkflowDefinition, execute, activities, activity, return_, Future
+from awsflow import WorkflowDefinition, execute, activities, activity, return_, Future, async
 from awsflow.test.workflow_testing_context import WorkflowTestingContext
 
 
@@ -33,6 +33,15 @@ class SimpleWorkflow(WorkflowDefinition):
 
         return_(retval)
 
+    @async
+    def sync_method(self, x, y):
+        return_(x+y)
+
+    @async
+    def async_method(self, x, y):
+        result = yield BunchOfActivities.sum(x, y)
+        return_(result)
+
 
 def test_simple_workflow_testing():
     with patch.object(BunchOfActivities, 'sum', return_value=Future.with_result(3)), \
@@ -49,3 +58,16 @@ def test_activity_not_stubbed_exception():
 
     assert NotImplementedError == type(result.exception())
     assert "Activity BunchOfActivities.sum must be stubbed" in repr(result.exception())
+
+
+def test_sync_method():
+    with WorkflowTestingContext():
+        result = SimpleWorkflow(None).sync_method(1, 2)
+    assert 3 == result.result()
+
+
+@patch.object(BunchOfActivities, 'sum', return_value=Future.with_result(3))
+def test_async_method(m_sum):
+    with WorkflowTestingContext():
+        result = SimpleWorkflow(None).async_method(1, 2)
+    assert 3 == result.result()
