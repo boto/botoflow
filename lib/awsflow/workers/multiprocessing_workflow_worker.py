@@ -19,13 +19,12 @@ import logging
 
 from ..core import async_traceback
 
-from .workflow_worker import WorkflowWorker
-from .multiprocessing_worker import MultiprocessingWorker
+from .multiprocessing_worker import MultiprocessingExecutor
 
 log = logging.getLogger(__name__)
 
 
-class MultiprocessingWorkflowWorker(WorkflowWorker, MultiprocessingWorker):
+class MultiprocessingWorkflowExecutor(MultiprocessingExecutor):
     """This is a multiprocessing workflow worker, suitable for handling lots of
     workflow decisions in parallel on CPython.
     """
@@ -50,43 +49,43 @@ class MultiprocessingWorkflowWorker(WorkflowWorker, MultiprocessingWorker):
         if pollers < 1:
             raise ValueError("pollers count must be greater than 0")
 
-        super(MultiprocessingWorkflowWorker, self).start()
+        super(MultiprocessingWorkflowExecutor, self).start()
 
         start_condition = self._process_manager().Condition()
 
-        def run_decider(worker):
-            worker._process_queue.get()
+        def run_decider(executor):
+            executor._process_queue.get()
             # ignore any SIGINT, so it looks closer to threading
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
             process = multiprocessing.current_process()
             log.debug("Poller/decider %s started", process.name)
 
-            while worker._worker_shutdown.empty():
+            while executor._worker_shutdown.empty():
                 with start_condition:
                     start_condition.notify_all()
                 try:
-                    worker.run_once()
+                    executor._worker.run_once()
 
                 except Exception as err:
                     tb_list = async_traceback.extract_tb()
-                    handler = worker.unhandled_exception_handler
+                    handler = executor._worker.unhandled_exception_handler
                     handler(err, tb_list)
 
-        def run_decider_with_exc(worker_pickle):
-            worker = pickle.loads(worker_pickle)
+        def run_decider_with_exc(executor_pickle):
+            executor = pickle.loads(executor_pickle)
             initializer = self.initializer
-            initializer(worker)
+            initializer(executor)
             try:
-                run_decider(worker)
+                run_decider(executor)
             except Exception as err:
                 tb_list = async_traceback.extract_tb()
-                handler = worker.unhandled_exception_handler
+                handler = executor._worker.unhandled_exception_handler
                 handler(err, tb_list)
             finally:
                 process = multiprocessing.current_process()
                 log.debug("Poller/decider %s terminating", process.name)
-                worker._process_queue.task_done()
+                executor._process_queue.task_done()
 
         for i in range(pollers):
             with start_condition:

@@ -50,13 +50,13 @@ log = logging.getLogger(__name__)
 
 class Decider(object):
 
-    def __init__(self, worker, domain, task_list, workflows, identity,
+    def __init__(self, worker, domain, task_list, get_workflow, identity,
                  _Poller=DecisionTaskPoller):
         self.worker = worker
         self.domain = domain
         self.task_list = task_list
         self.identity = identity
-        self.workflows = workflows
+        self.get_workflow = get_workflow
 
         self._poller = _Poller(worker, domain, task_list, identity)
 
@@ -376,8 +376,7 @@ class Decider(object):
         workflow_version = event.attributes['workflowType']['version']
 
         # find the workflow class based ont the event information
-        workflow_definition, workflow_type, func_name = self.workflows[
-            (workflow_name, workflow_version)]
+        workflow_definition, workflow_type, func_name = self.get_workflow(workflow_name, workflow_version)
 
         # instantiate workflow
 

@@ -138,7 +138,7 @@ class ActivityWorker(BaseWorker):
                 log.debug("Activity '%s %s' already registered",
                           activity_type.name, activity_type.version)
 
-    def _poll_for_activities(self):
+    def poll_for_activities(self):
         """
         Returns a closure function ready for execution
         """
@@ -214,6 +214,6 @@ class ActivityWorker(BaseWorker):
     def run_once(self):
         """Run this worker once (perform one decision loop).
         """
-        process_activity = self._poll_for_activities()
+        process_activity = self.poll_for_activities()
         if process_activity is not None:
             process_activity()

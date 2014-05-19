@@ -3,8 +3,8 @@ import logging
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowWorker,
-                      ThreadedActivityWorker, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
+from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
+                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       workflow_types, logging_filters, WorkflowStarter, workflow)
 
 from awsflow.exceptions import ActivityTaskFailedError, WorkflowFailedError
@@ -30,9 +30,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             self.workflow_execution = instance.workflow_execution
 
         # start + stop should run the worker's Decider once
-        worker = ThreadedWorkflowWorker(
+        worker = ThreadedWorkflowExecutor(WorkflowWorker(
             self.endpoint, self.domain, self.task_list,
-            NoActivitiesWorkflow)
+            NoActivitiesWorkflow))
         worker.start()
         worker.stop()
         worker.join()
@@ -84,8 +84,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 self.workflow_state = "Workflow Started"
                 return_(arg1)
 
-        worker = ThreadedWorkflowWorker(
-            self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow)
+        worker = ThreadedWorkflowExecutor(WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow))
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
@@ -120,8 +120,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         wf_worker = WorkflowWorker(
             self.endpoint, self.domain, self.task_list, OneActivityWorkflow)
 
-        act_worker = ThreadedActivityWorker(
-            self.endpoint, self.domain, self.task_list, BunchOfActivities())
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.endpoint, self.domain, self.task_list, BunchOfActivities()))
 
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
@@ -284,9 +284,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             self.endpoint, self.domain, self.task_list,
             OneActivityDefaultTaskListWorkflow)
 
-        act_worker = ThreadedActivityWorker(
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
             self.endpoint, self.domain, 'abracadabra',
-            OneActivityCustomTaskList())
+            OneActivityCustomTaskList()))
 
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = OneActivityDefaultTaskListWorkflow.execute(

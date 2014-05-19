@@ -40,8 +40,11 @@ class _ProcessManager(object):
 process_manager = _ProcessManager().process_manager
 
 
-class MultiprocessingWorker(object):
+class MultiprocessingExecutor(object):
     """A base/mixin for all multiprocessing workers"""
+
+    def __init__(self, worker):
+        self._worker = worker
 
     def start(self):
         """Start the worker. This method does not block."""

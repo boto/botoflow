@@ -16,14 +16,13 @@ import logging
 
 from ..core import async_traceback
 
-from .threaded_worker import ThreadedWorker
-from .workflow_worker import WorkflowWorker
+from .threaded_worker import ThreadedExecutor
 
 log = logging.getLogger(__name__)
 
 
-class ThreadedWorkflowWorker(WorkflowWorker, ThreadedWorker):
-    """This is a threaded workflow worker
+class ThreadedWorkflowExecutor (ThreadedExecutor):
+    """This is a threaded workflow worker executor
 
     As in the case with the :py:class:`~.ThreadedActivityWorker` it is not
     recomended to use it on CPython because of the GIL unless the poller/worker
@@ -50,7 +49,7 @@ class ThreadedWorkflowWorker(WorkflowWorker, ThreadedWorker):
         if pollers < 1:
             raise ValueError("poller_threads count must be greater than 0")
 
-        super(ThreadedWorkflowWorker, self).start()
+        super(ThreadedWorkflowExecutor, self).start()
 
         start_condition = threading.Condition()
 
@@ -65,10 +64,10 @@ class ThreadedWorkflowWorker(WorkflowWorker, ThreadedWorker):
                 while not self._worker_shutdown:
                     with start_condition:
                         start_condition.notifyAll()
-                    self.run_once()
+                    self._worker.run_once()
             except Exception as err:
                 tb_list = async_traceback.extract_tb()
-                handler = self.unhandled_exception_handler
+                handler = self._worker.unhandled_exception_handler
                 handler(err, tb_list)
             finally:
                 log.debug("Poller/decider %s terminating", thread.name)

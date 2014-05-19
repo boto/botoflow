@@ -28,7 +28,8 @@ if not hasattr(requests.sessions.Session, '__attrs__'):
 
 
 from awsflow import (
-    MultiprocessingActivityWorker, MultiprocessingWorkflowWorker, WorkflowStarter)
+    MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, WorkflowStarter,
+    WorkflowWorker, ActivityWorker)
 from awsflow.logging_filters import AWSFlowFilter
 from multiprocessing_workflows import (
     NoActivitiesWorkflow, NoActivitiesFailureWorkflow, OneActivityWorkflow)
@@ -45,8 +46,8 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
 
     def test_no_activities(self):
 
-        worker = MultiprocessingWorkflowWorker(
-            self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow)
+        worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow))
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
@@ -65,8 +66,8 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
 
     def test_no_activities_failure(self):
 
-        worker = MultiprocessingWorkflowWorker(
-            self.endpoint, self.domain, self.task_list, NoActivitiesFailureWorkflow)
+        worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, NoActivitiesFailureWorkflow))
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
@@ -84,11 +85,11 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
                          "ExecutionFailed")
 
     def test_one_activity(self):
-        wf_worker = MultiprocessingWorkflowWorker(
-            self.endpoint, self.domain, self.task_list, OneActivityWorkflow)
+        wf_worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
+            self.endpoint, self.domain, self.task_list, OneActivityWorkflow))
 
-        act_worker = MultiprocessingActivityWorker(
-            self.endpoint, self.domain, self.task_list, BunchOfActivities())
+        act_worker = MultiprocessingActivityExecutor(ActivityWorker(
+            self.endpoint, self.domain, self.task_list, BunchOfActivities()))
 
         with WorkflowStarter(self.endpoint, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)

@@ -13,9 +13,9 @@
 
 from .core import async, Return, return_, Future
 from .context import get_context, set_context
-from .workers import (WorkflowWorker, ActivityWorker, ThreadedWorkflowWorker,
-                      ThreadedActivityWorker, MultiprocessingWorkflowWorker,
-                      MultiprocessingActivityWorker)
+from .workers import (GenericWorkflowWorker, WorkflowWorker, ActivityWorker, 
+                      ThreadedWorkflowExecutor, ThreadedActivityExecutor, 
+                      MultiprocessingWorkflowExecutor, MultiprocessingActivityExecutor)
 from .decorators import workflow, execute, activity, activities, signal
 from .options import workflow_options, activity_options
 from .workflow_definition import WorkflowDefinition

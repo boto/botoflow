@@ -17,7 +17,11 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ThreadedWorker(object):
+class ThreadedExecutor(object):
+    """This will execute a worker using multiple threads."""
+
+    def __init__(self, worker):
+        self._worker = worker
 
     def start(self):
         """Start the worker. This method does not block."""

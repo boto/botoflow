@@ -11,9 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from .workflow_worker import WorkflowWorker
+from .workflow_worker import WorkflowWorker, GenericWorkflowWorker
 from .activity_worker import ActivityWorker
-from .threaded_workflow_worker import ThreadedWorkflowWorker
-from .threaded_activity_worker import ThreadedActivityWorker
-from .multiprocessing_workflow_worker import MultiprocessingWorkflowWorker
-from .multiprocessing_activity_worker import MultiprocessingActivityWorker
+from .threaded_workflow_worker import ThreadedWorkflowExecutor
+from .threaded_activity_worker import ThreadedActivityExecutor
+from .multiprocessing_workflow_worker import MultiprocessingWorkflowExecutor
+from .multiprocessing_activity_worker import MultiprocessingActivityExecutor

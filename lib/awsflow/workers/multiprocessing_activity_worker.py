@@ -18,14 +18,13 @@ import pickle
 import signal
 import logging
 
-from .activity_worker import ActivityWorker
-from .multiprocessing_worker import MultiprocessingWorker
+from .multiprocessing_worker import MultiprocessingExecutor
 
 log = logging.getLogger(__name__)
 
 
-class MultiprocessingActivityWorker(ActivityWorker, MultiprocessingWorker):
-    """This is an :py:class:`~.ActivityWorker` that uses multiple processes to
+class MultiprocessingActivityExecutor(MultiprocessingExecutor):
+    """This is an executor for :py:class:`~.ActivityWorker` that uses multiple processes to
     parallelize the activity work.
 
     """
@@ -45,47 +44,47 @@ class MultiprocessingActivityWorker(ActivityWorker, MultiprocessingWorker):
             raise ValueError("pollers must be less or equal to "
                              "workers")
 
-        super(MultiprocessingActivityWorker, self).start()
+        super(MultiprocessingActivityExecutor, self).start()
 
         # we use this semaphore to ensure we have at most poller_tasks running
         poller_semaphore = self._process_manager().Semaphore(pollers)
 
-        def run_poller_worker_with_exc(worker_pickle):
+        def run_poller_worker_with_exc(executor_pickle):
             try:
-                worker = pickle.loads(worker_pickle)
-                worker._process_queue.get()
+                executor = pickle.loads(executor_pickle)
+                executor._process_queue.get()
                 # ignore any SIGINT, so it looks closer to threading
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
-                run_poller_worker(worker)
+                run_poller_worker(executor)
             except Exception as err:
                 _, _, tb = sys.exc_info()
                 tb_list = traceback.extract_tb(tb)
-                handler = worker.unhandled_exception_handler
+                handler = executor.unhandled_exception_handler
                 handler(err, tb_list)
             finally:
                 process = multiprocessing.current_process()
-                log.debug("Poller/worker %s terminating", process.name)
-                worker._process_queue.task_done()
+                log.debug("Poller/executor %s terminating", process.name)
+                executor._process_queue.task_done()
 
-        def run_poller_worker(worker):
+        def run_poller_worker(executor):
             process = multiprocessing.current_process()
-            log.debug("Poller/worker %s started", process.name)
+            log.debug("Poller/executor %s started", process.name)
             initializer = self.initializer
-            initializer(worker)
-            while worker._worker_shutdown.empty():
+            initializer(executor)
+            while executor._worker_shutdown.empty():
                 work_callable = None
                 with poller_semaphore:
 
                     while work_callable is None:
                         # make sure that after we wake up we're still relevant
-                        if not worker._worker_shutdown.empty():
+                        if not executor._worker_shutdown.empty():
                             return
                         try:
-                            work_callable = worker._poll_for_activities()
+                            work_callable = executor._worker.poll_for_activities()
                         except Exception as err:
                             _, _, tb = sys.exc_info()
                             tb_list = traceback.extract_tb(tb)
-                            handler = worker.unhandled_exception_handler
+                            handler = executor._worker.unhandled_exception_handler
                             handler(err, tb_list)
 
                 try:
@@ -93,7 +92,7 @@ class MultiprocessingActivityWorker(ActivityWorker, MultiprocessingWorker):
                 except Exception as err:
                     _, _, tb = sys.exc_info()
                     tb_list = traceback.extract_tb(tb)
-                    handler = worker.unhandled_exception_handler
+                    handler = executor._worker.unhandled_exception_handler
                     handler(err, tb_list)
 
         for i in range(workers):

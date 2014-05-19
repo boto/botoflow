@@ -16,14 +16,13 @@ import threading
 import traceback
 import logging
 
-from .threaded_worker import ThreadedWorker
-from .activity_worker import ActivityWorker
+from .threaded_worker import ThreadedExecutor
 
 log = logging.getLogger(__name__)
 
 
-class ThreadedActivityWorker(ActivityWorker, ThreadedWorker):
-    """This is an :py:class:`~.ActivityWorker` that uses threads to parallelize
+class ThreadedActivityExecutor (ThreadedExecutor):
+    """This is an executor for :py:class:`~.ActivityWorker` that uses threads to parallelize
     the activity work.
 
     Because of the GIL in CPython, it is recomended to use this worker only on
@@ -45,7 +44,7 @@ class ThreadedActivityWorker(ActivityWorker, ThreadedWorker):
             raise ValueError("poller_thread must be less or equal to "
                              "worker_threads")
 
-        super(ThreadedActivityWorker, self).start()
+        super(ThreadedActivityExecutor, self).start()
 
         # we use this semaphore to ensure we have at most poller_tasks running
         poller_semaphore = threading.Semaphore(pollers)
@@ -64,13 +63,13 @@ class ThreadedActivityWorker(ActivityWorker, ThreadedWorker):
                             # relevant
                             if self._worker_shutdown:
                                 return
-                            work_callable = self._poll_for_activities()
+                            work_callable = self._worker.poll_for_activities()
                     work_callable()
 
             except Exception as err:
                 _, _, tb = sys.exc_info()
                 tb_list = traceback.extract_tb(tb)
-                handler = self.unhandled_exception_handler
+                handler = self._worker.unhandled_exception_handler
                 handler(err, tb_list)
             finally:
                 log.debug("Poller/worker %s terminating", thread.name)
