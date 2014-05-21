@@ -373,6 +373,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                                 raise RuntimeError("Test Failed")
                             arg_sum += yield BunchOfActivities.sum(arg1, arg2)
                     yield workflow_time.sleep(1)
+                    return_(arg_sum)
 
                 result = yield do_try_except()
                 return_(result)
@@ -390,6 +391,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             wf_worker.run_once()
             act_worker.run_once()
 
+        # Once for the timer
+        wf_worker.run_once()
+        # Once for the completion
         wf_worker.run_once()
         time.sleep(1)
 
@@ -397,7 +401,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist['events']), 28)
         self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 9)
+            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 6)
 
 
     def test_two_activities(self):
