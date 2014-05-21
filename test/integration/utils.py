@@ -1,16 +1,21 @@
+import sys
+import pytest
 from botocore import session
 
 from awsflow.data_converter import JSONDataConverter
 
-
 class SWFMixIn(object):
+    @pytest.fixture(autouse=True)
+    def add_test_args(self, integration_test_args):
+        self.test_args = integration_test_args
+        sys.stderr.write("Called add_test_args")
 
     def setUp(self):
         self.endpoint = session.get_session() \
                                .get_service('swf') \
-                               .get_endpoint('us-east-1')
-        self.domain = 'mydomain2'
-        self.task_list = 'testlist'
+                               .get_endpoint(self.test_args['region'])
+        self.domain = self.test_args['domain']
+        self.task_list = self.test_args['tasklist']
         self.workflow_execution = None
         self.workflow_executions = []
         self.serializer = JSONDataConverter()
