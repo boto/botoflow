@@ -86,7 +86,8 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
 
         wf_worker.run_once()
         time.sleep(3)
-        wf_worker.run_once()
+        for i in range(2):
+            wf_worker.run_once()
 
         time.sleep(1)
 
