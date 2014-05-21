@@ -55,7 +55,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 raise RuntimeError("ExecutionFailed")
 
         worker = WorkflowWorker(
-            self.endpoint, 'mydomain2', 'testlist', NoActivitiesFailureWorkflow)
+            self.endpoint, self.domain, self.task_list, NoActivitiesFailureWorkflow)
         with WorkflowStarter(self.endpoint, self.domain, self.task_list) as starter:
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
