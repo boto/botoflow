@@ -1,14 +1,16 @@
-import sys
+import logging
+
 import pytest
 from botocore import session
 
 from awsflow.data_converter import JSONDataConverter
 
+log = logging.getLogger(__name__)
+
 class SWFMixIn(object):
     @pytest.fixture(autouse=True)
     def add_test_args(self, integration_test_args):
         self.test_args = integration_test_args
-        sys.stderr.write("Called add_test_args")
 
     def setUp(self):
         self.endpoint = session.get_session() \
@@ -29,11 +31,16 @@ class SWFMixIn(object):
 
     def _terminate_workflow(self, workflow_execution):
         try:
-            self.swf_client.terminate_workflow_execution(
-                self.domain, self.workflow_execution.workflow_id,
-                run_id=self.workflow_execution.run_id)
+            op = self.endpoint.service.get_operation('TerminateWorkflowExecution')
+            op.call(self.endpoint,
+                    child_policy='TERMINATE',
+                    domain=self.domain,
+                    run_id=workflow_execution.run_id,
+                    workflow_id=workflow_execution.workflow_id,
+                    reason='Test Teardown',
+                    )
         except Exception:
-            pass
+            log.debug("Caught Error trying to terminate workflow:", exc_info=True) 
 
     def get_workflow_execution_history(self, workflow_id=None, run_id=None,
                                        next_page_token=None):
