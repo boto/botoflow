@@ -88,16 +88,13 @@ class GenericWorkflowWorker(BaseWorker):
     
     def __setstate__(self, newdict):
         self.__dict__ = newdict
-        self._setup_post_setstate()
+        self._setup()
 
     def _setup(self):
         get_workflow = self._get_workflow_finder()
         self._decider = Decider(self, self.domain, self.task_list,
                                 get_workflow, self.identity)
     
-    #These are the same here, but may be different in children
-    _setup_post_setstate = _setup
-
     def _get_workflow_finder(self):
         return self._get_workflow
 
@@ -168,37 +165,25 @@ class WorkflowWorker(GenericWorkflowWorker):
         self._workflow_definitions = workflow_definitions
 
         super(WorkflowWorker, self).__init__(endpoint, domain, task_list, None)
+
+        self._register_all_workflows()
     
     def __getstate__(self):
         newdict = super(WorkflowWorker, self).__getstate__()
         del newdict['_workflows']
         return newdict
 
-    def _setup(self):
+    def _register_all_workflows(self):
+        if not getattr(self, '_workflows', None):
+            self._setup_workflow_definitions()
 
-        self._setup_workflow_definitions()
-
-        return super(WorkflowWorker, self)._setup()
-
-    def _setup_post_setstate(self):
-        # register=False as we're assuming the object was already created
-        self._setup_workflow_definitions(register=False)
-
-        super(WorkflowWorker, self)._setup_post_setstate()
-
-    def _setup_workflow_definitions(self, register=True):
-        log.debug("WorkflowWorker._setup_workflows(register={})".format(register))
-        self._workflows = extract_workflows_dict(self._workflow_definitions)
-
-        if log.isEnabledFor(logging.DEBUG):
-            for _, workflow_type, _ in six.itervalues(self._workflows):
-                log.debug("Found Workflow: {} v{}".format(workflow_type.name, workflow_type.version))
-            for wfdef in self._workflow_definitions:
-                log.debug("Class has Worflow Definition Class: {0.__name__}".format(wfdef))
-
-        if register:
-            for _, workflow_type, _ in six.itervalues(self._workflows):
-                self._register_workflow_type(workflow_type)
+        for _, workflow_type, _ in six.itervalues(self._workflows):
+            self._register_workflow_type(workflow_type)
 
     def _get_workflow_finder(self):
+        self._setup_workflow_definitions()
         return lambda name,version: self._workflows[(name, version)]
+
+    def _setup_workflow_definitions(self):
+        self._workflows = extract_workflows_dict(self._workflow_definitions)
+
