@@ -19,7 +19,7 @@ import logging
 
 from ..core import async_traceback
 
-from .multiprocessing_worker import MultiprocessingExecutor
+from .multiprocessing_executor import MultiprocessingExecutor
 
 log = logging.getLogger(__name__)
 

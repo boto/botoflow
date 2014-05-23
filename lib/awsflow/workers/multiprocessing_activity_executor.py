@@ -18,7 +18,7 @@ import pickle
 import signal
 import logging
 
-from .multiprocessing_worker import MultiprocessingExecutor
+from .multiprocessing_executor import MultiprocessingExecutor
 
 log = logging.getLogger(__name__)
 

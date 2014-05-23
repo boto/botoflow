@@ -13,7 +13,7 @@
 
 from .workflow_worker import WorkflowWorker, GenericWorkflowWorker
 from .activity_worker import ActivityWorker
-from .threaded_workflow_worker import ThreadedWorkflowExecutor
-from .threaded_activity_worker import ThreadedActivityExecutor
-from .multiprocessing_workflow_worker import MultiprocessingWorkflowExecutor
-from .multiprocessing_activity_worker import MultiprocessingActivityExecutor
+from .threaded_workflow_executor import ThreadedWorkflowExecutor
+from .threaded_activity_executor import ThreadedActivityExecutor
+from .multiprocessing_workflow_executor import MultiprocessingWorkflowExecutor
+from .multiprocessing_activity_executor import MultiprocessingActivityExecutor

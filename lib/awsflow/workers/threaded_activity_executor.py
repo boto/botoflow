@@ -16,7 +16,7 @@ import threading
 import traceback
 import logging
 
-from .threaded_worker import ThreadedExecutor
+from .threaded_executor import ThreadedExecutor
 
 log = logging.getLogger(__name__)
 
