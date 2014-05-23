@@ -22,7 +22,9 @@ log = logging.getLogger(__name__)
 
 
 class ThreadedWorkflowExecutor (ThreadedExecutor):
-    """This is a threaded workflow worker executor
+    """This is a threaded workflow executor. 
+
+    It will execute a :py:class:`~WorkflowWorker` in multiple threads.
 
     As in the case with the :py:class:`~.ThreadedActivityWorker` it is not
     recomended to use it on CPython because of the GIL unless the poller/worker

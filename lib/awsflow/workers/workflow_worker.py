@@ -42,12 +42,13 @@ def get_workflow_entrypoint(definition_class, workflow_name, workflow_version):
 
 class GenericWorkflowWorker(BaseWorker):
     """As the name suggests, this worker class is intended for use by
-    the workflow implementation. It is configured with a task list and a
-    workflow finding function.
+    the workflow implementation. It is configured with a workflow
+    finding function.
 
     The worker class runs a loop to poll for decision tasks in the
-    specified task list. When a decision task is received, it creates an
-    instance of the workflow implementation and calls the @
+    specified task list. When a decision task is received, it first
+    looks up the workflow definition class using *get_workflow* and then
+    creates an instance of it and calls the @
     :py:func:`~awsflow.decorators.execute` decorated method to process
     the task.
 

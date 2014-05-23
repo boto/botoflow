@@ -41,7 +41,7 @@ process_manager = _ProcessManager().process_manager
 
 
 class MultiprocessingExecutor(object):
-    """A base/mixin for all multiprocessing workers"""
+    """A base for all multiprocessing executors"""
 
     def __init__(self, worker):
         self._worker = worker
