@@ -17,3 +17,14 @@ class BunchOfActivities(object):
     def throw(self):
         raise ValueError("Hello-Error")
 
+
+@activities(schedule_to_start_timeout=60,
+            start_to_close_timeout=60)
+class ManualActivities(object):
+    @manual_activity(version='1.0')
+    def perform_task(self, **kwargs):
+        activity_context = context.get_context()
+        task_token = activity_context.task.token
+
+        with open('task_token.txt', 'w') as shared_file:
+            shared_file.write(task_token)

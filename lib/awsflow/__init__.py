@@ -16,7 +16,7 @@ from .context import get_context, set_context
 from .workers import (GenericWorkflowWorker, WorkflowWorker, ActivityWorker, 
                       ThreadedWorkflowExecutor, ThreadedActivityExecutor, 
                       MultiprocessingWorkflowExecutor, MultiprocessingActivityExecutor)
-from .decorators import workflow, execute, activity, activities, signal
+from .decorators import workflow, execute, activity, manual_activity, activities, signal
 from .options import workflow_options, activity_options
 from .workflow_definition import WorkflowDefinition
 from .workflow_starter import WorkflowStarter

@@ -184,9 +184,14 @@ class ActivityWorker(BaseWorker):
                               "kwargs: %r", fargs, kwargs)
                     result = func(*fargs, **kwargs)
                     log.debug("Activity returned: %r", result)
-                    self._respond_activity_task_completed_op(
-                        task_token=task.token,
-                        result=activity_type.data_converter.dumps(result))
+                    if not activity_type.manual:
+                        self._respond_activity_task_completed_op(
+                            task_token=task.token,
+                            result=activity_type.data_converter.dumps(result))
+                    else:
+                        log.debug("Activity '%s %s' is a manual activity."
+                                  "Can be marked complete only when instructed by a human",
+                                  activity_type.name, activity_type.version)
                 except Exception as err:
                     _, _, tb = sys.exc_info()
                     tb_list = traceback.extract_tb(tb)

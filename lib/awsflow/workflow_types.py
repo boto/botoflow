@@ -214,7 +214,8 @@ class ActivityType(BaseFlowType):
                  schedule_to_close_timeout=None,
                  description=None,
                  data_converter=None,
-                 skip_registration=False):
+                 skip_registration=False,
+                 manual=False):
 
         self.version = version
         self.name = name
@@ -225,6 +226,7 @@ class ActivityType(BaseFlowType):
         self.schedule_to_close_timeout = schedule_to_close_timeout
         self.description = description
         self.skip_registration = skip_registration
+        self.manual = manual
 
         if data_converter is None:
             self.data_converter = JSONDataConverter()

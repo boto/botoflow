@@ -17,7 +17,7 @@ from . import decorator_descriptors
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .workflow_types import WorkflowType, ActivityType, SignalType
 
-__all__ = ('workflow', 'activities', 'execute', 'activity', 'signal')
+__all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal')
 
 
 def _str_or_none(value):
@@ -208,8 +208,106 @@ def activity(version,
              start_to_close_timeout=None,  # indicates not set
              schedule_to_close_timeout=None,
              description=None,
-             skip_registration=False):
+             skip_registration=False,
+             manual=False):
+
     """Indicates an activity type
+
+    :param str version: Specifies the version of the activity type.
+    :param str name: Specifies the name of the activity type. The default is
+        `None`, which indicates that the default prefix and the activity method
+        name should be used to determine the name of the activity type (which
+        is of the form {prefix}{name}). Note that when you specify a name in an
+        :py:func:`.activity`, the framework will not automatically prepend a
+        prefix to it. You are free to use your own naming scheme.
+    :param str task_list: Specifies the default task list to be registered with
+        Amazon SWF for this activity type.  The default can be overridden using
+        :py:func`~awsflow.options_overrides.activity_options` when calling the
+        activity. Set to :py:data:`~awsflow.constants.USE_WORKER_TASK_LIST` by
+        default. This is a special value which indicates that the task list
+        used by the worker, which is performing the registration, should be
+        used.
+    :param heartbeat_timeout: Specifies the defaultTaskHeartbeatTimeout
+        registered with Amazon SWF for this activity type. Activity workers
+        must provide heartbeat within this duration; otherwise, the task will
+        be timed out. Set to `None` by default, which is a special value that
+        indicates this timeout should be disabled. See Amazon SWF API reference
+        for more details.
+    :type heartbeat_timeout: int or None
+    :param schedule_to_start_timeout: Specifies the
+        defaultTaskScheduleToStartTimeout registered with Amazon SWF for this
+        activity type. This is the maximum time a task of this activity type is
+        allowed to wait before it is assigned to a worker. It is required
+        either here or in :py:func:`.activities`.
+    :type schedule_to_start_timeout: int or None
+    :param start_to_close_timeout: Specifies the defaultTaskStartToCloseTimeout
+        registered with Amazon SWF for this activity type. This timeout
+        determines the maximum time a worker can take to process an activity
+        task of this type.
+    :type start_to_close_timeout: int or None
+    :param schedule_to_close_timeout: Specifies the
+        defaultScheduleToCloseTimeout registered with Amazon SWF for this
+        activity type. This timeout determines the total duration that the task
+        can stay in open state. Set to `None` by default, which indicates this
+        timeout should be disabled.
+    :type schedule_to_close_timeout: int or None
+    :param description: Textual description of the activity type. By default
+        will use the docstring of the activity if available. The maximum length
+        is 1024 characters, so a long docstring will be truncated to that
+        length.
+    :type description: str or None
+    :param bool skip_registartion: Indicates that the activity type should not
+        be registered with Amazon SWF.
+    :param bool manual: Indicates that this is a manual activity, if set to true.
+    """
+
+    _activity_type = ActivityType(
+        version,
+        name=name,
+        task_list=task_list,
+        heartbeat_timeout=heartbeat_timeout,
+        schedule_to_start_timeout=schedule_to_start_timeout,
+        start_to_close_timeout=start_to_close_timeout,
+        schedule_to_close_timeout=schedule_to_close_timeout,
+        description=description,
+        skip_registration=skip_registration,
+        manual=manual)
+
+    def _activity(func):
+        # assume class for now XXX find a safer way
+        if not isinstance(func, types.FunctionType):
+            raise AttributeError("Can only be applied to functions/methods")
+
+        # set description
+        if _activity_type.description is None:
+            description = func.__doc__
+
+            if description is None:
+                description = ""
+            else:
+                # truncate to 1024 chars
+                description = (description[:1022] + '..') if len(
+                    description) > 1024 else description
+
+            _activity_type.description = description
+
+        _set_swf_options(func, 'activity_type', _activity_type)
+        return decorator_descriptors.ActivityFunc(func)
+
+    return _activity
+
+
+def manual_activity(version,
+                    name=None,
+                    task_list=USE_WORKER_TASK_LIST,
+                    heartbeat_timeout=None,
+                    schedule_to_start_timeout=None,  #indicates not set
+                    start_to_close_timeout=None,    #indicates not set
+                    schedule_to_close_timeout=None,
+                    description=None,
+                    skip_registration=False):
+
+    """Indicates a manual activity type
 
     :param str version: Specifies the version of the activity type.
     :param str name: Specifies the name of the activity type. The default is
@@ -258,39 +356,9 @@ def activity(version,
         be registered with Amazon SWF.
     """
 
-    _activity_type = ActivityType(
-        version,
-        name=name,
-        task_list=task_list,
-        heartbeat_timeout=heartbeat_timeout,
-        schedule_to_start_timeout=schedule_to_start_timeout,
-        start_to_close_timeout=start_to_close_timeout,
-        schedule_to_close_timeout=schedule_to_close_timeout,
-        description=description,
-        skip_registration=skip_registration)
-
-    def _activity(func):
-        # assume class for now XXX find a safer way
-        if not isinstance(func, types.FunctionType):
-            raise AttributeError("Can only be applied to functions/methods")
-
-        # set description
-        if _activity_type.description is None:
-            description = func.__doc__
-
-            if description is None:
-                description = ""
-            else:
-                # truncate to 1024 chars
-                description = (description[:1022] + '..') if len(
-                    description) > 1024 else description
-
-            _activity_type.description = description
-
-        _set_swf_options(func, 'activity_type', _activity_type)
-        return decorator_descriptors.ActivityFunc(func)
-
-    return _activity
+    return activity(version, name, task_list, heartbeat_timeout,
+                    schedule_to_start_timeout, start_to_close_timeout,
+                    description, skip_registration, manual=True)
 
 
 def signal(name=None):
