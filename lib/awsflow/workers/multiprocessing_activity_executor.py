@@ -59,7 +59,7 @@ class MultiprocessingActivityExecutor(MultiprocessingExecutor):
             except Exception as err:
                 _, _, tb = sys.exc_info()
                 tb_list = traceback.extract_tb(tb)
-                handler = executor.unhandled_exception_handler
+                handler = executor._worker.unhandled_exception_handler
                 handler(err, tb_list)
             finally:
                 process = multiprocessing.current_process()
