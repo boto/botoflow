@@ -22,30 +22,30 @@ from .workflow_definition import WorkflowDefinition
 from .workflow_starter import WorkflowStarter
 from . import workflow_types as types
 
+from warnings import warn as _warn
+
 
 def MultiprocessingWorkflowWorker(*args, **kwargs):
-    raise DeprecationWarning("MultiprocessingWorkflowWorker is no longer "
-                             "supported, please migrate to "
-                             "MultiprocessingWorkflowExecutor model")
+    _warn("MultiprocessingWorkflowWorker is no longer supported, please "
+          "migrate to MultiprocessingWorkflowExecutor model",
+          DeprecationWarning, stacklevel=2)
     return MultiprocessingWorkflowExecutor(WorkflowWorker(*args, **kwargs))
 
 
 def MultiprocessingActivityWorker(*args, **kwargs):
-    raise DeprecationWarning("MultiprocessingActivityWorker is no longer "
-                             "supported, please migrate to "
-                             "MultiprocessingActivityExecutor model")
+    _warn("MultiprocessingActivityWorker is no longer supported, please "
+          "migrate to MultiprocessingActivityExecutor model",
+          DeprecationWarning, stacklevel=2)
     return MultiprocessingActivityExecutor(ActivityWorker(*args, **kwargs))
 
 
 def ThreadedWorkflowWorker(*args, **kwargs):
-    raise DeprecationWarning("ThreadedWorkflowWorker is no longer "
-                             "supported, please migrate to "
-                             "ThreadedWorkflowExecutor model")
+    _warn("ThreadedWorkflowWorker is no longer supported, please migrate to "
+          "ThreadedWorkflowExecutor model", DeprecationWarning, stacklevel=2)
     return ThreadedWorkflowExecutor(WorkflowWorker(*args, **kwargs))
 
 
 def ThreadedActivityWorker(*args, **kwargs):
-    raise DeprecationWarning("ThreadedActivityWorker is no longer "
-                             "supported, please migrate to "
-                             "ThreadedActivityExecutor model")
+    _warn("ThreadedActivityWorker is no longer supported, please migrate to "
+          "ThreadedActivityExecutor model", DeprecationWarning, stacklevel=2)
     return ThreadedActivityExecutor(ActivityWorker(*args, **kwargs))
