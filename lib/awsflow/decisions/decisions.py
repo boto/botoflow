@@ -26,9 +26,9 @@ class CancelWorkflowExecution(WorkflowDecisionBase):
         event in the history.
         """
         super(CancelWorkflowExecution, self).__init__()
-        self.decision['decision_type'] = 'CancelWorkflowExecutions'
+        self.decision['decisionType'] = 'CancelWorkflowExecutions'
         attrs = self.decision[
-            'cancel_workflow_executions_decision_attributes'] = {}
+            'cancelWorkflowExecutionsDecisionAttributes'] = {}
         if details is not None:
             attrs['details'] = details
 
@@ -40,9 +40,9 @@ class CancelTimer(TimerDecisionBase):
         in the history.
         """
         super(CancelTimer, self).__init__(timer_id)
-        self.decision['decision_type'] = 'CancelTimer'
-        attrs = self.decision['cancel_timer_decision_attributes'] = {}
-        attrs['timer_id'] = timer_id
+        self.decision['decisionType'] = 'CancelTimer'
+        attrs = self.decision['cancelTimerDecisionAttributes'] = {}
+        attrs['timerId'] = timer_id
 
 
 class CompleteWorkflowExecution(WorkflowDecisionBase):
@@ -52,9 +52,9 @@ class CompleteWorkflowExecution(WorkflowDecisionBase):
         event in the history
         """
         super(CompleteWorkflowExecution, self).__init__()
-        self.decision['decision_type'] = 'CompleteWorkflowExecution'
+        self.decision['decisionType'] = 'CompleteWorkflowExecution'
         attrs = self.decision[
-            'complete_workflow_execution_decision_attributes'] = {}
+            'completeWorkflowExecutionDecisionAttributes'] = {}
         if result is not None:
             attrs['result'] = result
 
@@ -74,24 +74,24 @@ class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
         WorkflowExecutionContinuedAsNew event is recorded in the history.
         """
         super(ContinueAsNewWorkflowExecution, self).__init__()
-        self.decision['decision_type'] = 'ContinueAsNewWorkflowExecution'
+        self.decision['decisionType'] = 'ContinueAsNewWorkflowExecution'
         attrs = self.decision[
-            'continue_as_new_workflow_execution_decision_attributes'] = {}
+            'continueAsNewWorkflowExecutionDecisionAttributes'] = {}
         if child_policy is not None:
-            attrs['child_policy'] = child_policy
+            attrs['childPolicy'] = child_policy
         if execution_start_to_close_timeout is not None:
             attrs[
-                'execution_start_to_close_timeout'] = execution_start_to_close_timeout
+                'executionStartToCloseTimeout'] = execution_start_to_close_timeout
         if input is not None:
             attrs['input'] = input
         if tag_list is not None:
-            attrs['tag_list'] = tag_list
+            attrs['tagList'] = tag_list
         if task_list is not None:
-            attrs['task_list'] = task_list
+            attrs['taskList'] = task_list
         if task_start_to_close_timeout is not None:
-            attrs['task_start_to_close_timeout'] = task_start_to_close_timeout
+            attrs['taskStartToCloseTimeout'] = task_start_to_close_timeout
         if version is not None:
-            attrs['workflow_type_version'] = version
+            attrs['workflowTypeVersion'] = version
 
 
 class FailWorkflowExecution(WorkflowDecisionBase):
@@ -103,8 +103,8 @@ class FailWorkflowExecution(WorkflowDecisionBase):
         in the history.
         """
         super(FailWorkflowExecution, self).__init__()
-        self.decision['decision_type'] = 'FailWorkflowExecution'
-        attrs = self.decision['fail_workflow_execution_decision_attributes'] = {}
+        self.decision['decisionType'] = 'FailWorkflowExecution'
+        attrs = self.decision['failWorkflowExecutionDecisionAttributes'] = {}
         if reason is not None:
             attrs['reason'] = reason
         if details is not None:
@@ -119,9 +119,9 @@ class RecordMarker(RecordMarkerDecisionBase):
         that they do not need to look at the history beyond the marker event.
         """
         super(RecordMarker, self).__init__(marker_name)
-        self.decision['decision_type'] = 'RecordMarker'
-        attrs = self.decision['record_marker_decision_attributes'] = {}
-        attrs['marker_name'] = marker_name
+        self.decision['decisionType'] = 'RecordMarker'
+        attrs = self.decision['recordMarkerDecisionAttributes'] = {}
+        attrs['markerName'] = marker_name
         if details is not None:
             attrs['details'] = details
 
@@ -136,10 +136,10 @@ class RequestCancelActivityTask(ActivityDecisionBase):
         response to RecordActivityTaskHeartbeat.
         """
         super(RequestCancelActivityTask, self).__init__(activity_id)
-        self.decision['decision_type'] = 'RequestCancelActivityTask'
+        self.decision['decisionType'] = 'RequestCancelActivityTask'
         attrs = self.decision[
-            'request_cancel_activity_task_decision_attributes'] = {}
-        attrs['activity_id'] = activity_id
+            'requestCancelActivityTaskDecisionAttributes'] = {}
+        attrs['activityId'] = activity_id
 
 
 class RequestCancelExternalWorkflowExecution(RequestCancelExternalWorkflowDecisionBase):
@@ -152,11 +152,11 @@ class RequestCancelExternalWorkflowExecution(RequestCancelExternalWorkflowDecisi
         super(RequestCancelExternalWorkflowExecution,
               self).__init__(workflow_id, run_id)
         self.decision[
-            'decision_type'] = 'RequestCancelExternalWorkflowExecution'
+            'decisionType'] = 'RequestCancelExternalWorkflowExecution'
         attrs = self.decision[
-            'request_cancel_external_workflow_execution_decision_attributes'] = {}
-        attrs['workflow_id'] = workflow_id
-        attrs['run_id'] = run_id
+            'requestCancelExternalWorkflowExecutionDecisionAttributes'] = {}
+        attrs['workflowId'] = workflow_id
+        attrs['runId'] = run_id
         if control is not None:
             attrs['control'] = control
 
@@ -192,25 +192,25 @@ class ScheduleActivityTask(ActivityDecisionBase):
             at registration time then a fault will be returned.
         """
         super(ScheduleActivityTask, self).__init__(activity_id)
-        self.decision['decision_type'] = 'ScheduleActivityTask'
-        attrs = self.decision['schedule_activity_task_decision_attributes'] = {}
-        attrs['activity_id'] = activity_id
-        attrs['activity_type'] = {
+        self.decision['decisionType'] = 'ScheduleActivityTask'
+        attrs = self.decision['scheduleActivityTaskDecisionAttributes'] = {}
+        attrs['activityId'] = activity_id
+        attrs['activityType'] = {
             'name': activity_type_name,
             'version': activity_type_version,
         }
         if task_list is not None:
-            attrs['task_list'] = task_list
+            attrs['taskList'] = task_list
         if control is not None:
             attrs['control'] = control
         if heartbeat_timeout is not None:
-            attrs['heartbeat_timeout'] = heartbeat_timeout
+            attrs['heartbeatTimeout'] = heartbeat_timeout
         if schedule_to_close_timeout is not None:
-            attrs['schedule_to_close_timeout'] = schedule_to_close_timeout
+            attrs['scheduleToCloseTimeout'] = schedule_to_close_timeout
         if schedule_to_start_timeout is not None:
-            attrs['schedule_to_start_timeout'] = schedule_to_start_timeout
+            attrs['scheduleToStartTimeout'] = schedule_to_start_timeout
         if start_to_close_timeout is not None:
-            attrs['start_to_close_timeout'] = start_to_close_timeout
+            attrs['startToCloseTimeout'] = start_to_close_timeout
         if input is not None:
             attrs['input'] = input
 
@@ -225,13 +225,13 @@ class SignalExternalWorkflowExecution(SignalExternalWorkflowExecutionDecisionBas
         """
         super(SignalExternalWorkflowExecution, self).__init__(workflow_id,
                                                               run_id, signal_name)
-        self.decision['decision_type'] = 'SignalExternalWorkflowExecution'
+        self.decision['decisionType'] = 'SignalExternalWorkflowExecution'
         attrs = self.decision[
-            'signal_external_eorkflow_execution_decision_attributes'] = {}
-        attrs['workflow_id'] = workflow_id
-        attrs['signal_name'] = signal_name
+            'signalExternalEorkflowExecutionDecisionAttributes'] = {}
+        attrs['workflowId'] = workflow_id
+        attrs['signalName'] = signal_name
         if run_id is not None:
-            attrs['run_id'] = run_id
+            attrs['runId'] = run_id
         if control is not None:
             attrs['control'] = control
         if input is not None:
@@ -251,26 +251,26 @@ class StartChildWorkflowExecution(StartChildWorkflowExecutionDecisionBase):
         super(StartChildWorkflowExecution, self).__init__(
             workflow_type['name'], workflow_type['version'], workflow_id)
 
-        self.decision['decision_type'] = 'StartChildWorkflowExecution'
+        self.decision['decisionType'] = 'StartChildWorkflowExecution'
         attrs = self.decision[
-            'start_child_workflow_execution_decision_attributes'] = {}
-        attrs['workflow_type'] = workflow_type
-        attrs['workflow_id'] = workflow_id
+            'startChildWorkflowExecutionDecisionAttributes'] = {}
+        attrs['workflowType'] = workflow_type
+        attrs['workflowId'] = workflow_id
         if child_policy is not None:
-            attrs['child_policy'] = child_policy
+            attrs['childPolicy'] = child_policy
         if control is not None:
             attrs['control'] = control
         if execution_start_to_close_timeout is not None:
             attrs[
-                'execution_start_to_close_timeout'] = execution_start_to_close_timeout
+                'executionStartToCloseTimeout'] = execution_start_to_close_timeout
         if input is not None:
             attrs['input'] = input
         if tag_list is not None:
-            attrs['tag_list'] = tag_list
+            attrs['tagList'] = tag_list
         if task_list is not None:
-            attrs['task_list'] = task_list
+            attrs['taskList'] = task_list
         if task_start_to_close_timeout is not None:
-            attrs['task_start_to_close_timeout'] = task_start_to_close_timeout
+            attrs['taskStartToCloseTimeout'] = task_start_to_close_timeout
 
 
 class StartTimer(TimerDecisionBase):
@@ -282,9 +282,9 @@ class StartTimer(TimerDecisionBase):
         """
         super(StartTimer, self).__init__(timer_id)
         self.decision = {}
-        self.decision['decision_type'] = 'StartTimer'
-        attrs = self.decision['start_timer_decision_attributes'] = {}
-        attrs['start_to_fire_timeout'] = start_to_fire_timeout
-        attrs['timer_id'] = timer_id
+        self.decision['decisionType'] = 'StartTimer'
+        attrs = self.decision['startTimerDecisionAttributes'] = {}
+        attrs['startToFireTimeout'] = start_to_fire_timeout
+        attrs['timerId'] = timer_id
         if control is not None:
             attrs['control'] = control

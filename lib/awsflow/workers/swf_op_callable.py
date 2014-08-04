@@ -15,8 +15,8 @@ class SWFOp(object):
 
         exception = swf_exceptions.SWFResponseError
 
-        if '__type' in response_data:
-            _type = response_data['__type']
+        if 'Errors' in response_data:
+            _type = response_data['Errors'][0]['Type']
             if _type in swf_exceptions._swf_fault_exception:
                 exception = swf_exceptions._swf_fault_exception[_type]
 

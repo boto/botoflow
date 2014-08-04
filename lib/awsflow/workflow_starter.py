@@ -110,8 +110,8 @@ class WorkflowStarter(object):
     def _get_workflow_execution_status(self, workflow_execution):
         workflow_execution = self._describe_workflow_execution_op(
             domain=self.domain,
-            execution={'workflow_id': workflow_execution.workflow_id,
-                       'run_id': workflow_execution.run_id})
+            execution={'workflowId': workflow_execution.workflow_id,
+                       'runId': workflow_execution.run_id})
 
         execution_status = workflow_execution['executionInfo']['executionStatus']
         if execution_status != 'OPEN':
@@ -141,8 +141,8 @@ class WorkflowStarter(object):
     def _get_last_event(self, workflow_execution):
         last_event = self._get_workflow_execution_history_op(
             domain=self.domain,
-            execution={'workflow_id': workflow_execution.workflow_id,
-                       'run_id': workflow_execution.run_id})['events'][-1]
+            execution={'workflowId': workflow_execution.workflow_id,
+                       'runId': workflow_execution.run_id})['events'][-1]
         return last_event
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):

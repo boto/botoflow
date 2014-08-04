@@ -1,8 +1,7 @@
 from setuptools import setup, find_packages
 
 
-requires = ['botocore>=0.8.2',
-            'requests>=1.2.0',
+requires = ['botocore>=0.59.0',
             'six>=1.2.0']
 
 args = dict(

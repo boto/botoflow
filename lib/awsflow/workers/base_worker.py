@@ -15,6 +15,7 @@ import os
 import socket
 import threading
 import logging
+import copy
 
 from botocore.endpoint import Endpoint
 
@@ -40,10 +41,35 @@ class BaseWorker(object):
         self._domain = domain
         self._task_list = task_list
 
+        self._fix_endpoint()
+
     def __repr__(self):
         return "<%s at %s domain=%s task_list=%s>" % (
             self.__class__.__name__, hex(id(self)), self.domain,
             self.task_list)
+
+    def _fix_endpoint(self):
+        # temporary fix for botocore.endpoint not being picklable
+        # (applies to 0.59.0)
+        # the issue is with threading.Lock, so we create a new lock
+        # on unpickling which is fine for multiprocessing since
+        # threading locks are not ipc
+        def __getstate__(_self):
+            dct = copy.copy(_self.__dict__)
+            del dct['_lock']
+            return dct
+
+        def __setstate__(_self, state):
+            _self.__dict__ = state
+            _self._lock = threading.Lock()
+
+        if '__getstate__' not in dir(self._endpoint):
+            self._endpoint.__getstate__ = __getstate__
+            self._endpoint.__setstate__ = __setstate__
+
+        # timeout must be > 60 since SWF long poll
+        if self._endpoint.timeout < 65:
+            self._endpoint.timeout = 65
 
     @property
     def endpoint(self):

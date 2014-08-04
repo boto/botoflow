@@ -16,6 +16,7 @@ class SWFMixIn(object):
         self.endpoint = session.get_session() \
                                .get_service('swf') \
                                .get_endpoint(self.test_args['region'])
+        #import pdb;pdb.set_trace()
         self.domain = self.test_args['domain']
         self.task_list = self.test_args['tasklist']
         self.workflow_execution = None
@@ -53,10 +54,10 @@ class SWFMixIn(object):
 
         if next_page_token is None:
             return op.call(self.endpoint, domain=self.domain,
-                           execution={"workflow_id": workflow_id,
-                                      "run_id": run_id})[1]
+                           execution={"workflowId": workflow_id,
+                                      "runId": run_id})[1]
         return op.call(self.endpoint, domain=self.domain,
                        next_page_token=next_page_token,
-                       execution={"workflow_id": workflow_id,
-                                  "run_id": run_id})[1]
+                       execution={"workflowId": workflow_id,
+                                  "runId": run_id})[1]
 

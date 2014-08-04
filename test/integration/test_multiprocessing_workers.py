@@ -3,30 +3,6 @@ import time
 import unittest
 
 
-### EVIL MONKEY PATCH FOR REQUESTS
-### https://github.com/kennethreitz/requests/pull/1223
-### Wait for requests 1.1.1, which should be soon...
-import requests.sessions
-import requests.adapters
-if not hasattr(requests.sessions.Session, '__attrs__'):
-    def __getstate__(self):
-        return dict((attr, getattr(self, attr, None)) for attr in
-                    self.__attrs__)
-
-    def __setstate__(self, state):
-        for attr, value in state.items():
-            setattr(self, attr, value)
-        self.adapters = {}
-        self.mount('http://', requests.adapters.HTTPAdapter())
-        self.mount('https://', requests.adapters.HTTPAdapter())
-
-    requests.sessions.Session.__getstate__ = __getstate__
-    requests.sessions.Session.__setstate__ = __setstate__
-    requests.sessions.Session.__attrs__ = [
-        'headers', 'cookies', 'auth', 'timeout', 'proxies', 'hooks',
-        'params', 'verify', 'cert', 'prefetch']
-
-
 from awsflow import (
     MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, WorkflowStarter,
     WorkflowWorker, ActivityWorker)

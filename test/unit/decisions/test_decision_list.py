@@ -19,9 +19,9 @@ class TestDecisionList(unittest.TestCase):
 
         swf_list = dlist.to_swf()
         self.assertTrue(swf_list)
-        self.assertEqual(swf_list, [{'cancel_timer_decision_attributes':
-                                     {'timer_id': 123},
-                                     'decision_type': 'CancelTimer'}])
+        self.assertEqual(swf_list, [{'cancelTimerDecisionAttributes':
+                                     {'timerId': 123},
+                                     'decisionType': 'CancelTimer'}])
 
 if __name__ == '__main__':
     unittest.main()
