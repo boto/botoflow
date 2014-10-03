@@ -64,8 +64,8 @@ class BaseWorker(object):
             _self._lock = threading.Lock()
 
         if '__getstate__' not in dir(self._endpoint):
-            self._endpoint.__getstate__ = __getstate__
-            self._endpoint.__setstate__ = __setstate__
+            self._endpoint.__class__.__getstate__ = __getstate__
+            self._endpoint.__class__.__setstate__ = __setstate__
 
         # timeout must be > 60 since SWF long poll
         if self._endpoint.timeout < 65:
