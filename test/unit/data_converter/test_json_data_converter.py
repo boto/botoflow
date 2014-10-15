@@ -1,6 +1,7 @@
 import copy
 import unittest
 import zlib
+import six
 
 from collections import namedtuple, OrderedDict
 
@@ -113,7 +114,7 @@ class TestJSONDataConverter(unittest.TestCase):
 
     def test_zlib(self):
         # This test is really about ensuring that binary data isn't corrupted
-        data = 'compress me'
+        data = six.b('compress me')
         compressed = zlib.compress(data)
         self.assertEqual(data, zlib.decompress(self.dumps_loads(compressed)))
 

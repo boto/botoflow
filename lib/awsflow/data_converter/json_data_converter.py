@@ -37,7 +37,7 @@ class _FlowObjEncoder(json.JSONEncoder):
     def _flowify_obj(self, obj):
         obj_type = type(obj)
 
-        if obj_type == str:
+        if obj_type == str and six.PY2:
             try:
                 obj.decode('utf8')
             except UnicodeDecodeError:
@@ -45,6 +45,10 @@ class _FlowObjEncoder(json.JSONEncoder):
                 # and the JSON Encoder won't cope, so we base64-encode it.
                 return {'__base64str': base64.b64encode(obj)}
             return obj
+        # python3 binary data
+        elif six.PY3 and obj_type == six.binary_type:
+            print(obj)
+            return {'__bin': base64.b64encode(obj)}
         elif obj_type == tuple:
             return {'__tuple': [self._flowify_obj(o) for o in obj]}
         elif obj_type == set:
@@ -68,7 +72,7 @@ class _FlowObjEncoder(json.JSONEncoder):
                 return {
                     '__listclass': [flow_list_class, flow_list],
                     '__dict__': {key: self._flowify_obj(value)
-                                 for key, value in obj.__dict__.iteritems()}}
+                                 for key, value in six.iteritems(obj.__dict__)}}
 
         elif obj_type == OrderedDict:
             flowified = []
@@ -102,7 +106,7 @@ class _FlowObjEncoder(json.JSONEncoder):
                 return {
                     '__dictclass': [flow_dict_class, flow_dict],
                     '__dict__': {key: self._flowify_obj(value)
-                                 for key, value in obj.__dict__.iteritems()}}
+                                 for key, value in six.iteritems(obj.__dict__)}}
 
         # namedtuple (!)
         # http://bugs.python.org/issue7796
@@ -125,6 +129,7 @@ class _FlowObjEncoder(json.JSONEncoder):
             return self._flowify_obj(obj)
 
         flow_dict = None
+
 
         if hasattr(obj, '__getstate__'):
             flow_dict = obj.__getstate__()
@@ -165,6 +170,9 @@ def _flow_obj_decoder(dct):
         return OrderedDict(dct['__ordereddict'])
     elif '__base64str' in dct:
         return base64.b64decode(dct['__base64str'])
+    elif '__bin' in dct:
+        print(dct)
+        return six.b(base64.b64decode(dct['__bin']))
 
     module_name, attr_name = None, None
 
