@@ -14,6 +14,9 @@
 """Exceptions from the SWF service
 """
 
+from contextlib import contextmanager
+from botocore.client import ClientError
+
 
 class SWFResponseError(Exception):
     """Base exception for SWF Errors"""
@@ -92,14 +95,26 @@ class UnknownResourceError(SWFResponseError):
 
 # SWF __type/fault string to awsflow exception mapping
 _swf_fault_exception = {
-    'com.amazonaws.swf.base.model#DomainDeprecatedFault': DomainDeprecatedError,
-    'com.amazonaws.swf.base.model#DomainAlreadyExistsFault': DomainAlreadyExistsError,
-    'com.amazonaws.swf.base.model#DefaultUndefinedFault': DefaultUndefinedError,
-    'com.amazonaws.swf.base.model#LimitExceededFault': LimitExceededError,
-    'com.amazonaws.swf.base.model#WorkflowExecutionAlreadyStartedFault': WorkflowExecutionAlreadyStartedError,
-    'com.amazonaws.swf.base.model#TypeDeprecatedFault': TypeDeprecatedError,
-    'com.amazonaws.swf.base.model#TypeAlreadyExistsFault': TypeAlreadyExistsError,
-    'com.amazonaws.swf.base.model#OperationNotPermittedFault': OperationNotPermittedError,
-    'com.amazonaws.swf.base.model#UnknownResourceFault': UnknownResourceError
+    'DomainDeprecatedFault': DomainDeprecatedError,
+    'DomainAlreadyExistsFault': DomainAlreadyExistsError,
+    'DefaultUndefinedFault': DefaultUndefinedError,
+    'LimitExceededFault': LimitExceededError,
+    'WorkflowExecutionAlreadyStartedFault': WorkflowExecutionAlreadyStartedError,
+    'TypeDeprecatedFault': TypeDeprecatedError,
+    'TypeAlreadyExistsFault': TypeAlreadyExistsError,
+    'cOperationNotPermittedFault': OperationNotPermittedError,
+    'UnknownResourceFault': UnknownResourceError,
+    'SWFResponseError': SWFResponseError
 }
 
+
+@contextmanager
+def swf_exception_wrapper():
+    try:
+        yield
+    except ClientError as err:
+        err_type = err.response['Error'].get('Code', 'SWFResponseError')
+        err_msg = err.response['Error'].get(
+            'Message', 'No error message provided...')
+
+        raise _swf_fault_exception[err_type](err_msg)

@@ -91,9 +91,9 @@ You can start an instance of this workflow using the following code snippet:
 
 .. code-block:: python
 
-    swf_endpoint = botocore.session.get_session().get_service('swf').get_endpoint('us-east-1')
+    swf_session = botocore.session.get_session()
 
-    with WorkflowStarter(swf_endpoint, 'domain1', "tasklist1"):
+    with WorkflowStarter(swf_session, 'us-east-1', 'domain1', "tasklist1"):
         HelloWorldWorkflow.hello_world()  # starts the workflow
 
 Here we use botocore SWF endpoint *(we use it for authentication as well as

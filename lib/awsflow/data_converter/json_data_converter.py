@@ -47,8 +47,8 @@ class _FlowObjEncoder(json.JSONEncoder):
             return obj
         # python3 binary data
         elif six.PY3 and obj_type == six.binary_type:
-            print(obj)
-            return {'__bin': base64.b64encode(obj)}
+            #import pdb;pdb.set_trace()
+            return {'__bin': base64.b64encode(obj).decode('latin-1')}
         elif obj_type == tuple:
             return {'__tuple': [self._flowify_obj(o) for o in obj]}
         elif obj_type == set:
@@ -125,7 +125,7 @@ class _FlowObjEncoder(json.JSONEncoder):
     def default(self, obj):
         obj_cls = type(obj)
 
-        if obj_cls in (set, frozenset, type) or isinstance(obj, tuple):
+        if obj_cls in (set, frozenset, type, six.binary_type) or isinstance(obj, tuple):
             return self._flowify_obj(obj)
 
         flow_dict = None
@@ -171,8 +171,7 @@ def _flow_obj_decoder(dct):
     elif '__base64str' in dct:
         return base64.b64decode(dct['__base64str'])
     elif '__bin' in dct:
-        print(dct)
-        return six.b(base64.b64decode(dct['__bin']))
+        return base64.b64decode(dct['__bin'])
 
     module_name, attr_name = None, None
 

@@ -20,7 +20,7 @@ import logging
 
 import six
 
-from ..swf_exceptions import TypeAlreadyExistsError
+from ..swf_exceptions import TypeAlreadyExistsError, swf_exception_wrapper
 
 from ..context import ActivityContext, get_context, set_context
 
@@ -46,8 +46,10 @@ class ActivityWorker(BaseWorker):
     The ActivityWorker class uses the AWS Flow Framework decorators to
     determine the registration and execution options.
 
-    :param endpoint: botocore Endpoint object.
-    :type endpoint: botocore.endpoint.endpoint
+    :param session: botocore session object.
+    :type session: botocore.session.Session
+    :param aws_region: aws region to connect to
+    :type aws_region: str
     :param str domain: SWF domain to operate on.
     :param str task_list: default task list on which to put all the workflow
         requests.
@@ -60,35 +62,27 @@ class ActivityWorker(BaseWorker):
         activities = [SomeActivities(), OtherActivities()]
 
         # create the worker object
-        activity_worker = ActivityWorker(session, "SOMEDOMAIN",
+        activity_worker = ActivityWorker(session, "us-east-1", "SOMEDOMAIN",
                                          "MYTASKLIST", *activities_obj)
         activity_worker.run()
     """
 
-    def __init__(self, endpoint, domain, task_list,
+    def __init__(self, session, aws_region, domain, task_list,
                  *activity_definitions):
 
-        super(ActivityWorker, self).__init__(endpoint, domain, task_list)
-
-        self._register_activity_type_op = self._build_swf_op(
-            "RegisterActivityType")
-        self._poll_for_activity_task_op = self._build_swf_op(
-            "PollForActivityTask")
-        self._respond_activity_task_completed_op = self._build_swf_op(
-            "RespondActivityTaskCompleted")
-        self._respond_activity_task_failed_op = self._build_swf_op(
-            "RespondActivityTaskFailed")
+        super(ActivityWorker, self).__init__(session, aws_region, domain, task_list)
 
         self._activity_definitions = activity_definitions
         self._setup_activities()
         self._register_activities()
 
     def __getstate__(self):
-        newdict = copy.copy(self.__dict__)
+        newdict = BaseWorker.__getstate__(self)
         del newdict['_activity_names_to_methods']
         return newdict
 
     def __setstate__(self, newdict):
+        BaseWorker.__setstate__(self, newdict)
         self.__dict__ = newdict
         self._setup_activities()
 
@@ -133,7 +127,8 @@ class ActivityWorker(BaseWorker):
             try:
                 log.debug("Registering activity with the following "
                           "options: %s", kwargs)
-                self._register_activity_type_op(**kwargs)
+                with swf_exception_wrapper():
+                    self.client.register_activity_type(**kwargs)
             except TypeAlreadyExistsError:
                 log.debug("Activity '%s %s' already registered",
                           activity_type.name, activity_type.version)
@@ -144,9 +139,10 @@ class ActivityWorker(BaseWorker):
         """
         poll_time = time.time()
         try:
-            task_dict = self._poll_for_activity_task_op(
-                domain=self.domain, task_list={'name':self.task_list},
-                identity=self.identity)
+            with swf_exception_wrapper():
+                task_dict = self.client.poll_for_activity_task(
+                    domain=self.domain, taskList={'name': self.task_list},
+                    identity=self.identity)
             if task_dict['startedEventId'] == 0:
                 return
 
@@ -185,9 +181,10 @@ class ActivityWorker(BaseWorker):
                     result = func(*fargs, **kwargs)
                     log.debug("Activity returned: %r", result)
                     if not activity_type.manual:
-                        self._respond_activity_task_completed_op(
-                            task_token=task.token,
-                            result=activity_type.data_converter.dumps(result))
+                        with swf_exception_wrapper():
+                            self.client.respond_activity_task_completed(
+                                taskToken=task.token,
+                                result=activity_type.data_converter.dumps(result))
                     else:
                         log.debug("Activity '%s %s' is a manual activity."
                                   "Can be marked complete only when instructed by a human",
@@ -202,8 +199,9 @@ class ActivityWorker(BaseWorker):
                     # like the code ran alone
                     details = activity_type.data_converter.dumps(
                         [err, tb_list[1:]])
-                    self._respond_activity_task_failed_op(
-                        task_token=task.token, reason='', details=details)
+                    with swf_exception_wrapper():
+                        self.client.respond_activity_task_failed(
+                            taskToken=task.token, reason='', details=details)
 
             finally:
                 set_context(saved_context)

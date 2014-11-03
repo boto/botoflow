@@ -15,12 +15,12 @@ import os
 import socket
 import threading
 import logging
-import copy
 
-from botocore.endpoint import Endpoint
+from copy import copy
+
+from botocore.session import Session
 
 from ..core import async_traceback
-from .swf_op_callable import SWFOp
 
 log = logging.getLogger(__name__)
 
@@ -30,13 +30,14 @@ class BaseWorker(object):
     Base for the Workflow and Activity workers
     """
 
-    def __init__(self, endpoint, domain, task_list):
-        if not isinstance(endpoint, Endpoint):
-            raise TypeError("endpoint must be an instance "
-                            "of botocore.endpoint.Endpoint")
+    def __init__(self, session, aws_region, domain, task_list):
+        if not isinstance(session, Session):
+            raise TypeError("session must be an instance "
+                            "of botocore.session.Session")
 
         self._identity = None
-        self._endpoint = endpoint
+        self._session = session
+        self._aws_region = aws_region
 
         self._domain = domain
         self._task_list = task_list
@@ -49,32 +50,32 @@ class BaseWorker(object):
             self.task_list)
 
     def _fix_endpoint(self):
-        # temporary fix for botocore.endpoint not being picklable
-        # (applies to 0.59.0)
-        # the issue is with threading.Lock, so we create a new lock
-        # on unpickling which is fine for multiprocessing since
-        # threading locks are not ipc
-        def __getstate__(_self):
-            dct = copy.copy(_self.__dict__)
-            del dct['_lock']
-            return dct
+        if self.client._endpoint.timeout < 65:
+            self.client._endpoint.timeout = 65
 
-        def __setstate__(_self, state):
-            _self.__dict__ = state
-            _self._lock = threading.Lock()
+    def __setstate__(self, dct):
+        self.__dict__ = dct
+        self._fix_endpoint()
 
-        if '__getstate__' not in dir(self._endpoint):
-            self._endpoint.__class__.__getstate__ = __getstate__
-            self._endpoint.__class__.__setstate__ = __setstate__
-
-        # timeout must be > 60 since SWF long poll
-        if self._endpoint.timeout < 65:
-            self._endpoint.timeout = 65
+    def __getstate__(self):
+        dct = copy(self.__dict__)
+        try:
+            del dct['_client']  # for pickling
+        except KeyError:
+            pass
+        return dct
 
     @property
-    def endpoint(self):
-        """Returns the botocore SWF Endpoint"""
-        return self._endpoint
+    def client(self):
+        """Returns the botocore SWF client
+        :rtype: botocore.client.swf
+        """
+        try:
+            return self._client
+        except AttributeError:  # create a new client
+            self._client = self._session.create_client(
+                service_name='swf', region_name=self._aws_region)
+            return self._client
 
     @property
     def domain(self):
@@ -138,7 +139,3 @@ class BaseWorker(object):
         tb_str = async_traceback.format_exc(None, exc, tb_list)
         log.error("Unhandled exception raised in thread %s:\n%s",
                   thread_name, "\n".join(tb_str))
-
-    def _build_swf_op(self, op_name):
-        op = self._endpoint.service.get_operation(op_name)
-        return SWFOp(self._endpoint, op)

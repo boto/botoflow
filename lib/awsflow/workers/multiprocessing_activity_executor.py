@@ -14,9 +14,10 @@
 import sys
 import traceback
 import multiprocessing
-import pickle
 import signal
 import logging
+
+import dill
 
 from .multiprocessing_executor import MultiprocessingExecutor
 
@@ -51,7 +52,7 @@ class MultiprocessingActivityExecutor(MultiprocessingExecutor):
 
         def run_poller_worker_with_exc(executor_pickle):
             try:
-                executor = pickle.loads(executor_pickle)
+                executor = dill.loads(executor_pickle)
                 executor._process_queue.get()
                 # ignore any SIGINT, so it looks closer to threading
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -97,7 +98,7 @@ class MultiprocessingActivityExecutor(MultiprocessingExecutor):
 
         for i in range(workers):
             process = multiprocessing.Process(
-                target=run_poller_worker_with_exc, args=(pickle.dumps(self),))
+                target=run_poller_worker_with_exc, args=(dill.dumps(self),))
             self._process_queue.put(i)
             process.daemon = True
             process.name = "%r Process-%d" % (self, i)

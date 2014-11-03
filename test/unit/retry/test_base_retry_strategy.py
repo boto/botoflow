@@ -22,14 +22,14 @@ def test_init_retry_and_raise_set():
 
 def test_next_delay():
     with pytest.raises(NotImplementedError):
-        BaseRetryStrategy().next_delay('error', 'timestamp')
+        BaseRetryStrategy().next_delay('error', 'datetime')
 
 
 def test_set_properties():
     brs = BaseRetryStrategy()
-    brs._set_properties('error', 'timestamp', 'user_context')
+    brs._set_properties('error', 'datetime', 'user_context')
 
     assert brs._error_count == 1
     assert brs.error == 'error'
-    assert brs.timestamp == 'timestamp'
+    assert brs.timestamp == 'datetime'
     assert brs.user_context == 'user_context'

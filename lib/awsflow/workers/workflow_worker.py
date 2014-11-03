@@ -18,7 +18,7 @@ import six
 
 from ..utils import extract_workflows_dict
 from ..decider import Decider
-from ..swf_exceptions import TypeAlreadyExistsError
+from ..swf_exceptions import swf_exception_wrapper, TypeAlreadyExistsError
 
 from .base_worker import BaseWorker
 
@@ -52,8 +52,10 @@ class GenericWorkflowWorker(BaseWorker):
     :py:func:`~awsflow.decorators.execute` decorated method to process
     the task.
 
-    :param endpoint: botocore Endpoint object.
-    :type endpoint: botocore.endpoint.endpoint
+    :param session: botocore session object.
+    :type session: botocore.session.Session
+    :param aws_region: aws region to connect to
+    :type aws_region: str
     :param str domain: SWF domain to operate on.
     :param str task_list: default task list on which to put all the workflow
         requests.
@@ -66,28 +68,19 @@ class GenericWorkflowWorker(BaseWorker):
     This worker also acts as a context manager for starting new workflow
     executions. See the following example on how to start a workflow:
     """
-    def __init__(self, endpoint, domain, task_list, get_workflow):
-        super(GenericWorkflowWorker, self).__init__(endpoint, domain, task_list)
+    def __init__(self, session, aws_region, domain, task_list, get_workflow):
+        super(GenericWorkflowWorker, self).__init__(session, aws_region, domain, task_list)
 
         self._get_workflow = get_workflow
-
-        self._poll_for_decision_task_op = self._build_swf_op(
-            "PollForDecisionTask")
-        self._respond_decision_task_completed_op = self._build_swf_op(
-            "RespondDecisionTaskCompleted")
-        self._signal_workflow_execution_op = self._build_swf_op(
-            "SignalWorkflowExecution")
-        self._register_workflow_type_op = self._build_swf_op(
-            "RegisterWorkflowType")
-
         self._setup()
 
     def __getstate__(self):
-        newdict = copy.copy(self.__dict__)
+        newdict = BaseWorker.__getstate__(self)
         del newdict['_decider']
         return newdict
     
     def __setstate__(self, newdict):
+        BaseWorker.__setstate__(self, newdict)
         self.__dict__ = newdict
         self._setup()
 
@@ -113,7 +106,8 @@ class GenericWorkflowWorker(BaseWorker):
                   "options: %s", options)
 
         try:
-            self._register_workflow_type_op(**options)
+            with swf_exception_wrapper():
+                self.client.register_workflow_type(**options)
         except TypeAlreadyExistsError:
             log.debug("Workflow '%s %s' already registered",
                       workflow_type.name, workflow_type.version)
@@ -139,8 +133,10 @@ class WorkflowWorker(GenericWorkflowWorker):
     :py:func:`~awsflow.decorators.execute` decorated method to process the
     task.
 
-    :param endpoint: botocore Endpoint object.
-    :type endpoint: botocore.endpoint.endpoint
+    :param session: botocore session object.
+    :type session: botocore.session.Session
+    :param aws_region: aws region to connect to
+    :type aws_region: str
     :param str domain: SWF domain to operate on.
     :param str task_list: default task list on which to put all the workflow
         requests.
@@ -153,19 +149,19 @@ class WorkflowWorker(GenericWorkflowWorker):
 
         # create the workflow worker using botocore endpoint and register
         # ExampleWorkflow class
-        wf_worker = WorkflowWorker(endpoint, "SOMEDOMAIN", "MYTASKLIST",
+        wf_worker = WorkflowWorker(session, "us-east-1", "SOMEDOMAIN", "MYTASKLIST",
                                    ExampleWorkflow)
         wf_worker.run()
 
     """
 
-    def __init__(self, endpoint, domain, task_list,
+    def __init__(self, session, aws_region, domain, task_list,
                  *workflow_definitions):
 
         # holds all of our workflows
         self._workflow_definitions = workflow_definitions
 
-        super(WorkflowWorker, self).__init__(endpoint, domain, task_list, None)
+        super(WorkflowWorker, self).__init__(session, aws_region, domain, task_list, None)
 
         self._register_all_workflows()
     
@@ -183,7 +179,7 @@ class WorkflowWorker(GenericWorkflowWorker):
 
     def _get_workflow_finder(self):
         self._setup_workflow_definitions()
-        return lambda name,version: self._workflows[(name, version)]
+        return lambda name, version: self._workflows[(name, version)]
 
     def _setup_workflow_definitions(self):
         self._workflows = extract_workflows_dict(self._workflow_definitions)

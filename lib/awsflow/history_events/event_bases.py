@@ -11,16 +11,17 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+
 class EventBase(object):
-    def __init__(self, event_id, timestamp, attributes):
+    def __init__(self, event_id, datetime, attributes):
         self.id = event_id
-        self.timestamp = float(timestamp)
+        self.datetime = datetime
         self.attributes = attributes
 
     def __repr__(self):
-        return "<%s id=%d, time=%f, attributes=%s>" % (
-            self.__class__.__name__, self.id, self.timestamp,
-            repr(self.attributes))
+        return "<{0} id={1}, time={2}, attributes={3}>".format(
+            self.__class__.__name__, self.id, self.datetime,
+            self.attributes)
 
 
 class ActivityEventBase(EventBase):

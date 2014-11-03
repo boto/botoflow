@@ -23,6 +23,7 @@ from ..workflow_execution import WorkflowExecution
 from ..core import async, async_traceback, Future, return_, AsyncEventLoop
 from ..utils import pairwise
 from ..constants import USE_WORKER_TASK_LIST
+from ..swf_exceptions import swf_exception_wrapper
 
 from ..history_events import (
     WorkflowExecutionStarted, ActivityTaskScheduled, ActivityTaskTimedOut,
@@ -120,7 +121,7 @@ class Decider(object):
                 elif isinstance(event, DecisionTaskStarted):
                     decision_started = True
                     if next_event is None or not isinstance(next_event, DecisionTaskTimedOut):
-                        get_context()._workflow_time = event.timestamp
+                        get_context()._workflow_time = event.datetime
                 elif isinstance(event, (DecisionTaskScheduled, DecisionTaskTimedOut)):
                     continue
                 else:
@@ -161,10 +162,11 @@ class Decider(object):
             workflow_state = get_context().workflow.workflow_state
 
             log.debug("Sending workflow decisions: %s", self._decisions)
-            self.worker._respond_decision_task_completed_op(
-                task_token=self._decision_task_token,
-                decisions=self._decisions.to_swf(),
-                execution_context=workflow_state)
+            with swf_exception_wrapper():
+                self.worker.client.respond_decision_task_completed(
+                    taskToken=self._decision_task_token,
+                    decisions=self._decisions.to_swf(),
+                    executionContext=workflow_state)
 
         # basically garbage collect
         Future.untrack_all_coroutines()
@@ -297,10 +299,10 @@ class Decider(object):
             if isinstance(event, ChildWorkflowExecutionStarted):
                 # set the workflow_execution information on the instance
                 workflow_instance = self._open_child_workflows[workflow_id] \
-                                    ['workflow_instance']
+                                    ['workflowInstance']
                 workflow_started_future = self._open_child_workflows \
                                           [workflow_id] \
-                                          ['workflow_started_future']
+                                          ['workflowStartedFuture']
 
 
                 workflow_id = event.attributes['workflowExecution']['workflowId']
@@ -403,7 +405,8 @@ class Decider(object):
                 # any subsequent executions will be counted "continue as new"
                 self.execution_started = True
                 execute_result = yield future
-
+                print("###################")
+                print(execute_result)
                 # XXX should these be the only decisions?
                 if self._continue_as_new_on_completion is None:
                     log.debug(
@@ -411,11 +414,13 @@ class Decider(object):
                     self._decisions.append(CompleteWorkflowExecution(
                         workflow_type.data_converter.dumps(execute_result)))
                 else:
+                    print("Continue ASSSSSSSSSSSSSSSS")
                     log.debug("ContinueAsNew: %s",
                               self._continue_as_new_on_completion)
                     self._decisions.append(self._continue_as_new_on_completion)
 
             except Exception as err:
+                print("###################################################")
                 tb_list = async_traceback.extract_tb()
                 log.debug("Workflow execute() raised an exception:\n%s",
                           "".join(traceback.format_exc()))
@@ -423,6 +428,10 @@ class Decider(object):
                 # the execution
                 # XXX Validate this is the right action
                 self._decisions = DecisionList()
+                print("###################################################")
+                print(err)
+                print(tb_list)
+                print(workflow_type.data_converter.dumps([err, tb_list]))
                 self._decisions.append(FailWorkflowExecution(
                     '', workflow_type.data_converter.dumps([err, tb_list])))
 
@@ -479,7 +488,7 @@ class Decider(object):
 
         log.debug("Workflow start child workflow execution: %s", decision)
 
-        workflow_id = decision_dict['workflow_id']
+        workflow_id = decision_dict['workflowId']
 
         # set the future that represents the result of our activity
         workflow_future = Future()
@@ -490,8 +499,8 @@ class Decider(object):
         six.next(handler)  # arm
         self._open_child_workflows[workflow_id] = {
             'future': workflow_future, 'handler': handler,
-            'workflow_instance': workflow_instance,
-            'workflow_started_future': workflow_started_future}
+            'workflowInstance': workflow_instance,
+            'workflowStartedFuture': workflow_started_future}
 
         @async
         def wait_workflow_start():

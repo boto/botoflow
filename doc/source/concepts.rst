@@ -205,7 +205,7 @@ host-specific task list:
 .. code-block:: python
 
     from socket import gethostname
-    swf_endpoint = botocore.session.get_session().get_service('swf').get_endpoint('us-east-1')
-    worker = ActivityWorker(swf_endpoint, 'domain1', gethostname(), ImageActivities())
+    swf_session = botocore.session.get_session()
+    worker = ActivityWorker(swf_session, 'us-east-1', 'domain1', gethostname(), ImageActivities())
     worker.run()
 

@@ -20,7 +20,7 @@ class BaseRetryStrategy(object):
     def next_delay(self, error, timestamp, user_context=None):
         """Returns the new delay in seconds or raises the error
         :param Exception error: error to retry or raise on
-        :param float timestamp: timestamp of the error
+        :param float timestamp: datetime of the error
         :param object user_context: user specific context
         """
         raise NotImplementedError()
@@ -44,14 +44,14 @@ class BaseRetryStrategy(object):
     @property
     def timestamp(self):
         """
-        :return int: returns the last timestamp of error
+        :return int: returns the last datetime of error
         """
         return self._last_timestamp
 
     @property
     def first_timestamp(self):
         """
-        :return float: timestamp of the first error
+        :return float: datetime of the first error
         """
         return self._first_timestamp
 

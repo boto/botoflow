@@ -1,36 +1,36 @@
-from awsflow.workers.swf_op_callable import SWFOp
+from awsflow.swf_exceptions import swf_exception_wrapper
 from awsflow.data_converter import JSONDataConverter
 from awsflow.core.exceptions import CancellationError
 
 
 class ManualActivityCompletionClient(object):
-    def __init__(self, swf_endpoint, data_converter=JSONDataConverter()):
-        _op = swf_endpoint.service.get_operation('RespondActivityTaskCompleted')
-        self._complete_activity_op = SWFOp(swf_endpoint, _op)
+    def __init__(self, swf_client, data_converter=JSONDataConverter()):
+        """Helper class to work with manual activities
 
-        _op = swf_endpoint.service.get_operation('RespondActivityTaskFailed')
-        self._failed_activity_op = SWFOp(swf_endpoint, _op)
-
-        _op = swf_endpoint.service.get_operation('RespondActivityTaskCanceled')
-        self._cancelled_activity_op = SWFOp(swf_endpoint, _op)
-
-        _op = swf_endpoint.service.get_operation('RecordActivityTaskHeartbeat')
-        self._record_activity_heartbeat_op = SWFOp(swf_endpoint, _op)
- 
+        :param swf_client: botocore SWF client
+        :type swf_client: botocore.clients.Client
+        :param data_converter: DataConverter to use for marshaling data
+        :type data_converter: awsflow.data_converter.BaseDataConverter
+        """
+        self._swf_client = swf_client
         self.data_converter = data_converter
 
     def complete(self, result, task_token):
         result = self.data_converter.dumps(result)
-        self._complete_activity_op(result=result, task_token=task_token)
+        with swf_exception_wrapper():
+            self._swf_client.respond_activity_task_completed(result=result, taskToken=task_token)
 
     def fail(self, details, task_token, reason=''):
         details = self.data_converter.dumps(details)
-        self._failed_activity_op(details=details, reason=reason, task_token=task_token)
+        with swf_exception_wrapper():
+            self._swf_client.respond_activity_task_failed(details=details, reason=reason, taskToken=task_token)
 
     def cancel(self, details, task_token):
-        self._cancelled_activity_op(details=details, task_token=task_token)
+        with swf_exception_wrapper():
+            self._swf_client.respond_activity_task_cancelled(details=details, taskToken=task_token)
 
     def record_heartbeat(self, details, task_token):
-        response_data = self._record_activity_hearbeat_op(details=details, task_token=task_token)
+        with swf_exception_wrapper():
+            response_data = self._swf_client.record_activity_task_hearbeat(details=details, taskToken=task_token)
         if response_data['cancelRequested']:
             raise CancellationError()

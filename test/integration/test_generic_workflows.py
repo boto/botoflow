@@ -45,14 +45,14 @@ class TestGenericWorkflows(SWFMixIn, unittest.TestCase):
                 return_(arg_sum)
 
         wf_worker = GenericWorkflowWorker(
-            self.endpoint, self.domain, self.task_list, WorkflowFinder(OneActivityWorkflow))
+            self.session, self.region, self.domain, self.task_list, WorkflowFinder(OneActivityWorkflow))
 
         self._register_workflows(wf_worker)
 
         act_worker = ThreadedActivityExecutor(ActivityWorker(
-            self.endpoint, self.domain, self.task_list, BunchOfActivities()))
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -64,10 +64,10 @@ class TestGenericWorkflows(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 11)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
 
 
 

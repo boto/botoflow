@@ -109,7 +109,7 @@ class TestJSONDataConverter(unittest.TestCase):
         self.assertEqual('test', self.dumps_loads('test'))
 
     def test_unicode(self):
-        ustring = unichr(40960) + u'abcd' + unichr(1972)
+        ustring = six.unichr(40960) + u'abcd' + six.unichr(1972)
         self.assertEqual(ustring, self.dumps_loads(ustring))
 
     def test_zlib(self):

@@ -18,11 +18,11 @@ class TestMultiWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_two_workflows(self):
         wf_worker = WorkflowWorker(
-            self.endpoint, self.domain, self.task_list,
+            self.session, self.region, self.domain, self.task_list,
             OneMultiWorkflow, TwoMultiWorkflow)
         act_worker = ActivityWorker(
-            self.endpoint, self.domain, self.task_list, BunchOfActivities())
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities())
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = OneMultiWorkflow.execute(arg1=1, arg2=2)
             self.workflow_executions.append(instance.workflow_execution)
             instance = TwoMultiWorkflow.execute(arg1=1, arg2=2)

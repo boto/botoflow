@@ -13,9 +13,10 @@
 
 import multiprocessing
 import multiprocessing.queues
-import pickle
 import signal
 import logging
+
+import dill
 
 from ..core import async_traceback
 
@@ -73,7 +74,7 @@ class MultiprocessingWorkflowExecutor(MultiprocessingExecutor):
                     handler(err, tb_list)
 
         def run_decider_with_exc(executor_pickle):
-            executor = pickle.loads(executor_pickle)
+            executor = dill.loads(executor_pickle)
             initializer = self.initializer
             initializer(executor)
             try:
@@ -91,7 +92,7 @@ class MultiprocessingWorkflowExecutor(MultiprocessingExecutor):
             with start_condition:
                 self._process_queue.put(i)
                 process = multiprocessing.Process(target=run_decider_with_exc,
-                                                  args=(pickle.dumps(self),))
+                                                  args=(dill.dumps(self),))
                 process.daemon = True
                 process.name = "%r Process-%d" % (self, i)
                 process.start()

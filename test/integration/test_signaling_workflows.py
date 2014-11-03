@@ -56,10 +56,10 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_signalled_workflow(self):
         wf_worker = WorkflowWorker(
-            self.endpoint, self.domain, self.task_list,
+            self.session, self.region, self.domain, self.task_list,
             SignalledWorkflow)
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = SignalledWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -73,17 +73,17 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 11)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'Signaled')
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 'Signaled')
 
     def test_signalled_many_input_workflow(self):
         wf_worker = WorkflowWorker(
-            self.endpoint, self.domain, self.task_list,
+            self.session, self.region, self.domain, self.task_list,
             SignalledManyInputWorkflow)
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = SignalledManyInputWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -97,10 +97,10 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 10)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 10)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']),
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']),
                          [1,2,3,4])
 
 

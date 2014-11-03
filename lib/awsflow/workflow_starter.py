@@ -25,6 +25,7 @@ import logging
 from .context import StartWorkflowContext, get_context, set_context
 from .workers.swf_op_callable import SWFOp
 from .utils import random_sha1_hash
+from .swf_exceptions import swf_exception_wrapper
 from .exceptions import (
     WorkflowFailedError, WorkflowTimedOutError, WorkflowTerminatedError)
 
@@ -40,24 +41,17 @@ class WorkflowStarter(object):
 
         # start the workflow using botocore session and ExampleWorkflow class
         # with a random workflow_id
-        with WorkflowStarter(endpoint, "SOMEDOMAIN", "DEFAULT_TASKLIST"):
+        with WorkflowStarter(session, "us-east-1", "SOMEDOMAIN", "DEFAULT_TASKLIST"):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             print instance.workflow_execution.workflow_id
             # will print the workflow execution ID
     """
 
-    def __init__(self, endpoint, domain, default_task_list):
+    def __init__(self, session, aws_region, domain, default_task_list):
         self.domain = domain
         self.task_list = default_task_list
-
-        _op = endpoint.service.get_operation("StartWorkflowExecution")
-        self._start_workflow_execution_op = SWFOp(endpoint, _op)
-        _op = endpoint.service.get_operation("SignalWorkflowExecution")
-        self._signal_workflow_execution_op = SWFOp(endpoint, _op)
-        _op = endpoint.service.get_operation("DescribeWorkflowExecution")
-        self._describe_workflow_execution_op = SWFOp(endpoint, _op)
-        _op = endpoint.service.get_operation("GetWorkflowExecutionHistory")
-        self._get_workflow_execution_history_op = SWFOp(endpoint, _op)
+        self.client = session.create_client(
+            service_name='swf', region_name=aws_region)
 
     def __enter__(self):
         try:
@@ -108,10 +102,11 @@ class WorkflowStarter(object):
                                               workflow_execution)
 
     def _get_workflow_execution_status(self, workflow_execution):
-        workflow_execution = self._describe_workflow_execution_op(
-            domain=self.domain,
-            execution={'workflowId': workflow_execution.workflow_id,
-                       'runId': workflow_execution.run_id})
+        with swf_exception_wrapper():
+            workflow_execution = self.client.describe_workflow_execution(
+                domain=self.domain,
+                execution={'workflowId': workflow_execution.workflow_id,
+                           'runId': workflow_execution.run_id})
 
         execution_status = workflow_execution['executionInfo']['executionStatus']
         if execution_status != 'OPEN':
@@ -139,10 +134,11 @@ class WorkflowStarter(object):
                                   workflow_execution, exc, traceback)
 
     def _get_last_event(self, workflow_execution):
-        last_event = self._get_workflow_execution_history_op(
-            domain=self.domain,
-            execution={'workflowId': workflow_execution.workflow_id,
-                       'runId': workflow_execution.run_id})['events'][-1]
+        with swf_exception_wrapper():
+            last_event = self.client.get_workflow_execution_history(
+                domain=self.domain,
+                execution={'workflowId': workflow_execution.workflow_id,
+                           'runId': workflow_execution.run_id})['events'][-1]
         return last_event
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):
@@ -154,6 +150,7 @@ class WorkflowStarter(object):
         log.debug("Starting workflow execution with args: %s",
                   decision_dict)
 
-        response = self._start_workflow_execution_op(**decision_dict)
-        return decision_dict['workflow_id'], response['runId']
+        with swf_exception_wrapper():
+            response = self.client.start_workflow_execution(**decision_dict)
+        return decision_dict['workflowId'], response['runId']
 

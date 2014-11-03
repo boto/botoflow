@@ -16,6 +16,7 @@ __all__ = ('WorkflowType', 'ActivityType')
 
 import abc
 
+from .swf_exceptions import swf_exception_wrapper
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .utils import str_or_NONE
 from .data_converter import AbstractDataConverter, JSONDataConverter
@@ -97,19 +98,19 @@ class WorkflowType(BaseFlowType):
         serialized_input = self.data_converter.dumps(input)
 
         decision_dict = {
-            'workflow_type': {'version': self.version,
+            'workflowType': {'version': self.version,
                               'name': self.name},
-            'task_list': {'name': str_or_NONE(task_list)},
-            'child_policy': str_or_NONE(self.child_policy),
-            'execution_start_to_close_timeout': str_or_NONE(
+            'taskList': {'name': str_or_NONE(task_list)},
+            'childPolicy': str_or_NONE(self.child_policy),
+            'executionStartToCloseTimeout': str_or_NONE(
                 self.execution_start_to_close_timeout),
-            'task_start_to_close_timeout': str_or_NONE(
+            'taskStartToCloseTimeout': str_or_NONE(
                 self.task_start_to_close_timeout),
             'input': serialized_input}
 
         # for child workflows
         if workflow_id is not None and self.workflow_id is None:
-            decision_dict['workflow_id'] = workflow_id
+            decision_dict['workflowId'] = workflow_id
 
         if domain is not None:
             decision_dict['domain'] = domain
@@ -145,11 +146,11 @@ class WorkflowType(BaseFlowType):
             'domain': domain,
             'version': self.version,
             'name': self.name,
-            'default_task_list': {'name': str_or_NONE(task_list)},
-            'default_child_policy': str_or_NONE(self.child_policy),
-            'default_execution_start_to_close_timeout': str_or_NONE(
+            'defaultTaskList': {'name': str_or_NONE(task_list)},
+            'defaultChildPolicy': str_or_NONE(self.child_policy),
+            'defaultExecutionStartToCloseTimeout': str_or_NONE(
                 self.execution_start_to_close_timeout),
-            'default_task_start_to_close_timeout': str_or_NONE(
+            'defaultTaskStartToCloseTimeout': str_or_NONE(
                 self.task_start_to_close_timeout),
             'description': str_or_NONE(self.description)
         }
@@ -251,7 +252,7 @@ class ActivityType(BaseFlowType):
         decision_dict = {
             'activity_type_version': self.version,
             'activity_type_name': self.name,
-            'task_list': {'name':str_or_NONE(self.task_list)},
+            'task_list': {'name': str_or_NONE(self.task_list)},
             'heartbeat_timeout': str_or_NONE(self.heartbeat_timeout),
             'schedule_to_start_timeout': str_or_NONE(
                 self.schedule_to_start_timeout),
@@ -273,14 +274,14 @@ class ActivityType(BaseFlowType):
             'domain': domain,
             'version': self.version,
             'name': self.name,
-            'default_task_list': {'name': str_or_NONE(task_list)},
-            'default_task_heartbeat_timeout': str_or_NONE(
+            'defaultTaskList': {'name': str_or_NONE(task_list)},
+            'defaultTaskHeartbeatTimeout': str_or_NONE(
                 self.heartbeat_timeout),
-            'default_task_schedule_to_start_timeout': str_or_NONE(
+            'defaultTaskScheduleToStartTimeout': str_or_NONE(
                 self.schedule_to_start_timeout),
-            'default_task_start_to_close_timeout': str_or_NONE(
+            'defaultTaskStartToCloseTimeout': str_or_NONE(
                 self.start_to_close_timeout),
-            'default_task_schedule_to_close_timeout': str_or_NONE(
+            'defaultTaskScheduleToCloseTimeout': str_or_NONE(
                 self.schedule_to_close_timeout),
             'description': str_or_NONE(self.description)
         }
@@ -352,8 +353,9 @@ class SignalType(BaseFlowType):
             raise RuntimeError(
                 "Unsupported context for this call: %r" % context)
 
-        context.worker._signal_workflow_execution_op(
-            domain=context.worker.domain, signal_name=self.name,
-            workflow_id=workflow_execution.workflow_id,
-            run_id=workflow_execution.run_id,
-            input=serialized_input)
+        with swf_exception_wrapper():
+            context.worker.client.signal_workflow_execution(
+                domain=context.worker.domain, signalName=self.name,
+                workflowId=workflow_execution.workflow_id,
+                runId=workflow_execution.run_id,
+                input=serialized_input)

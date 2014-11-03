@@ -23,8 +23,8 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
     def test_no_activities(self):
 
         worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
-            self.endpoint, self.domain, self.task_list, NoActivitiesWorkflow))
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            self.session, self.region, self.domain, self.task_list, NoActivitiesWorkflow))
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -35,16 +35,16 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
         time.sleep(2)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 5)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 5)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'TestExecution')
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 'TestExecution')
 
     def test_no_activities_failure(self):
 
         worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
-            self.endpoint, self.domain, self.task_list, NoActivitiesFailureWorkflow))
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+            self.session, self.region, self.domain, self.task_list, NoActivitiesFailureWorkflow))
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -54,20 +54,20 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 5)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionFailed')
+        self.assertEqual(len(hist), 5)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionFailed')
         self.assertEqual(str(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionFailedEventAttributes']['details'])[0]),
+            hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]),
                          "ExecutionFailed")
 
     def test_one_activity(self):
         wf_worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
-            self.endpoint, self.domain, self.task_list, OneActivityWorkflow))
+            self.session, self.region, self.domain, self.task_list, OneActivityWorkflow))
 
         act_worker = MultiprocessingActivityExecutor(ActivityWorker(
-            self.endpoint, self.domain, self.task_list, BunchOfActivities()))
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -81,10 +81,10 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 11)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
 
 if __name__ == '__main__':
     unittest.main()

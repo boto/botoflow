@@ -85,11 +85,11 @@ class DecisionTaskPoller(object):
         poll_time = time.time()
         try:
             kwargs = {'domain': self.domain,
-                      'task_list': {'name':self.task_list},
+                      'taskList': {'name': self.task_list},
                       'identity': self.identity}
             if next_page_token is not None:
-                kwargs['next_page_token'] = next_page_token
-            return self.worker._poll_for_decision_task_op(**kwargs)
+                kwargs['nextPageToken'] = next_page_token
+            return self.worker.client.poll_for_decision_task(**kwargs)
 
         except KeyboardInterrupt:
             # seep before actually exiting as the connection is not yet closed

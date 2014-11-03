@@ -11,7 +11,7 @@ Prerequisites
 
 To develop applications that use the AWS Flow Framework in Python, you will need:
 
-* A working Python 2.6+ environment.
+* A working Python 2.7+ environment.
 * `BotoCore <https://pypi.python.org/pypi/botocore>`_ (and it's dependencies).
 * AWS Flow.
 * An active AWS account signed up for `Simple Workflow Service <http://aws.amazon.com/swf>`_.

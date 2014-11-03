@@ -24,7 +24,7 @@ logging.getLogger().addFilter(logging_filters.AWSFlowFilter())
 class TestManualActivities(SWFMixIn, unittest.TestCase):
 
     def test_one_manual_activity(self):
-        swf_endpoint = self.endpoint
+        swf_client = self.client
         class OneManualActivityWorkflow(WorkflowDefinition):
             def __init__(self, workflow_execution):
                 super(OneManualActivityWorkflow, self).__init__(workflow_execution)
@@ -35,17 +35,17 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
                 return_(result)
 
         wf_worker = WorkflowWorker(
-            self.endpoint, self.domain, self.task_list, OneManualActivityWorkflow)
+            self.session, self.region, self.domain, self.task_list, OneManualActivityWorkflow)
 
         act_executor = ThreadedActivityExecutor(ActivityWorker(
-            self.endpoint, self.domain, self.task_list, ManualActivities()))
+            self.session, self.region, self.domain, self.task_list, ManualActivities()))
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = OneManualActivityWorkflow.execute(template='instructions.tmpl')
             self.workflow_execution = instance.workflow_execution
 
         def complete_this_activity():
-            activities_client = ManualActivityCompletionClient(swf_endpoint)
+            activities_client = ManualActivityCompletionClient(swf_client)
             with open('task_token.txt', 'r') as shared_file:
                 task_token = shared_file.read()
             os.remove('task_token.txt')
@@ -67,14 +67,14 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 11)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 'Manual Activity Done')
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 'Manual Activity Done')
 
 
     def test_one_manual_one_automatic_activity(self):
-        swf_endpoint = self.endpoint
+        swf_client = self.client
         class OneManualOneAutomaticActivityWorkflow(WorkflowDefinition):
             def __init__(self, workflow_execution):
                 super(OneManualOneAutomaticActivityWorkflow, self).__init__(workflow_execution)
@@ -86,18 +86,18 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
                 return_(arg_sum)
 
         wf_worker = WorkflowWorker(
-            self.endpoint, self.domain, self.task_list, OneManualOneAutomaticActivityWorkflow)
+            self.session, self.region, self.domain, self.task_list, OneManualOneAutomaticActivityWorkflow)
 
         act_worker = ActivityWorker(
-            self.endpoint, self.domain, self.task_list,
+            self.session, self.region, self.domain, self.task_list,
             BunchOfActivities(), ManualActivities())
 
-        with WorkflowStarter(self.endpoint, self.domain, self.task_list):
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
             instance = OneManualOneAutomaticActivityWorkflow.execute(template='instructions.tmpl')
             self.workflow_execution = instance.workflow_execution
 
         def complete_this_activity():
-            activities_client = ManualActivityCompletionClient(swf_endpoint)
+            activities_client = ManualActivityCompletionClient(swf_client)
             with open('task_token.txt', 'r') as shared_file:
                 task_token = shared_file.read()
             os.remove('task_token.txt')
@@ -117,10 +117,10 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist['events']), 17)
-        self.assertEqual(hist['events'][-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(len(hist), 17)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 7)
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 7)
 
 if __name__ == '__main__':
     unittest.main()
