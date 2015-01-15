@@ -390,9 +390,10 @@ class Decider(object):
 
         context.workflow = workflow_instance
 
-        # get input parameters from the workflow starter
-        args, kwargs = workflow_type.data_converter.loads(
-            event.attributes['input'])
+        if not event.attributes.get('input'):
+            args, kwargs = [], {}
+        else:
+            args, kwargs = workflow_type.data_converter.loads(event.attributes['input'])
 
         # make sure kwargs are non-unicode in 2.6
         if sys.version_info[0:2] == (2, 6):
