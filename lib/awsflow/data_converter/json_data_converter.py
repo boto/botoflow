@@ -188,8 +188,22 @@ def _flow_obj_decoder(dct):
     else:
         return dct
 
-    module = __import__(module_name, globals(), locals(), [attr_name], 0)
-    cls = getattr(module, attr_name)
+    try:
+        # attempt to import the module and cls of the object specified
+        module = __import__(module_name, globals(), locals(), [attr_name], 0)
+        cls = getattr(module, attr_name)
+
+    # if an import error is raised
+    except ImportError:
+        # try and rescue objects with exception information by bundling them
+        # into a ImportError
+        if '__exc' in dct:
+            cls = ImportError
+            # prepend the original exception class to the exception message
+            dct['__exc'][1] = "%s.%s: %s" % (module_name, attr_name, dct['__exc'][1])
+        else:
+            # otherwise there isn't much we can do
+            raise
 
     # don't need an object at all
     if '__class' in dct:

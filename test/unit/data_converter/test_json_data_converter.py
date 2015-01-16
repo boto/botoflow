@@ -53,6 +53,11 @@ class MyWorkflowDefinition(WorkflowDefinition):
     def execute_test(self):
         pass
 
+class MyCustomException(Exception):
+    def __init__(self, message, other):
+        super(MyCustomException, self).__init__(message)
+        self.other = other
+
 
 class TestJSONDataConverter(unittest.TestCase):
 
@@ -179,6 +184,25 @@ class TestJSONDataConverter(unittest.TestCase):
         self.assertEqual(MyWorkflowDefinition,
                          self.serde.loads(
                              self.serde.dumps(MyWorkflowDefinition)))
+
+    def test_exceptions(self):
+        e = MyCustomException(u'some error message', 'someparam')
+        r = self.dumps_loads(e)
+
+        self.assertEqual(e.message, r.message)
+        self.assertEqual(e.other, r.other)
+
+    def test_unimportable_exception(self):
+        raw = '{"__obj":["unknown_module:MyUnknownException",{"other":"someparam"}],"__exc":[["some error message"],"some error message"]}'
+        r = self.serde.loads(raw)
+        self.assertTrue(isinstance(r, ImportError))
+        self.assertEqual(r.message, 'unknown_module.MyUnknownException: some error message')
+        self.assertEqual(r.other, 'someparam')
+
+    def test_unimportable_object(self):
+        raw = '{"__obj":["unknown_module:MyUnknownObject",{"other":"someparam"}]}'
+        with self.assertRaises(ImportError):
+            self.serde.loads(raw)
 
 if __name__ == '__main__':
     unittest.main()
