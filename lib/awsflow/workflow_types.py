@@ -121,6 +121,12 @@ class WorkflowType(BaseFlowType):
         _decision_dict = {}
         _decision_dict.update(decision_dict)
         _decision_dict.update(context._workflow_options_overrides.items())
+
+        # apply overrides for workflowId
+        if _decision_dict['workflow_id'] is not None:
+            _decision_dict['workflowId'] = _decision_dict['workflow_id']
+            del _decision_dict['workflow_id']
+
         return _decision_dict
 
     def to_continue_as_new_dict(self, input, worker_task_list):
