@@ -21,7 +21,7 @@ import six
 from ..context import get_context, set_context, DecisionContext
 from ..workflow_execution import WorkflowExecution
 from ..core import async, async_traceback, Future, return_, AsyncEventLoop
-from ..utils import pairwise
+from ..utils import pairwise, translate_kwargs
 from ..constants import USE_WORKER_TASK_LIST
 from ..swf_exceptions import swf_exception_wrapper
 
@@ -481,15 +481,15 @@ class Decider(object):
         run_id = get_context().run_id
         workflow_id = "%s:%s" % (run_id, self.get_next_id())
 
-        decision_dict = workflow_type.to_decision_dict(
-            input, workflow_id, self.task_list)
+        decision_dict = translate_kwargs(workflow_type.to_decision_dict(
+            input, workflow_id, self.task_list))
 
         decision = StartChildWorkflowExecution(**decision_dict)
         self._decisions.append(decision)
 
         log.debug("Workflow start child workflow execution: %s", decision)
 
-        workflow_id = decision_dict['workflowId']
+        workflow_id = decision_dict['workflow_id']
 
         # set the future that represents the result of our activity
         workflow_future = Future()

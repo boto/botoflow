@@ -123,7 +123,7 @@ class WorkflowType(BaseFlowType):
         _decision_dict.update(context._workflow_options_overrides.items())
 
         # apply overrides for workflowId
-        if _decision_dict['workflow_id'] is not None:
+        if 'workflow_id' in _decision_dict and _decision_dict['workflow_id'] is not None:
             _decision_dict['workflowId'] = _decision_dict['workflow_id']
             del _decision_dict['workflow_id']
 

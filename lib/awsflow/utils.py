@@ -13,6 +13,7 @@
 
 """**INTERNAL**
 """
+import re
 import hashlib
 import time
 import random
@@ -26,6 +27,7 @@ from .workflow_definition import WorkflowDefinition
 WorkflowDetails = namedtuple('WorkflowDetails',
                              'name version skip_registration '
                              'registration_options')
+
 
 
 def str_or_NONE(value):
@@ -95,3 +97,22 @@ def extract_workflows_dict(workflow_definitions):
                                   func_name)
 
     return workflows
+
+
+# regex for translating kwarg case
+_first_cap_replace = re.compile(r'(.)([A-Z][a-z]+)')
+_remainder_cap_replace = re.compile(r'([a-z0-9])([A-Z])')
+
+def translate_kwargs(dictionary):
+    """
+    Translate a dictionary containing camelCase keys into dictionary with
+    snake_case keys that match python kwargs well.
+    """
+    output = {}
+    for original_key in dictionary.keys():
+        # insert an underscore before any word beginning with a capital followed by lower case
+        translated_key = _first_cap_replace.sub(r'\1_\2', original_key)
+        # insert an underscore before any remaining capitals that follow lower case characters
+        translated_key = _remainder_cap_replace.sub(r'\1_\2', translated_key).lower()
+        output[translated_key] = dictionary[original_key]
+    return output
