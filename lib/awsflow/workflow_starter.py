@@ -135,11 +135,28 @@ class WorkflowStarter(object):
 
     def _get_last_event(self, workflow_execution):
         with swf_exception_wrapper():
-            last_event = self.client.get_workflow_execution_history(
-                domain=self.domain,
-                execution={'workflowId': workflow_execution.workflow_id,
-                           'runId': workflow_execution.run_id})['events'][-1]
-        return last_event
+            # start with no token to request the first page of events
+            next_page_token = None
+            while True:
+                kwargs = {'domain': self.domain,
+                          'execution':
+                            {'workflowId': workflow_execution.workflow_id,
+                             'runId': workflow_execution.run_id}}
+                if next_page_token:
+                    # if we have a token, request the next page of events
+                    kwargs['nextPageToken'] = next_page_token
+
+                workflow_execution_history = self.client.get_workflow_execution_history(**kwargs)
+
+                try:
+                    # paginated results: record token to request next page
+                    next_page_token = workflow_execution_history['nextPageToken']
+                except KeyError:
+                    # no more pages
+                    break
+
+        # return the final event in the workflow execution history
+        return workflow_execution_history['events'][-1]
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):
         """Calls SWF to start the workflow using our workflow_type"""
