@@ -50,6 +50,9 @@ def test_simple_workflow_testing():
         with WorkflowTestingContext():
             result = SimpleWorkflow.run(1,2)
     assert 6 == result.result()
+    assert BunchOfActivities.__dict__['sum'].__dict__['func'].swf_options['activity_type'].schedule_to_start_timeout == 60
+    assert BunchOfActivities.__dict__['mul'].__dict__['func'].swf_options['activity_type'].schedule_to_start_timeout == 60
+    assert BunchOfActivities.__dict__['mul'].__dict__['func'].swf_options['activity_type'].schedule_to_close_timeout == 120
 
 
 def test_activity_not_stubbed_exception():

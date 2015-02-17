@@ -175,7 +175,7 @@ def activities(task_list=USE_WORKER_TASK_LIST,
             except AttributeError:
                 continue
 
-            if isinstance(_func, types.MethodType):
+            if isinstance(_func, types.FunctionType):
                 if hasattr(_func, 'swf_options'):  # decorated
                     _set_swf_options(_func, 'activity_name_prefix',
                                      activity_name_prefix)
