@@ -14,10 +14,11 @@
 import types
 
 from . import decorator_descriptors
+from .activity_retrying import Retrying
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .workflow_types import WorkflowType, ActivityType, SignalType
 
-__all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal')
+__all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal', 'retry')
 
 
 def _str_or_none(value):
@@ -295,6 +296,52 @@ def activity(version,
         return decorator_descriptors.ActivityFunc(func)
 
     return _activity
+
+
+def retry_activity(stop_max_attempt_number=None, stop_max_delay=None, wait_fixed=None, wait_random_min=None,
+                   wait_random_max=None, wait_incrementing_start=None, wait_incrementing_increment=None,
+                   wait_exponential_multiplier=None, wait_exponential_max=None, retry_on_exception=None,
+                   retry_on_result=None, wrap_exception=False, stop_func=None, wait_func=None):
+    """Retry activity decorator
+
+    (based on the :py:module:`retrying` library)
+
+    :param stop_max_attempt_number:
+    :param stop_max_delay:
+    :param wait_fixed:
+    :param wait_random_min:
+    :param wait_random_max:
+    :param wait_incrementing_start:
+    :param wait_incrementing_increment:
+    :param wait_exponential_multiplier:
+    :param wait_exponential_max:
+    :param retry_on_exception:
+    :param retry_on_result:
+    :param wrap_exception:
+    :param stop_func:
+    :param wait_func:
+    """
+    def _retry(func):
+        retrying = Retrying(stop_max_attempt_number=stop_max_attempt_number,
+                            stop_max_delay=stop_max_delay, wait_fixed=wait_fixed, wait_random_min=wait_random_min,
+                            wait_random_max=wait_random_max, wait_incrementing_start=wait_incrementing_start,
+                            wait_incrementing_increment=wait_incrementing_increment,
+                            wait_exponential_multiplier=wait_exponential_multiplier,
+                            wait_exponential_max=wait_exponential_max, retry_on_exception=retry_on_exception,
+                            retry_on_result=retry_on_result,
+                            wrap_exception=wrap_exception,
+                            stop_func=stop_func,
+                            wait_func=wait_func)
+
+        # is the activity already wrapped in a descriptor?
+        if isinstance(func, decorator_descriptors.ActivityFunc):
+            _set_swf_options(func.func, 'activity_retrying', retrying)
+        else:
+            _set_swf_options(func, 'activity_retrying', retrying)
+
+        return func
+
+    return _retry
 
 
 def manual_activity(version,

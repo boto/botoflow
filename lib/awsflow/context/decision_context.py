@@ -57,7 +57,7 @@ class DecisionContext(ContextBase):
         ``awsflow.workflow_time.time``
 
         :returns: workflow time
-        :rtype: float
+        :rtype: datetime.datetime
         """
         return self.__time
 

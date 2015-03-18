@@ -63,6 +63,8 @@ class ActivityFunc(object):
         # otherwise, return the function
 
         activity_type = self.func.swf_options['activity_type']
+        activity_type.retrying = self.func.swf_options.get('activity_retrying', None)
+
         activity_name_prefix = ""
         if hasattr(self.func.swf_options, 'activity_name_prefix'):
             activity_name_prefix = self.func.swf_options[

@@ -242,6 +242,10 @@ class ActivityType(BaseFlowType):
         self.skip_registration = skip_registration
         self.manual = manual
 
+        # retrying will be set by ActivityFunc, as it's a separate decorator
+        # and we want to not care about the decorator order
+        self.retrying = None
+
         if data_converter is None:
             self.data_converter = self.DEFAULT_DATA_CONVERTER
         else:
@@ -320,6 +324,10 @@ class ActivityType(BaseFlowType):
         _decision_dict = {}
         _decision_dict.update(decision_dict)
         _decision_dict.update(context._activity_options_overrides.items())
+
+        if self.retrying is not None:
+            return self.retrying.call(context.decider._handle_execute_activity,
+                                      self, _decision_dict, args, kwargs)
 
         return context.decider._handle_execute_activity(
             self, _decision_dict, args, kwargs)

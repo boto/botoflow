@@ -13,7 +13,6 @@
 
 __all__ = ('time', 'sleep')
 
-
 from .context import get_context, DecisionContext
 
 
@@ -30,7 +29,7 @@ def time():
     try:
         context = get_context()
         if isinstance(context, DecisionContext):
-            return context._workflow_time
+            return _time.mktime(context._workflow_time.timetuple())
     except AttributeError:
         pass
     raise TypeError("workflow_time.time() should be run inside of a workflow")
