@@ -406,8 +406,6 @@ class Decider(object):
                 # any subsequent executions will be counted "continue as new"
                 self.execution_started = True
                 execute_result = yield future
-                print("###################")
-                print(execute_result)
                 # XXX should these be the only decisions?
                 if self._continue_as_new_on_completion is None:
                     log.debug(
@@ -415,13 +413,11 @@ class Decider(object):
                     self._decisions.append(CompleteWorkflowExecution(
                         workflow_type.data_converter.dumps(execute_result)))
                 else:
-                    print("Continue ASSSSSSSSSSSSSSSS")
                     log.debug("ContinueAsNew: %s",
                               self._continue_as_new_on_completion)
                     self._decisions.append(self._continue_as_new_on_completion)
 
             except Exception as err:
-                print("###################################################")
                 tb_list = async_traceback.extract_tb()
                 log.debug("Workflow execute() raised an exception:\n%s",
                           "".join(traceback.format_exc()))
@@ -429,10 +425,6 @@ class Decider(object):
                 # the execution
                 # XXX Validate this is the right action
                 self._decisions = DecisionList()
-                print("###################################################")
-                print(err)
-                print(tb_list)
-                print(workflow_type.data_converter.dumps([err, tb_list]))
                 self._decisions.append(FailWorkflowExecution(
                     '', workflow_type.data_converter.dumps([err, tb_list])))
 
