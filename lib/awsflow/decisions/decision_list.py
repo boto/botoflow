@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+
 class DecisionList(list):
     """
     DecisionList is just like a regular list with a few additional methods
@@ -28,6 +29,7 @@ class DecisionList(list):
 
             if decision.decision_id == decision_id:
                 self.remove(decision)
+                break
 
     def has_decision_type(self, *args):
         for decision in self:

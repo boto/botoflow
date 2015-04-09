@@ -10,16 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from collections import defaultdict
 
 import sys
 import traceback
 import itertools
 import logging
+import warnings
 
 import six
 
 from ..context import get_context, set_context, DecisionContext
-from ..workflow_execution import WorkflowExecution
+from ..workflow_execution import WorkflowExecution, workflow_execution_from_swf_event
 from ..core import async, async_traceback, Future, return_, AsyncEventLoop
 from ..utils import pairwise, translate_kwargs
 from ..constants import USE_WORKER_TASK_LIST
@@ -33,11 +35,14 @@ from ..history_events import (
     StartChildWorkflowExecutionFailed, ChildWorkflowExecutionCompleted,
     ChildWorkflowExecutionFailed, ChildWorkflowExecutionTimedOut, StartTimerFailed,
     TimerFired, TimerStarted, TimerCanceled, ChildWorkflowExecutionTerminated,
-    WorkflowExecutionSignaled, ChildWorkflowExecutionStarted)
+    WorkflowExecutionSignaled, ChildWorkflowExecutionStarted, WorkflowExecutionCancelRequested,
+    ExternalWorkflowExecutionCancelRequested, RequestCancelExternalWorkflowExecutionInitiated,
+    RequestCancelExternalWorkflowExecutionFailed)
 
 from ..decisions import (
     DecisionList, ScheduleActivityTask, CompleteWorkflowExecution,
-    FailWorkflowExecution, ContinueAsNewWorkflowExecution, StartChildWorkflowExecution)
+    FailWorkflowExecution, ContinueAsNewWorkflowExecution, StartChildWorkflowExecution,
+    RequestCancelExternalWorkflowExecution)
 
 from ..exceptions import (
     ScheduleActivityTaskFailedError, StartChildWorkflowExecutionFailedError,
@@ -53,6 +58,21 @@ class Decider(object):
 
     def __init__(self, worker, domain, task_list, get_workflow, identity,
                  _Poller=DecisionTaskPoller):
+        """
+
+        :param worker:
+        :type worker: awsflow.workers.base_worker.BaseWorker
+        :param domain:
+        :type domain: str
+        :param task_list:
+        :type task_list: str
+        :param get_workflow:
+        :type get_workflow: function
+        :param identity:
+        :type identity: str
+        :param _Poller:
+        :type _Poller: awsflow.decider.decision_task_poller.DecisionTaskPoller
+        """
         self.worker = worker
         self.domain = domain
         self.task_list = task_list
@@ -72,6 +92,7 @@ class Decider(object):
         self._open_activities = {}
         self._open_child_workflows = {}
         self._open_timers = {}
+        self._open_cancellation_requests = defaultdict(dict)
         self._event_to_id_table = {}
         self._decision_task_token = None
         self._continue_as_new_on_completion = None
@@ -99,12 +120,12 @@ class Decider(object):
         if decision_task is None:
             return
 
+        workflow_execution = WorkflowExecution(
+            decision_task.workflow_id, decision_task.run_id)
+
         self._decision_task_token = decision_task.task_token
         non_replay_event_id = decision_task.previous_started_event_id
-        context.workflow_id = decision_task.workflow_id
-        context.run_id = decision_task.run_id
-        context._workflow_execution = WorkflowExecution(
-            decision_task.workflow_id, decision_task.run_id)
+        context._workflow_execution = workflow_execution
 
         try:
             try:
@@ -142,7 +163,7 @@ class Decider(object):
                     for event in reordered_events:
                         if event.id >= non_replay_event_id:
                             get_context()._replaying = False
-                        self._handle_history_event(event)
+                        self._handle_history_event(workflow_execution, event)
 
                     reordered_events = list()
                     decision_completion_to_start_events = list()
@@ -174,7 +195,7 @@ class Decider(object):
         for val in six.itervalues(self._open_activities):
             val['handler'].close()
 
-    def _handle_history_event(self, event):
+    def _handle_history_event(self, workflow_execution, event):
         log.debug("Handling history event: %s", event)
         # TODO implemet timers
         try:
@@ -224,8 +245,17 @@ class Decider(object):
 
             elif isinstance(event, WorkflowExecutionSignaled):
                 self._signal_workflow_execution(event)
-#            else:
-#                raise NotImplementedError(event)
+
+            elif isinstance(event, WorkflowExecutionCancelRequested):
+                # TODO: Figure out what to do with you, cancel all the activities maybe?
+                pass
+            elif isinstance(event, RequestCancelExternalWorkflowExecutionInitiated,
+                            ExternalWorkflowExecutionCancelRequested, RequestCancelExternalWorkflowExecutionFailed):
+                external_workflow_execution = workflow_execution_from_swf_event(event.attributes['workflowExecution'])
+                self._open_cancellation_requests[workflow_execution][external_workflow_execution]['handler'].send(event)
+            else:
+                warnings.warn("Handler for the even {} not implemented".format(event))
+
         except StopIteration:
             pass
         self._eventloop.execute_all_tasks()
@@ -304,10 +334,8 @@ class Decider(object):
                                           [workflow_id] \
                                           ['workflowStartedFuture']
 
-
-                workflow_id = event.attributes['workflowExecution']['workflowId']
-                run_id = event.attributes['workflowExecution']['runId']
-                workflow_instance.workflow_execution = WorkflowExecution(workflow_id, run_id)
+                workflow_instance.workflow_execution = workflow_execution_from_swf_event(
+                    event.attributes['workflowExecution'])
                 workflow_started_future.set_result(workflow_instance)
 
             event = (yield)
@@ -357,6 +385,17 @@ class Decider(object):
             raise RuntimeError("Unexpected event/state: %s", event)
 
         del self._open_child_workflows[workflow_id]  # child worflow done
+
+    def _handle_external_workflow_event(self, external_workflow_execution, workflow_future):
+        event = (yield)
+        if isinstance(event, RequestCancelExternalWorkflowExecutionInitiated):
+            # already handled
+            self._decisions.delete_decision(RequestCancelExternalWorkflowExecution,
+                                            external_workflow_execution)
+        elif isinstance(event, ExternalWorkflowExecutionCancelRequested):  # success
+            workflow_future.set_result(None)
+        elif isinstance(event, RequestCancelExternalWorkflowExecutionFailed):  # not good
+            workflow_future.set_exception()
 
     def _signal_workflow_execution(self, event):
         context = get_context()
@@ -524,3 +563,20 @@ class Decider(object):
         """
         decision = ContinueAsNewWorkflowExecution(**kwargs)
         self._continue_as_new_on_completion = decision
+
+    def _request_cancel_workflow_execution(self, external_workflow_execution):
+        self._decisions.append(RequestCancelExternalWorkflowExecution(
+            workflow_id=external_workflow_execution.workflow_id,
+            run_id=external_workflow_execution.run_id))
+
+        workflow_future = Future()
+        handler = self._handle_external_workflow_event(external_workflow_execution, workflow_future)
+        six.next(handler)
+        self._open_cancellation_requests[get_context()._workflow_execution][external_workflow_execution] = {
+            'handler': handler}
+
+        @async
+        def wait_request_cancel_workflow_execution():
+            yield workflow_future
+
+        return wait_request_cancel_workflow_execution()

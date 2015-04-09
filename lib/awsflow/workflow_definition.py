@@ -14,6 +14,8 @@
 from copy import copy
 
 import six
+from awsflow import get_context
+from awsflow.context import DecisionContext
 
 
 class _WorkflowDefinitionMeta(type):
@@ -193,3 +195,18 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
             not been started.
         """
         return self._workflow_result
+
+    def cancel(self):
+        """@async method that requests the workflow to be cancelled
+        """
+        context = None
+        try:
+            context = get_context()
+        except AttributeError:  # not in context
+            pass
+
+        if not isinstance(context, DecisionContext):
+            raise TypeError("{}.cancel can only be called in the decision "
+                            "context".format(self.__class__.__name__))
+
+        return context.decider._request_cancel_workflow_execution(self.workflow_execution)

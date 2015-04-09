@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import warnings
 
 import six
 
@@ -24,7 +25,11 @@ def swf_event_to_object(event_dict):
     takes an event dictionary from botocore and converts it into a specific
     event instance.
     """
-    event_class = _event_type_name_to_class[event_dict['eventType']]
+    try:
+        event_class = _event_type_name_to_class[event_dict['eventType']]
+    except KeyError:
+        warnings.warn("Event type {} is not implemented".format(event_dict['eventType']))
+
     return event_class(event_dict['eventId'],
                        event_dict['eventTimestamp'],
                        event_dict[event_class.attribute_key])
@@ -134,6 +139,10 @@ class RequestCancelExternalWorkflowExecutionInitiated(ExternalWorkflowEventBase,
     attribute_key = 'requestCancelExternalWorkflowExecutionInitiatedEventAttributes'
 
 
+class ExternalWorkflowExecutionCancelRequested(ExternalWorkflowEventBase, DecisionEventBase):
+    attribute_key = 'externalWorkflowExecutionCancelRequestedEventAttributes'
+
+
 class ScheduleActivityTaskFailed(ActivityEventBase, DecisionEventBase):
     attribute_key = 'scheduleActivityTaskFailedEventAttributes'
 
@@ -174,6 +183,10 @@ class WorkflowExecutionCanceled(WorkflowEventBase, DecisionEventBase):
     attribute_key = 'workflowExecutionCanceledEventAttributes'
 
 
+class WorkflowExecutionCancelRequested(WorkflowEventBase, DecisionEventBase):
+    attribute_key = 'workflowExecutionCancelRequestedEventAttributes'
+
+
 class WorkflowExecutionCompleted(WorkflowEventBase, DecisionEventBase):
     attribute_key = 'workflowExecutionCompletedEventAttributes'
 
@@ -208,5 +221,6 @@ def _set_event_type_name_to_class():
                 _event_type_name_to_class[name] = value
         except TypeError:
             pass
+
 
 _set_event_type_name_to_class()

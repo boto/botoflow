@@ -14,3 +14,7 @@
 from collections import namedtuple
 
 WorkflowExecution = namedtuple('WorkflowExecution', 'workflow_id run_id')
+
+
+def workflow_execution_from_swf_event(event_attribute):
+    return WorkflowExecution(event_attribute['workflowId'], event_attribute['runId'])

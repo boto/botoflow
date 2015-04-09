@@ -48,6 +48,18 @@ class WorkflowStarter(object):
     """
 
     def __init__(self, session, aws_region, domain, default_task_list):
+        """
+
+        :param session: BotoCore session.
+        :type session: botocore.session.Session
+        :param aws_region:
+        :type aws_region: str
+        :param domain:
+        :type domain: str
+        :param default_task_list:
+        :type default_task_list: str
+        :return:
+        """
         self.domain = domain
         self.task_list = default_task_list
         self.client = session.create_client(

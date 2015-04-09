@@ -49,6 +49,9 @@ class DecisionContext(ContextBase):
     @_workflow_execution.setter
     def _workflow_execution(self, value):
         self.__workflow_execution = value
+        if value is not None:
+            self.workflow_id = value.workflow_id
+            self.run_id = value.run_id
 
     @property
     def _workflow_time(self):
