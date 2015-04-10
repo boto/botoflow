@@ -1,4 +1,4 @@
-# Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+3# Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
 # You may not use this file except in compliance with the License.
@@ -54,28 +54,28 @@ class Retrying(retrying.Retrying):
                  wait_incrementing_increment=None, wait_exponential_multiplier=None, wait_exponential_max=None,
                  retry_on_exception=None, retry_on_result=None, wrap_exception=False, stop_func=None, wait_func=None):
 
+        super(Retrying, self).__init__(stop=stop_func, wait=wait_func, stop_max_attempt_number=stop_max_attempt_number,
+                                       stop_max_delay=stop_max_delay, wait_fixed=wait_fixed, wait_random_min=wait_random_min,
+                                       wait_random_max=wait_random_max, wait_incrementing_start=wait_incrementing_start,
+                                       wait_incrementing_increment=wait_incrementing_increment,
+                                       wait_exponential_multiplier=wait_exponential_multiplier,
+                                       wait_exponential_max=wait_exponential_max, retry_on_exception=retry_on_exception,
+                                       retry_on_result=retry_on_result,
+                                       wrap_exception=wrap_exception,
+                                       stop_func=stop_func, wait_func=wait_func)
+
         # unfortunately retrying uses ms everywhere and we are using seconds (as in floats 0.5 is valid)
         # to remain consistent with awsflow, we fix all the times before passing the to retrying
 
         self._stop_max_attempt_number = 3 if stop_max_attempt_number is None else stop_max_attempt_number
-        self._stop_max_delay = 100 if stop_max_delay is None else int(stop_max_delay * 1000)
+        self._stop_max_delay = 1000 if stop_max_delay is None else int(stop_max_delay * 1000)
         self._wait_fixed = 1000 if wait_fixed is None else int(wait_fixed * 1000)
         self._wait_random_min = 0 if wait_random_min is None else int(wait_random_min * 1000)
         self._wait_random_max = 1000 if wait_random_max is None else int(wait_random_max * 1000)
         self._wait_incrementing_start = 0 if wait_incrementing_start is None else int(wait_incrementing_start * 1000)
-        self._wait_incrementing_increment = 100 if wait_incrementing_increment is None else int(wait_incrementing_increment * 1000)
+        self._wait_incrementing_increment = 1000 if wait_incrementing_increment is None else int(wait_incrementing_increment * 1000)
         self._wait_exponential_multiplier = 1 if wait_exponential_multiplier is None else int(wait_exponential_multiplier * 1000)
         self._wait_exponential_max = retrying.MAX_WAIT if wait_exponential_max is None else int(wait_exponential_max * 1000)
-
-        super(Retrying, self).__init__(stop=stop_func, wait=wait_func, stop_max_attempt_number=stop_max_attempt_number,
-                            stop_max_delay=stop_max_delay, wait_fixed=wait_fixed, wait_random_min=wait_random_min,
-                            wait_random_max=wait_random_max, wait_incrementing_start=wait_incrementing_start,
-                            wait_incrementing_increment=wait_incrementing_increment,
-                            wait_exponential_multiplier=wait_exponential_multiplier,
-                            wait_exponential_max=wait_exponential_max, retry_on_exception=retry_on_exception,
-                            retry_on_result=retry_on_result,
-                            wrap_exception=wrap_exception,
-                            stop_func=stop_func, wait_func=wait_func)
 
     @async
     def call(self, fn, *args, **kwargs):

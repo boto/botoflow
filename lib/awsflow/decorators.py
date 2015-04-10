@@ -18,7 +18,7 @@ from .activity_retrying import Retrying
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .workflow_types import WorkflowType, ActivityType, SignalType
 
-__all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal', 'retry')
+__all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal', 'retry_activity')
 
 
 def _str_or_none(value):
@@ -304,22 +304,114 @@ def retry_activity(stop_max_attempt_number=None, stop_max_delay=None, wait_fixed
                    retry_on_result=None, wrap_exception=False, stop_func=None, wait_func=None):
     """Retry activity decorator
 
-    (based on the :py:module:`retrying` library)
+    (based on the :py:mod:`retrying` library)
 
-    :param stop_max_attempt_number:
-    :param stop_max_delay:
-    :param wait_fixed:
-    :param wait_random_min:
-    :param wait_random_max:
-    :param wait_incrementing_start:
-    :param wait_incrementing_increment:
-    :param wait_exponential_multiplier:
-    :param wait_exponential_max:
-    :param retry_on_exception:
-    :param retry_on_result:
-    :param wrap_exception:
-    :param stop_func:
-    :param wait_func:
+    **Examples:**
+
+    .. code-block:: python
+       :caption: Retry forever
+
+       @retry
+       @activity(version='1.0', start_to_close_timeout=float('inf'))
+       def never_give_up_never_surrender_activity():
+           print "Retry forever ignoring Exceptions, don't wait between retries"
+
+
+    .. code-block:: python
+       :caption: Retry only a certain number of times
+
+       @retry(stop_max_attempt_number=7)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def stop_after_7_attempts_activity():
+           print "Stopping after 7 attempts"
+
+    .. code-block:: python
+       :caption: Stop retrying after 10 seconds
+
+       @retry(stop_max_delay=10*SECONDS)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def stop_after_10_s_activity():
+           print "Stopping after 10 seconds"
+
+    .. code-block:: python
+       :caption: Wait a random amount of time
+
+       @retry(wait_random_min=1*SECONDS, wait_random_max=2*SECONDS)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def wait_random_1_to_2_s_activity():
+           print "Randomly wait 1 to 2 seconds between retries"
+
+    .. code-block:: python
+       :caption: Wait an exponentially growing amount of time
+
+       @retry(wait_exponential_multiplier=1*SECONDS, wait_exponential_max=10*SECONDS)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def wait_exponential_1_activity():
+           print "Wait 2^x * 1 second between each retry, up to 10 seconds, then 10 seconds afterwards"
+
+    .. code-block:: python
+       :caption: Retry on exception
+
+       @retry(retry_on_exception=retry_on_exception(IOError, OSError))
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def might_io_os_error():
+           print "Retry forever with no wait if an IOError or OSError occurs, raise any other errors"
+
+    .. code-block:: python
+       :caption: Custom exception retryer
+
+       def retry_if_io_error(exception):
+       \"\"\"Return True if we should retry (in this case when it's an IOError), False otherwise\"\"\"
+       if isinstance(exception, ActivityTaskFailedError):
+           return isinstance(exception.cause, IOError)
+
+       @retry(retry_on_exception=retry_if_io_error)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def might_io_error():
+           print "Retry forever with no wait if an IOError occurs, raise any other errors"
+
+    .. code-block:: python
+       :caption: Custom retryer based on result
+
+       def retry_if_result_none(result):
+       \"\"\"Return True if we should retry (in this case when result is None), False otherwise\"\"\"
+           return result is None
+
+       @retry(retry_on_result=retry_if_result_none)
+       @activity(version='1.0', start_to_close_timeout=10*MINUTES)
+       def might_return_none():
+           print "Retry forever ignoring Exceptions with no wait if return value is None"
+
+    :param stop_max_attempt_number: Stop retrying after reaching this attempt number. Default is 3 attempts.
+    :type stop_max_attempt_number: int
+    :param stop_max_delay: Retry for at most this given period of time in seconds. Default is 1 second.
+    :type stop_max_delay: float
+    :param wait_fixed: Wait a fixed amount of seconds before retrying. Default is 1 second.
+    :type wait_fixed: float
+    :param wait_random_min: Random wait time minimum in seconds. Default is 0 seconds.
+    :type wait_random_min: float
+    :param wait_random_max: Maximum random wait time in seconds. Default is 1 second.
+    :type wait_random_max: float
+    :param wait_incrementing_start: Starting point for waiting an incremental amount of time. Default is 0.
+    :type wait_incrementing_start: float
+    :param wait_incrementing_increment: For each attempt, by how much we increment the waiting period.
+       Default is 1 second.
+    :type wait_incrementing_increment: float
+    :param wait_exponential_multiplier: Exponential wait time multiplier. Default is 1.
+    :type wait_exponential_multiplier: float
+    :param wait_exponential_max: Maximum number in seconds for the exponential multiplier to get to. Default is 1073741.
+    :type wait_exponential_max: float
+    :param retry_on_exception: A function that returns True if an exception needs to be retried on
+    :type retry_on_exception: callable
+    :param retry_on_result: A function that returns True if a retry is needed based on a result.
+    :type retry_on_result: callable
+    :param wrap_exception: Whether to wrap the non-retryable exceptions in RetryError
+    :type wrap_exception: bool
+    :param stop_func: Function that decides when to stop retrying
+    :type stop_func: callable
+    :param wait_func: Function that looks like f(previous_attempt_number, delay_since_first_attempt_ms) and returns a
+       a new time in ms for the next wait period
+    :type wait_func: callable
     """
     def _retry(func):
         retrying = Retrying(stop_max_attempt_number=stop_max_attempt_number,

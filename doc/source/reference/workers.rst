@@ -37,7 +37,7 @@ awsflow.workers
 .workers.multiprocessing_activity_worker
 ----------------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_activity_worker
+.. automodule:: awsflow.workers.multiprocessing_activity_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -45,7 +45,7 @@ awsflow.workers
 .workers.multiprocessing_worker
 -------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_worker
+.. automodule:: awsflow.workers.multiprocessing_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -53,7 +53,7 @@ awsflow.workers
 .workers.multiprocessing_workflow_worker
 ----------------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_workflow_worker
+.. automodule:: awsflow.workers.multiprocessing_workflow_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -61,7 +61,7 @@ awsflow.workers
 .workers.threaded_activity_worker
 ---------------------------------
 
-.. automodule:: awsflow.workers.threaded_activity_worker
+.. automodule:: awsflow.workers.threaded_activity_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -69,7 +69,7 @@ awsflow.workers
 .workers.threaded_worker
 ------------------------
 
-.. automodule:: awsflow.workers.threaded_worker
+.. automodule:: awsflow.workers.threaded_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -77,7 +77,7 @@ awsflow.workers
 .workers.threaded_workflow_worker
 ---------------------------------
 
-.. automodule:: awsflow.workers.threaded_workflow_worker
+.. automodule:: awsflow.workers.threaded_workflow_executor
    :show-inheritance:
    :members:
    :undoc-members:
