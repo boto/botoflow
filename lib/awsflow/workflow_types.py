@@ -12,9 +12,11 @@
 # permissions and limitations under the License.
 
 
-__all__ = ('WorkflowType', 'ActivityType')
+__all__ = ('WorkflowType', 'ActivityType', 'SignalType')
 
 import abc
+
+from copy import copy
 
 from .swf_exceptions import swf_exception_wrapper
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
@@ -250,6 +252,42 @@ class ActivityType(BaseFlowType):
             self.data_converter = self.DEFAULT_DATA_CONVERTER
         else:
             self.data_converter = data_converter
+
+    def __getstate__(self):
+        """Prepare the activity type for serialization as it's included in ActivityTaskFailed exception, and it
+        may be passed around by our clients for exception handling.
+
+        But only serialize basic information about the activity, not to bloat serialized object
+
+        :return: A serializable dict
+        :rtype: dict
+        """
+        dct = copy(self.__dict__)
+        if 'retrying' in dct:
+            del dct['retrying']
+
+        if 'data_converter' in dct:
+            del dct['data_converter']
+
+        if 'description' in dct:
+            del dct['description']
+
+        if 'skip_registration' in dct:
+            del dct['skip_registration']
+
+        return dct
+
+    def __setstate__(self, dct):
+        """Recreate our activity type based on the dct
+        :param dct: a deserialized dictionary to recreate our state
+        :type dct: dict
+        """
+        self.__dict__ = dct
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__getstate__() == other.__getstate__()
+        return False
 
     def _set_activities_value(self, key, value):
         if getattr(self, key) is None:
