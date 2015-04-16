@@ -92,6 +92,9 @@ class UnknownResourceError(SWFResponseError):
     """
     pass
 
+class ThrottlingException(SWFResponseError):
+    pass
+
 
 # SWF __type/fault string to awsflow exception mapping
 _swf_fault_exception = {
@@ -104,7 +107,8 @@ _swf_fault_exception = {
     'TypeAlreadyExistsFault': TypeAlreadyExistsError,
     'cOperationNotPermittedFault': OperationNotPermittedError,
     'UnknownResourceFault': UnknownResourceError,
-    'SWFResponseError': SWFResponseError
+    'SWFResponseError': SWFResponseError,
+    'ThrottlingException': ThrottlingException
 }
 
 
