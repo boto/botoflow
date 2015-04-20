@@ -126,11 +126,11 @@ class ActivityWorker(BaseWorker):
 
             if act_name in already_registered:
                 if already_registered[act_name] == activity_type.version:
-                    log.info("Skipping registration of %s %s because it's already registered" % (act_name, activity_type.version))
+                    log.debug("Skipping registration of %s %s because it's already registered" % (act_name, activity_type.version))
                     continue
 
             if activity_type.skip_registration:
-                log.info("Skipping activity '%s %s' registration because skip_registration is set to True",
+                log.debug("Skipping activity '%s %s' registration because skip_registration is set to True",
                          activity_type.name, activity_type.version)
                 continue
 
@@ -138,12 +138,12 @@ class ActivityWorker(BaseWorker):
                 domain=self.domain, worker_task_list=self.task_list)
 
             try:
-                log.info("Registering activity with the following "
+                log.debug("Registering activity with the following "
                           "options: %s", kwargs)
                 with swf_exception_wrapper():
                     self.client.register_activity_type(**kwargs)
             except TypeAlreadyExistsError:
-                log.info("Activity '%s %s' already registered",
+                log.debug("Activity '%s %s' already registered",
                           activity_type.name, activity_type.version)
 
     def poll_for_activities(self):
