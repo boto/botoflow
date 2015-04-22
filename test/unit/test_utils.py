@@ -1,6 +1,6 @@
 import unittest
 
-from awsflow.utils import translate_kwargs
+from awsflow.utils import camel_keys_to_snake_case
 
 
 class TestUtils(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestUtils(unittest.TestCase):
             'domain': 'H'
         }
 
-        self.assertDictEqual(translate_kwargs(d), {
+        self.assertDictEqual(camel_keys_to_snake_case(d), {
             'workflow_type': 'A',
             'task_list': 'B',
             'child_policy': 'C',

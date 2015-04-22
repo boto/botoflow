@@ -13,13 +13,8 @@
 
 __all__ = ('time', 'sleep')
 
-import six
 
-from .core import async, Future, CancelledError
 from .context import get_context, DecisionContext
-from .decisions import StartTimer
-from .history_events import (StartTimerFailed, TimerFired, TimerStarted,
-                             TimerCanceled)
 
 
 def time():
@@ -57,22 +52,7 @@ def sleep(seconds):
                         "workflow")
 
     decider = context.decider
-    decision_id = decider.get_next_id()
-    timer_decision = StartTimer(decision_id, str(int(seconds)))
-    decider._decisions.append(timer_decision)
-
-    timer_future = Future()
-
-    handler = _handle_timer_event(decision_id, timer_future)
-    six.next(handler)  # arm
-    decider._open_timers[decision_id] = dict(future=timer_future,
-                                             handler=handler)
-
-    @async
-    def wait_for_timer():
-        yield timer_future
-
-    return wait_for_timer()
+    return decider.handle_execute_timer(seconds)
 
 
 def is_replaying():
@@ -93,25 +73,3 @@ def is_replaying():
     except AttributeError:
         pass
     raise TypeError("workflow_time.time() should be run inside of a workflow")
-
-
-def _handle_timer_event(timer_id, timer_future):
-    event = (yield)
-
-    decider = get_context().decider
-
-    if isinstance(event, StartTimerFailed):
-        decider._decisions.delete_decision(StartTimer, timer_id)
-        # TODO Throw an exception on startTimerFailed
-    elif isinstance(event, TimerStarted):
-        decider._decisions.delete_decision(StartTimer, timer_id)
-        event = (yield)
-
-        if isinstance(event, TimerFired):
-            timer_future.set_result(None)
-        elif isinstance(event, TimerCanceled):
-            timer_future.set_exception(CancelledError("Timer Cancelled"))
-    else:
-        raise RuntimeError("Unexpected event/state: %s", event)
-
-    del decider._open_timers[timer_id]

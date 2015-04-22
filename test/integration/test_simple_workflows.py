@@ -14,11 +14,6 @@ from utils import SWFMixIn
 from various_activities import BunchOfActivities
 
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(logging_filters.AWSFlowFilter())
-
-
 class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_no_activities(self):
@@ -563,9 +558,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             instance = NoActivitiesWorkflow.execute(arg1=1)
             self.workflow_execution = instance.workflow_execution
 
-        for i in range(3):
+        for i in range(2):
             worker.run_once()
-        time.sleep(2)
+        time.sleep(1)
 
         hist = self.get_workflow_execution_history()
         self.assertEqual(len(hist), 5)

@@ -1,24 +1,16 @@
 # -*- mode:python ; fill-column:120 -*-
-import logging
 import time
 import unittest
-import pytest
 import os
 from threading import Thread
 
-from awsflow import (WorkflowDefinition, execute, return_, activity, ThreadedWorkflowExecutor,
-                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker,
-                      workflow_types, logging_filters, WorkflowStarter, workflow, get_context)
+from awsflow import (WorkflowDefinition, execute, return_,
+                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker,
+                     WorkflowStarter)
 
 from awsflow.manual_activity_completion_client import ManualActivityCompletionClient
-from awsflow.data_converter import JSONDataConverter
 from utils import SWFMixIn
 from various_activities import BunchOfActivities, ManualActivities
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(logging_filters.AWSFlowFilter())
 
 
 class TestManualActivities(SWFMixIn, unittest.TestCase):

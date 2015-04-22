@@ -1,19 +1,13 @@
 # -*- mode:python ; fill-column:120 -*-
-import logging
 import time
 import unittest
 
 from awsflow import (WorkflowDefinition, execute, return_, ThreadedActivityExecutor, GenericWorkflowWorker, ActivityWorker,
-                      logging_filters, WorkflowStarter)
+                     WorkflowStarter)
 
 from awsflow.utils import extract_workflows_dict
 from utils import SWFMixIn
 from various_activities import BunchOfActivities
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(logging_filters.AWSFlowFilter())
 
 
 class WorkflowFinder (object):

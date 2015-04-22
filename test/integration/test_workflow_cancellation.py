@@ -16,10 +16,17 @@ logging.basicConfig(level=logging.DEBUG,
 logging.getLogger().addFilter(AWSFlowFilter)
 
 
+global child_execution
+# type: awsflow.WorkflowExecution
+child_execution = None
+
+
 class MasterWorkflow(WorkflowDefinition):
     @execute(version='1.2', execution_start_to_close_timeout=60)
     def execute(self, arg1, arg2):
+        global child_execution
         instance = yield ChildWorkflow.execute(arg1, arg2)
+        child_execution = instance.workflow_execution
         yield instance.cancel()
         arg_sum = yield instance.workflow_result
         return_(arg_sum)
@@ -50,10 +57,15 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist), 11)
+        from pprint import pprint
+        pprint(hist)
+        pprint(self.get_workflow_execution_history_with_token(child_execution.workflow_id,
+                                                              child_execution.run_id))
+        self.assertEqual(len(hist), 10)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,6 +7,8 @@ from awsflow.data_converter import JSONDataConverter
 
 log = logging.getLogger(__name__)
 
+logging.getLogger('awsflow').debug('Blah')
+
 
 class SWFMixIn(object):
     @pytest.fixture(autouse=True)

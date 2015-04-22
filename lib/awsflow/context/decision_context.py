@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 
 from .context_base import ContextBase
-
+from ..workflow_execution import WorkflowExecution
 
 class DecisionContext(ContextBase):
 
@@ -27,6 +27,8 @@ class DecisionContext(ContextBase):
         self._activity_options_overrides = dict()
         self._workflow_options_overrides = dict()
 
+        self.__workflow_execution = WorkflowExecution(None, None)
+
     @property
     def _replaying(self):
         """Do not use directly, instead please use
@@ -39,19 +41,15 @@ class DecisionContext(ContextBase):
         self.__replaying = value
 
     @property
-    def _workflow_execution(self):
-        """Do not use directly, instead please use
-        ``awsflow.workflow_definition.WorkflowDefinition.workflow_execution``
-        method.
+    def workflow_execution(self):
+        """Returns the current workflow execution information
+        :rtype: awsflow.workflow_execution.WorkflowExecution
         """
         return self.__workflow_execution
 
-    @_workflow_execution.setter
-    def _workflow_execution(self, value):
+    @workflow_execution.setter
+    def workflow_execution(self, value):
         self.__workflow_execution = value
-        if value is not None:
-            self.workflow_id = value.workflow_id
-            self.run_id = value.run_id
 
     @property
     def _workflow_time(self):

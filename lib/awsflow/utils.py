@@ -103,7 +103,8 @@ def extract_workflows_dict(workflow_definitions):
 _first_cap_replace = re.compile(r'(.)([A-Z][a-z]+)')
 _remainder_cap_replace = re.compile(r'([a-z0-9])([A-Z])')
 
-def translate_kwargs(dictionary):
+
+def camel_keys_to_snake_case(dictionary):
     """
     Translate a dictionary containing camelCase keys into dictionary with
     snake_case keys that match python kwargs well.

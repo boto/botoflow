@@ -48,9 +48,14 @@ class BaseFlowType(object):
 
 class WorkflowType(BaseFlowType):
 
-    _continue_as_new_keys = ['task_start_to_close_timeout', 'child_policy',
-                             'task_list', 'execution_start_to_close_timeout',
-                             'version', 'input']
+    _continue_as_new_keys = (('taskStartToCloseTimeout', 'task_start_to_close_timeout'),
+                             ('childPolicy', 'child_policy'),
+                             ('taskList', 'task_list'),
+                             ('executionStartToCloseTimeout', 'execution_start_to_close_timeout'),
+                             ('version', 'version'),
+                             ('input', 'input'))
+
+    DEFAULT_DATA_CONVERTER = JSONDataConverter()
 
     def __init__(self,
                  version,
@@ -81,7 +86,7 @@ class WorkflowType(BaseFlowType):
     @data_converter.setter
     def data_converter(self, converter):
         if converter is None:  # set the default
-            self._data_converter = JSONDataConverter()
+            self._data_converter = self.DEFAULT_DATA_CONVERTER
             return
 
         if isinstance(converter, AbstractDataConverter):
@@ -133,9 +138,9 @@ class WorkflowType(BaseFlowType):
         decision_dict = self.to_decision_dict(
             input, worker_task_list=worker_task_list)
         continue_as_new_dict = {}
-        for key in self._continue_as_new_keys:
+        for key, continue_as_new_key in self._continue_as_new_keys:
             try:
-                continue_as_new_dict[key] = decision_dict[key]
+                continue_as_new_dict[continue_as_new_key] = decision_dict[key]
             except KeyError:
                 pass
         return continue_as_new_dict
@@ -211,6 +216,8 @@ class WorkflowType(BaseFlowType):
 
 class ActivityType(BaseFlowType):
 
+    DEFAULT_DATA_CONVERTER = JSONDataConverter()
+
     def __init__(self,
                  version,
                  name=None,
@@ -236,7 +243,7 @@ class ActivityType(BaseFlowType):
         self.manual = manual
 
         if data_converter is None:
-            self.data_converter = JSONDataConverter()
+            self.data_converter = self.DEFAULT_DATA_CONVERTER
         else:
             self.data_converter = data_converter
 
@@ -360,7 +367,7 @@ class SignalType(BaseFlowType):
                 "Unsupported context for this call: %r" % context)
 
         with swf_exception_wrapper():
-            context.worker.client.signal_workflow_execution(
+            context.worker.client._signal_workflow_execution(
                 domain=context.worker.domain, signalName=self.name,
                 workflowId=workflow_execution.workflow_id,
                 runId=workflow_execution.run_id,

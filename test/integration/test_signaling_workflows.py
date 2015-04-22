@@ -1,18 +1,11 @@
 # -*- mode:python ; fill-column:120 -*-
-import logging
 import time
 import unittest
 
 from awsflow import (workflow_time, WorkflowDefinition, WorkflowWorker,
                      signal, execute, return_, WorkflowStarter,
                      Future)
-from awsflow.logging_filters import AWSFlowFilter
 from utils import SWFMixIn
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(AWSFlowFilter)
 
 
 class SignalledWorkflow(WorkflowDefinition):

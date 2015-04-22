@@ -1,4 +1,3 @@
-import logging
 import time
 import unittest
 
@@ -6,16 +5,10 @@ import unittest
 from awsflow import (
     MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, WorkflowStarter,
     WorkflowWorker, ActivityWorker)
-from awsflow.logging_filters import AWSFlowFilter
 from multiprocessing_workflows import (
     NoActivitiesWorkflow, NoActivitiesFailureWorkflow, OneActivityWorkflow)
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(AWSFlowFilter)
 
 
 class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):

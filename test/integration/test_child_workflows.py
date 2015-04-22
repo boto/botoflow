@@ -1,20 +1,12 @@
 # -*- mode:python ; fill-column:120 -*-
-import logging
 import time
 import unittest
 
 from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
                       ActivityWorker, WorkflowStarter)
 from awsflow.exceptions import ChildWorkflowTimedOutError
-from awsflow.logging_filters import AWSFlowFilter
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(AWSFlowFilter)
-
 
 
 class MasterWorkflow(WorkflowDefinition):
@@ -51,7 +43,6 @@ class TimingOutChildWorkflow(WorkflowDefinition):
 class TestChildWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_two_workflows(self):
-        return
         wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list,
             MasterWorkflow, ChildWorkflow)
@@ -61,12 +52,12 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
             instance = MasterWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
-        for i in range(2):
+        for i in range(3):
             wf_worker.run_once()
 
         act_worker.run_once()
 
-        for i in range(3):
+        for i in range(2):
             wf_worker.run_once()
 
         time.sleep(1)
@@ -75,10 +66,9 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist), 14)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist['events'][-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
 
     def test_child_workflow_timed_out(self):
-        return
         wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list,
             TimingOutMasterWorkflow, TimingOutChildWorkflow)
@@ -88,8 +78,7 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
 
         wf_worker.run_once()
         time.sleep(3)
-        for i in range(2):
-            wf_worker.run_once()
+        wf_worker.run_once()
 
         time.sleep(1)
 
