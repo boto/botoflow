@@ -130,8 +130,7 @@ class ChildWorkflowExecutionHandler(object):
                 workflow_instance = self._open_child_workflows[workflow_id]['workflowInstance']
                 workflow_started_future = self._open_child_workflows[workflow_id]['workflowStartedFuture']
 
-                workflow_instance.workflow_execution = workflow_execution_from_swf_event(
-                    event.attributes['workflowExecution'])
+                workflow_instance.workflow_execution = workflow_execution_from_swf_event(event)
                 workflow_started_future.set_result(workflow_instance)
 
             event = (yield)

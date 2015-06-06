@@ -16,6 +16,7 @@ from copy import copy
 import six
 from awsflow import get_context
 from awsflow.context import DecisionContext
+from awsflow.exceptions import AWSFlowError
 
 
 class _WorkflowDefinitionMeta(type):
@@ -28,6 +29,8 @@ class _WorkflowDefinitionMeta(type):
         # super and subclass
         _workflow_types, _signals = _WorkflowDefinitionMeta \
             ._extract_workflows_and_signals(newdct)
+        _cancellation_handler = _WorkflowDefinitionMeta \
+            ._extract_cancellation_handler(newdct)
 
         for base in bases:
             base_workflow_types, base_signals = _WorkflowDefinitionMeta \
@@ -41,8 +44,7 @@ class _WorkflowDefinitionMeta(type):
                     newdct[val_func[1].__name__] = copy(val_func[0])
                     _signals[signal_name] = val_func
 
-            for workflow_type, val_func in six.iteritems(
-                base_workflow_types):
+            for workflow_type, val_func in six.iteritems(base_workflow_types):
                 if workflow_type not in _workflow_types and \
                    val_func[1].__name__ not in newdct:
 
@@ -59,7 +61,25 @@ class _WorkflowDefinitionMeta(type):
         if not hasattr(cls, '_workflow_types'):
             newdct['_workflow_types'] = workflow_types
 
+        newdct['_cancellation_handler'] = _cancellation_handler
+
         return type.__new__(cls, name, bases, newdct)
+
+    @staticmethod
+    def _extract_cancellation_handler(dct):
+        # temporarily as separate func to not break tests; this will be merged
+        # with _extract_workflows_and_signals later
+        cancellation_handler = None
+
+        for val in six.itervalues(dct):
+            if hasattr(val, 'func'):
+                func = val.func
+                if hasattr(func, 'handler') and func.handler == 'cancel':
+                    if cancellation_handler:
+                        raise AWSFlowError("Found multiple @cancellation_handler "
+                                           "definitions; only one permitted.")
+                    cancellation_handler = val.func
+        return cancellation_handler
 
     @staticmethod
     def _extract_workflows_and_signals(dct):
@@ -196,9 +216,36 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         """
         return self._workflow_result
 
-    def cancel(self):
-        """@async method that requests the workflow to be cancelled
+    def cancel(self, details=None):
+        """Cancels the workflow execution by executing cancellation_handler, and
+        then (conditionally) sending SWF cancellation decisions for all open
+        activities, followed by the entire workflow.
+
+        Use this to cancel a workflow execution from within the execution.
+
+        :returns: `awsflow.core.future.Future` or None
+            None is returned if the cancellation_handler did not request a cancel by
+            raising CancellationError.
+
+            Future is returned if a cancel decision was sent. This will be empty
+            until the cancel decision is acknowledged by SWF.
         """
+        context = self._get_decision_context(self.cancel.__name__)
+        return context.decider._cancel_workflow_execution(self.workflow_execution, details)
+
+    def cancel_external(self, external_workflow_execution):
+        """Cancels an external workflow execution by sending request to SWF
+
+        :returns: `awsflow.core.future.Future`, that is empty until the message
+            was succesfully delivered to target execution. This will not indicate
+            whether the target execution accepted the request and cancelled or not.
+        """
+        context = self._get_decision_context(self.cancel_external.__name__)
+        return context._request_cancel_external_workflow_execution(
+            external_workflow_execution)
+
+    def _get_decision_context(self, calling_func):
+        """returns DecisionContext if in said context; otherwise, raises TypeError"""
         context = None
         try:
             context = get_context()
@@ -206,7 +253,12 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
             pass
 
         if not isinstance(context, DecisionContext):
-            raise TypeError("{}.cancel can only be called in the decision "
-                            "context".format(self.__class__.__name__))
+            raise TypeError("{}.{} can only be called in the decision "
+                            "context".format(self.__class__.__name__, calling_func))
+        return context
 
-        return context.decider._request_cancel_workflow_execution(self.workflow_execution)
+    def _exec_cancellation_handler(self):
+        """Internal use; see awsflow.decorators.cancellation_handler for usage"""
+        if not self._cancellation_handler:
+            return
+        self._cancellation_handler()

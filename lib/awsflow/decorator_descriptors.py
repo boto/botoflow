@@ -19,6 +19,11 @@ from .core import async
 from .test import WorkflowTestingContext
 
 
+class CancellationFunc(object):
+    def __init__(self, func):
+        self.func = func
+
+
 class SignalFunc(object):
     """This class follows the descriptor protocol and allows us
     to catch workflow instance the signal is being executed in.

@@ -39,8 +39,6 @@ class WorkflowExecutionHandler(object):
     def _load_input(self, event):
         """Load initial workflow input data
 
-        :param workflow_type:
-        :type workflow_type: awsflow.workflow_types.WorkflowType
         :param event:
         :type event: awsflow.history_events.WorkflowExecutionStarted
         :return: tuple of list,dict to feed as *args, *kwargs
@@ -135,7 +133,7 @@ class WorkflowExecutionHandler(object):
         :return:
         """
         context = get_context()
-        args, kwargs = self._load_input(event.attributes['input'])
+        args, kwargs = self._load_input(event)
         signal_name = event.attributes['signalName']
 
         context.workflow._workflow_signals[signal_name][1](

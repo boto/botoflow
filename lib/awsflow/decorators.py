@@ -379,3 +379,18 @@ def signal(name=None):
         return decorator_descriptors.SignalFunc(func)
 
     return _signal
+
+
+def cancellation_handler():
+    """When used on a method in the WorkflowDefinition subclass, identifies a
+    handler for processing workflow cancellation requests.
+
+    Use this decorator to do any necessary cleanup before the cancellation
+    raises. By default, cancel requests are ignored. To honor the requests,
+    specify a handler that raises a awsflow.exceptions.CancelWorkflow.
+    """
+    def _cancellation_handler(func):
+        func.handler = 'cancel'
+        return decorator_descriptors.CancellationFunc(func)
+
+    return _cancellation_handler

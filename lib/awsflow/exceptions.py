@@ -159,6 +159,33 @@ class ActivityTaskTimedOutError(ActivityTaskError):
                     self.timeout_type)
 
 
+class ActivityTaskCanceledError(ActivityTaskError):
+    def __init__(self, event_id, activity_type, activity_id, details,
+                 latest_cancel_requested_event_id, scheduled_event_id, started_event_id):
+        super(ActivityTaskCanceledError, self).__init__(
+            event_id, activity_type, activity_id, details, latest_cancel_requested_event_id,
+            scheduled_event_id, started_event_id)
+
+        self.details = details
+        self.latest_cancel_requested_event_id = latest_cancel_requested_event_id
+        self.scheduled_event_id = scheduled_event_id
+        self.started_event_id = started_event_id
+
+    def __repr__(self):
+        return ("<%s at %s event_id=%s activity_type=%s activity_id=%s "
+                "details=%s latest_cancel_requested_event_id=%s "
+                "scheduled_event_id=%s started_event_id=%s >") % (
+                    self.__class__.__name__, hex(id(self)),
+                    self.event_id, self.activity_type, self.activity_id,
+                    self.latest_cancel_requested_event_id,
+                    self.scheduled_event_id, self.started_event_id)
+
+
+class CancelWorkflow(Exception):
+    """Raise this from a @cancellation_handler to cancel the workflow"""
+    pass
+
+
 class WorkflowError(DecisionException):
     """Base class for exceptions used to report failure of the originating
     workflow"""
@@ -210,6 +237,57 @@ class WorkflowTerminatedError(WorkflowError):
     def __init__(self, event_id, workflow_type, workflow_execution):
         super(WorkflowTerminatedError, self).__init__(event_id, workflow_type,
                                                       workflow_execution)
+
+
+class CancelWorkflowExecutionFailedError(DecisionException):
+    """Decision to cancel self failed to be processed by SWF"""
+
+    def __init__(self, event_id, workflow_execution, cause):
+        super(CancelWorkflowExecutionFailedError, self).__init__(
+            event_id)
+        self.workflow_execution = workflow_execution
+        self.cause = cause
+
+    def __repr__(self):
+        return "<%s at %s event_id=%s workflow_execution=%s cause=%r>" % (
+               self.__class__.__name__, hex(id(self)), self.event_id,
+               self.workflow_execution, self.cause)
+
+
+class ExternalWorkflowError(Exception):
+    """This is the base class for exceptions that represent failures to enact a
+    decision on an external workflow by Amazon SWF. You can catch this exception
+    to generically deal with such exceptions.
+    """
+
+    def __init__(self, decision_task_completed_event_id, initiated_event_id,
+                 run_id, workflow_id, cause, *args):
+        super(ExternalWorkflowError, self).__init__(
+            decision_task_completed_event_id, initiated_event_id, run_id,
+            workflow_id, *args)
+        self.decision_task_completed_event_id = decision_task_completed_event_id
+        self.initiated_event_id = initiated_event_id
+        self.run_id = run_id
+        self.workflow_id = workflow_id
+        self.cause = cause
+
+    def __str__(self):
+        return ("<%s at %s decision_task_completed_event_id=%s "
+                "initiated_event_id=%s run_id=%s workflow_id=%s>") % (
+                    self.__class__.__name__, hex(id(self)),
+                    self.decision_task_completed_event_id,
+                    self.initiated_event_id, self.run_id, self.workflow_id)
+
+
+class RequestCancelExternalWorkflowExecutionFailedError(ExternalWorkflowError):
+    """Request to cancel an external workflow failed; likely due to
+    invalid workflowID.
+    """
+    def __init__(self, decision_task_completed_event_id, initiated_event_id,
+                 run_id, workflow_id, cause):
+        super(RequestCancelExternalWorkflowExecutionFailedError, self).__init__(
+            decision_task_completed_event_id, initiated_event_id, run_id,
+            workflow_id, cause)
 
 
 class ChildWorkflowError(DecisionException):

@@ -26,7 +26,7 @@ class CancelWorkflowExecution(WorkflowDecisionBase):
         event in the history.
         """
         super(CancelWorkflowExecution, self).__init__()
-        self.decision['decisionType'] = 'CancelWorkflowExecutions'
+        self.decision['decisionType'] = 'CancelWorkflowExecution'
         attrs = self.decision[
             'cancelWorkflowExecutionsDecisionAttributes'] = {}
         if details is not None:
