@@ -181,6 +181,11 @@ class ActivityTaskCanceledError(ActivityTaskError):
                     self.scheduled_event_id, self.started_event_id)
 
 
+class RequestCancelActivityTaskFailedError(Exception):
+    """TODO"""
+    pass
+
+
 class CancelWorkflow(Exception):
     """Raise this from a @cancellation_handler to cancel the workflow"""
     pass
