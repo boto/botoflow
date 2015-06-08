@@ -181,9 +181,21 @@ class ActivityTaskCanceledError(ActivityTaskError):
                     self.scheduled_event_id, self.started_event_id)
 
 
-class RequestCancelActivityTaskFailedError(Exception):
-    """TODO"""
-    pass
+class RequestCancelActivityTaskFailedError(DecisionException):
+    """Request to cancel an activity task failed"""
+    def __init__(self, event_id, activity_id, cause, decision_task_completed_event_id):
+        super(RequestCancelActivityTaskFailedError, self).__init__(
+            event_id, activity_id, decision_task_completed_event_id)
+        self.activity_id = activity_id
+        self.cause = cause
+        self.decision_task_completed_event_id = decision_task_completed_event_id
+
+    def __repr__(self):
+        return ("<%s at %s event_id=%s activity_id=%s cause=%s "
+                "decision_task_completed_event_id=%s >") % (
+                    self.__class__.__name__, hex(id(self)),
+                    self.event_id, self.activity_id, self.cause,
+                    self.decision_task_completed_event_id)
 
 
 class CancelWorkflow(Exception):
@@ -276,7 +288,7 @@ class ExternalWorkflowError(Exception):
         self.workflow_id = workflow_id
         self.cause = cause
 
-    def __str__(self):
+    def __repr__(self):
         return ("<%s at %s decision_task_completed_event_id=%s "
                 "initiated_event_id=%s run_id=%s workflow_id=%s>") % (
                     self.__class__.__name__, hex(id(self)),

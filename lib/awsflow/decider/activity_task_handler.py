@@ -198,7 +198,9 @@ class ActivityTaskHandler(object):
             activity_id = attributes['activityId']
             self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
             del self._open_cancels[activity_id]
-            error = RequestCancelActivityTaskFailedError()  # TODO
+            error = RequestCancelActivityTaskFailedError(
+                event.id, activity_id, attributes['cause'],
+                attributes['decisionTaskCompletedEventId'])
             cancel_activity_future.set_exception(error)
 
         elif isinstance(event, ActivityTaskCanceled):
