@@ -15,6 +15,7 @@ from copy import copy
 
 import six
 from awsflow import get_context
+from awsflow.constants import CANCEL_HANDLER_TYPE
 from awsflow.context import DecisionContext
 from awsflow.exceptions import AWSFlowError
 
@@ -74,7 +75,7 @@ class _WorkflowDefinitionMeta(type):
         for val in six.itervalues(dct):
             if hasattr(val, 'func'):
                 func = val.func
-                if hasattr(func, 'handler') and func.handler == 'cancel':
+                if hasattr(func, 'handler_type') and func.handler_type == CANCEL_HANDLER_TYPE:
                     if cancellation_handler:
                         raise AWSFlowError("Found multiple @cancellation_handler "
                                            "definitions; only one permitted.")

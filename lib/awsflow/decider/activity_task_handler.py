@@ -30,9 +30,10 @@ log = logging.getLogger(__name__)
 
 class ActivityTaskHandler(object):
 
+    cancel_events = (ActivityTaskCancelRequested, ActivityTaskCanceled, RequestCancelActivityTaskFailed)
+
     responds_to = (ActivityTaskScheduled, ActivityTaskCompleted, ActivityTaskFailed, ActivityTaskTimedOut,
-                   ActivityTaskCancelRequested, ScheduleActivityTaskFailed, ActivityTaskCanceled, ActivityTaskStarted,
-                   RequestCancelActivityTaskFailed)
+                   ScheduleActivityTaskFailed, ActivityTaskStarted) + cancel_events
 
     def __init__(self, decider, task_list):
 
@@ -78,6 +79,10 @@ class ActivityTaskHandler(object):
                 pass
         return wait_activity()
 
+    def request_cancel_activity_task_all(self):
+        for activity_id in self._open_activities:
+            self.request_cancel_activity_task(activity_id)
+
     def request_cancel_activity_task(self, activity_id):
         if activity_id in self._open_cancels:
             log.warn("Already have open request to cancel activity {} -- ignoring.".format(
@@ -90,8 +95,7 @@ class ActivityTaskHandler(object):
     def handle_event(self, event):
         activity_id = None
 
-        if isinstance(event, (ActivityTaskCancelRequested, RequestCancelActivityTaskFailed,
-                              ActivityTaskCanceled)):
+        if isinstance(event, self.cancel_events):
             self._handle_cancel_event(event)
             return
 

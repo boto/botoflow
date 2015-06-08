@@ -222,6 +222,10 @@ class Decider(object):
         return self._activity_task_handler.request_cancel_activity_task(
             workflow_execution, activity_id)
 
+    def _request_cancel_activity_task_all(self, workflow_execution):
+        """RequestCancelActivityTask decision for all open activities of given execution"""
+        return self._activity_task_handler.request_cancel_activity_task_all(workflow_execution)
+
     def _continue_as_new_workflow_execution(self, **kwargs):
         """
         ContinueAsNewWorkflowExecution closes the workflow execution and

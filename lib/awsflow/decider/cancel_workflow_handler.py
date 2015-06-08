@@ -36,12 +36,6 @@ class CancelWorkflowHandler(object):
     def handle_event(self, event):
         workflow_execution = get_context().workflow_execution
         if isinstance(event, WorkflowExecutionCancelRequested):
-            if self._open_cancels[workflow_execution]:
-                # ignore conflicting cancels, or queue them up?
-                log.warn(("Received {} event while there is already another open "
-                          "cancel request being processed for {} -- ignoring.").format(
-                              event, workflow_execution))
-                return
             details = self._construct_cancel_details(event)
             self.cancel_workflow_execution(workflow_execution, details)
         else:
@@ -60,14 +54,21 @@ class CancelWorkflowHandler(object):
         return None
 
     def cancel_workflow_execution(self, workflow_execution, details):
+        if self._open_cancels[workflow_execution]:
+            # ignore conflicting cancels, or queue them up?
+            log.warn(("Received cancel_workflow_execution request while another is in progress. "
+                      "workflow_execution={}, details={} -- ignoring.").format(
+                          workflow_execution, details))
+
         try:
+            log.info("executing cancellation_handler for {}".format(workflow_execution))
             get_context().workflow._exec_cancellation_handler()
             return
         except CancelWorkflow:
-            pass
+            log.info("{} raised CancelWorkflow; begin cancelling workflow".format(
+                workflow_execution))
 
-        for activity_id in self._decider._activity_task_handler:  # requires lock?
-            self._decider._request_cancel_activity_task(workflow_execution, activity_id)
+        self._decider._request_cancel_activity_task_all(workflow_execution)
         self._decisions.append(CancelWorkflowExecution(details))
 
         cancel_future = Future()

@@ -48,10 +48,11 @@ class ExternalWorkflowHandler(object):
             workflow_id=external_workflow_execution.workflow_id,
             run_id=external_workflow_execution.run_id))
 
+        workflow_execution = get_context().workflow_execution
         workflow_future = Future()
         handler = self.handle_cancel_workflow_event(external_workflow_execution, workflow_future)
         six.next(handler)
-        self._open_cancellation_requests[get_context()._workflow_execution][external_workflow_execution] = {
+        self._open_cancellation_requests[workflow_execution][external_workflow_execution] = {
             'handler': handler}
 
         @async
