@@ -141,6 +141,12 @@ def _async(daemon=False):
     # without parentheses the same: @async == @async()
 
     def __async(func=None):
+        """
+
+        :type func: __builtin__.function or __builtin__.NoneType
+        :return:
+        :rtype: awsflow.core.future.Future
+        """
         def ___async(func):
             return AsyncDecorator(func, daemon)
 
