@@ -15,7 +15,7 @@ import logging
 
 import six
 
-from ..core import return_, async, Future, AllFuture
+from ..core import return_, async, Future, AllFuture, BaseFuture, CancelledError
 
 from ..constants import USE_WORKER_TASK_LIST
 from ..exceptions import (ActivityTaskFailedError, ActivityTaskTimedOutError, ScheduleActivityTaskFailedError,
@@ -24,6 +24,8 @@ from ..decisions import ScheduleActivityTask, RequestCancelActivityTask
 from ..history_events import (ActivityTaskScheduled, ScheduleActivityTaskFailed, ActivityTaskCompleted,
                               ActivityTaskFailed, ActivityTaskTimedOut, ActivityTaskCancelRequested,
                               ActivityTaskCanceled, ActivityTaskStarted, RequestCancelActivityTaskFailed)
+
+from .activity_future import ActivityFuture
 
 log = logging.getLogger(__name__)
 
@@ -70,14 +72,7 @@ class ActivityTaskHandler(object):
         self._open_activities[activity_id] = {'future': activity_future,
                                               'handler': handler}
 
-        @async
-        def wait_activity():
-            try:
-                result = yield activity_future
-                return_(result)
-            except GeneratorExit:
-                pass
-        return wait_activity()
+        return ActivityFuture(activity_future, self, activity_id)
 
     def request_cancel_activity_task_all(self):
         cancel_activity_futures = []
@@ -90,11 +85,15 @@ class ActivityTaskHandler(object):
             return AllFuture(*cancel_activity_futures)
         return None
 
-    def request_cancel_activity_task(self, activity_id):
+    def request_cancel_activity_task(self, activity_future, activity_id):
         if activity_id in self._open_cancels:
             return
 
-        self._decisions.append(RequestCancelActivityTask(activity_id))
+        if self._decider._decisions.delete_decision(ScheduleActivityTask, activity_id):
+            activity_future.set_exception(CancelledError("Activity was cancelled before scheduled"))
+            return BaseFuture.with_result(None)
+
+        self._decider._decisions.append(RequestCancelActivityTask(activity_id))
 
         cancel_activity_future = Future()
         handler = self._cancel_handler_fsm(activity_id, cancel_activity_future)
@@ -184,18 +183,16 @@ class ActivityTaskHandler(object):
 
         del self._open_activities[activity_id]  # activity done
 
-    def _cancel_handler_fsm(self, cancel_activity_future):
+    def _cancel_handler_fsm(self, activity_id, cancel_activity_future):
         event = (yield)
         attributes = event.attributes
 
         if isinstance(event, ActivityTaskCancelRequested):
-            activity_id = attributes['activityId']
             self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
             self._cancel_event_to_activity_id[event.id] = activity_id
             cancel_activity_future.set_result(None)
 
         elif isinstance(event, RequestCancelActivityTaskFailed):
-            activity_id = attributes['activityId']
             self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
             del self._open_cancels[activity_id]
             error = RequestCancelActivityTaskFailedError(
@@ -205,7 +202,6 @@ class ActivityTaskHandler(object):
 
         elif isinstance(event, ActivityTaskCanceled):
             request_event_id = attributes['latestCancelRequestedEventId']
-            activity_id = self._cancel_event_to_activity_id[request_event_id]
             del self._open_cancels[activity_id]
             del self._cancel_event_to_activity_id[request_event_id]
 

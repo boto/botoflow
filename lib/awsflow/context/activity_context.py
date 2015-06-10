@@ -11,6 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+from awsflow.core.exceptions import CancellationError
+
 from .context_base import ContextBase
 
 
@@ -18,6 +20,19 @@ class ActivityContext(ContextBase):
     # TODO document
 
     def __init__(self, worker, task):
+        """
+
+        :param worker:
+        :type worker: awsflow.workers.activity_worker.ActivityWorker
+        :param task:
+        :type task: awsflow.workers.activity_task.ActivityTask
+        :return:
+        """
 
         self.worker = worker
         self.task = task
+
+    def heartbeat(self, details):
+        result = self.worker.request_heartbeat(details, self.task)
+        if result['cancelRequested']:
+            raise CancellationError()

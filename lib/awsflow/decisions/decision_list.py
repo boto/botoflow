@@ -20,8 +20,10 @@ class DecisionList(list):
     # TODO: validation of inputs
 
     def delete_decision(self, decision_type, decision_id):
-        """
-        delete a decision
+        """delete a decision
+
+        :returns: True if the decision was found and removed, False otherwise
+        :rtype: bool
         """
         for decision in self:
             if not isinstance(decision, decision_type):
@@ -29,7 +31,9 @@ class DecisionList(list):
 
             if decision.decision_id == decision_id:
                 self.remove(decision)
-                break
+                return True
+
+        return False
 
     def has_decision_type(self, *args):
         for decision in self:

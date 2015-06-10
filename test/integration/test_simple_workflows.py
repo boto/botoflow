@@ -8,6 +8,7 @@ from calendar import timegm
 from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       workflow_types, logging_filters, WorkflowStarter, workflow)
+from awsflow.core import CancelledError
 
 from awsflow.exceptions import ActivityTaskFailedError, WorkflowFailedError
 from utils import SWFMixIn
@@ -636,7 +637,6 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def start_wf_v2(self):
                 pass
 
-
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, SubMultiverWorkflow)
 
@@ -663,6 +663,67 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                          hist[0]
                          ['workflowExecutionStartedEventAttributes']
                          ['workflowType'])
+
+    def test_one_activity_heartbeat(self):
+        class OneActivityHeartbeatWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityHeartbeatWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self):
+                yield self.activities_client.heartbeating_activity(1)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatWorkflow)
+
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityHeartbeatWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        act_worker.start(1, 4)
+        act_worker.stop()
+        wf_worker.run_once()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+
+    def test_one_activity_heartbeat_cancel(self):
+        class OneActivityHeartbeatCancelWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityHeartbeatCancelWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self):
+                activity_future = self.activities_client.heartbeating_activity(2)
+                yield activity_future.cancel()
+                try:
+                    yield activity_future
+                except CancelledError:
+                    return_(True)
+                return_(False)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatCancelWorkflow)
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityHeartbeatCancelWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 5)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
 
 
 if __name__ == '__main__':

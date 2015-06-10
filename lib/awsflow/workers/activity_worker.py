@@ -15,7 +15,6 @@ import sys
 import traceback
 import time
 import functools
-import copy
 import logging
 
 import six
@@ -23,6 +22,7 @@ import six
 from ..swf_exceptions import TypeAlreadyExistsError, swf_exception_wrapper
 
 from ..context import ActivityContext, get_context, set_context
+from ..core.exceptions import CancellationError, CancelledError
 
 from .base_worker import BaseWorker
 from .activity_task import ActivityTask
@@ -200,13 +200,27 @@ class ActivityWorker(BaseWorker):
                     details = activity_type.data_converter.dumps(
                         [err, tb_list[1:]])
                     with swf_exception_wrapper():
-                        self.client.respond_activity_task_failed(
-                            taskToken=task.token, reason='', details=details)
+                        if isinstance(err, CancellationError, CancelledError):
+                            self.client.respond_activity_task_canceled(taskToken=task.token, details=details)
+                        else:
+                            self.client.respond_activity_task_failed(
+                                taskToken=task.token, reason='', details=details)
 
             finally:
                 set_context(saved_context)
 
         return process_activity
+
+    def request_heartbeat(self, details, task):
+        """
+
+        :param details:
+        :type details: str
+        :param task:
+        :type task: awsflow.workers.activity_task.ActivityTask
+        :return:
+        """
+        return self.client.record_activity_task_heartbeat(taskToken=task.token, details=details)
 
     def run(self):
         """Run this worker forever (or till SIGINT).

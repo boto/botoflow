@@ -176,7 +176,7 @@ class Decider(object):
         try:
             for handler in (self._workflow_execution_handler, self._activity_task_handler,
                             self._child_workflow_execution_handler, self._timer_handler,
-                            self._cancel_execution_handler):
+                            self._cancel_workflow_handler):
                 if isinstance(event, handler.responds_to):
                     handler.handle_event(event)
                     break
