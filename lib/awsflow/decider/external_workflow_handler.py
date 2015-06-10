@@ -44,13 +44,13 @@ class ExternalWorkflowHandler(object):
             'handler'].send(event)
 
     def request_cancel_external_workflow_execution(self, external_workflow_execution):
-        self._decisions.append(RequestCancelExternalWorkflowExecution(
+        self._decider._decisions.append(RequestCancelExternalWorkflowExecution(
             workflow_id=external_workflow_execution.workflow_id,
             run_id=external_workflow_execution.run_id))
 
         workflow_execution = get_context().workflow_execution
         workflow_future = Future()
-        handler = self.handle_cancel_workflow_event(external_workflow_execution, workflow_future)
+        handler = self.handle_external_workflow_event(external_workflow_execution, workflow_future)
         six.next(handler)
         self._open_cancellation_requests[workflow_execution][external_workflow_execution] = {
             'handler': handler}
@@ -73,8 +73,8 @@ class ExternalWorkflowHandler(object):
         """
         event = (yield)
         if isinstance(event, RequestCancelExternalWorkflowExecutionInitiated):
-            self._decisions.delete_decision(RequestCancelExternalWorkflowExecution,
-                                            external_workflow_execution)
+            self._decider._decisions.delete_decision(RequestCancelExternalWorkflowExecution,
+                                                     external_workflow_execution)
         elif isinstance(event, ExternalWorkflowExecutionCancelRequested):
             workflow_future.set_result(None)
         elif isinstance(event, RequestCancelExternalWorkflowExecutionFailed):

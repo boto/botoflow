@@ -75,6 +75,10 @@ class Decider(object):
         self._cancel_workflow_handler = CancelWorkflowHandler(self, self.task_list)
         self._external_workflow_handler = ExternalWorkflowHandler(self, self.task_list)
 
+        self._handlers = (self._workflow_execution_handler, self._activity_task_handler,
+                          self._child_workflow_execution_handler, self._timer_handler,
+                          self._cancel_workflow_handler, self._external_workflow_handler)
+
         # basically garbage collect
         Future.untrack_all_coroutines()
 
@@ -174,15 +178,10 @@ class Decider(object):
         log.debug("Handling history event: %s", event)
 
         try:
-            for handler in (self._workflow_execution_handler, self._activity_task_handler,
-                            self._child_workflow_execution_handler, self._timer_handler,
-                            self._cancel_workflow_handler):
-                if isinstance(event, handler.responds_to):
-                    handler.handle_event(event)
-                    break
-            warnings.warn("Handler for the event {} not implemented".format(event))
+            handler = next(handler for handler in self._handlers if isinstance(event, handler.responds_to))
+            handler.handle_event(event)
         except StopIteration:
-            pass
+            warnings.warn("Handler for the event {} not implemented".format(event))
         self._eventloop.execute_all_tasks()
 
     def _handle_execute_activity(self, activity_type, decision_dict, args, kwargs):

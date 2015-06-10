@@ -48,17 +48,14 @@ class CancelWorkflowHandler(object):
         external_workflow_execution = attributes.get('externalWorkflowExecution')
         if any(cause, external_initiated_event_id, external_workflow_execution):
             return ("cause={} external_workflow_execution={} "
-                    "external_initiated_event_id={} ").format(external_workflow_execution,
-                                                              external_initiated_event_id,
-                                                              cause)
+                    "external_initiated_event_id={} ").format(cause,
+                                                              external_workflow_execution,
+                                                              external_initiated_event_id)
         return None
 
     def cancel_workflow_execution(self, workflow_execution, details):
         if self._open_cancels[workflow_execution]:
-            # ignore conflicting cancels, or queue them up?
-            log.warn(("Received cancel_workflow_execution request while another is in progress. "
-                      "workflow_execution={}, details={} -- ignoring.").format(
-                          workflow_execution, details))
+            return  # ignore duplicate cancel requests
 
         try:
             log.info("executing cancellation_handler for {}".format(workflow_execution))
@@ -69,7 +66,7 @@ class CancelWorkflowHandler(object):
                 workflow_execution))
 
         self._decider._request_cancel_activity_task_all(workflow_execution)
-        self._decisions.append(CancelWorkflowExecution(details))
+        self._decider._decisions.append(CancelWorkflowExecution(details))
 
         cancel_future = Future()
         handler = self.handle_cancel_workflow_event(cancel_future)
@@ -93,7 +90,7 @@ class CancelWorkflowHandler(object):
         event = (yield)
         workflow_execution = get_context().workflow_execution
 
-        self._decisions.delete_decision(CancelWorkflowExecution, workflow_execution)
+        self._decider._decisions.delete_decision(CancelWorkflowExecution, workflow_execution)
         del self._open_cancels[workflow_execution]
 
         if isinstance(event, CancelWorkflowExecutionFailed):
@@ -104,6 +101,4 @@ class CancelWorkflowHandler(object):
                 attributes['cause'])
             cancel_future.set_exception(exception)
         elif isinstance(event, WorkflowExecutionCanceled):
-            # successfully canceled; shouldn't receive further events from SWF
-            # set_exception() or just rely on natural closure?
             cancel_future.set_result(None)
