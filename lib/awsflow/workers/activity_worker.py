@@ -200,7 +200,7 @@ class ActivityWorker(BaseWorker):
                     details = activity_type.data_converter.dumps(
                         [err, tb_list[1:]])
                     with swf_exception_wrapper():
-                        if isinstance(err, CancellationError, CancelledError):
+                        if isinstance(err, (CancellationError, CancelledError)):
                             self.client.respond_activity_task_canceled(taskToken=task.token, details=details)
                         else:
                             self.client.respond_activity_task_failed(

@@ -14,6 +14,8 @@
 import sys
 import traceback
 
+from awsflow.core.exceptions import CancellationError, CancelledError
+
 
 class AWSFlowError(Exception):
     """
@@ -159,25 +161,26 @@ class ActivityTaskTimedOutError(ActivityTaskError):
                     self.timeout_type)
 
 
-class ActivityTaskCanceledError(ActivityTaskError):
-    def __init__(self, event_id, activity_type, activity_id, details,
-                 latest_cancel_requested_event_id, scheduled_event_id, started_event_id):
+class ActivityTaskCanceledError(ActivityTaskError, DecisionExceptionWithTracebackMixIn):
+    def __init__(self, event_id, activity_type, activity_id, cause,
+                 latest_cancel_requested_event_id, scheduled_event_id, started_event_id,
+                 _traceback=None):
         super(ActivityTaskCanceledError, self).__init__(
-            event_id, activity_type, activity_id, details, latest_cancel_requested_event_id,
+            event_id, activity_type, activity_id, cause, latest_cancel_requested_event_id,
             scheduled_event_id, started_event_id)
 
-        self.details = details
+        self.cause = cause
         self.latest_cancel_requested_event_id = latest_cancel_requested_event_id
         self.scheduled_event_id = scheduled_event_id
         self.started_event_id = started_event_id
 
     def __repr__(self):
         return ("<%s at %s event_id=%s activity_type=%s activity_id=%s "
-                "details=%s latest_cancel_requested_event_id=%s "
+                "cause=%s latest_cancel_requested_event_id=%s "
                 "scheduled_event_id=%s started_event_id=%s >") % (
                     self.__class__.__name__, hex(id(self)),
                     self.event_id, self.activity_type, self.activity_id,
-                    self.latest_cancel_requested_event_id,
+                    self.cause, self.latest_cancel_requested_event_id,
                     self.scheduled_event_id, self.started_event_id)
 
 
