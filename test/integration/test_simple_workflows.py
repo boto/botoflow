@@ -725,6 +725,46 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist), 5)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
 
+    def test_one_activity_heartbeat_cancel_catch(self):
+        class OneActivityHeartbeatCancelCatchWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityHeartbeatCancelCatchWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self):
+                activity_future = self.activities_client.heartbeating_activity(5)
+                yield self.activities_client.sum(1, 2)
+                yield activity_future.cancel()
+                try:
+                    yield activity_future
+                except CancelledError:
+                    return_(True)
+                return_(False)
+
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatCancelCatchWorkflow)
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityHeartbeatCancelCatchWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        act_worker.start(1, 4)
+        wf_worker.run_once()
+        act_worker.stop()
+        wf_worker.run_once()
+        wf_worker.run_once()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 18)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+
 
 if __name__ == '__main__':
     unittest.main()

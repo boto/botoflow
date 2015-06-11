@@ -14,7 +14,7 @@
 import sys
 import traceback
 
-from awsflow.core.exceptions import CancellationError, CancelledError
+from .core.exceptions import CancellationError, CancelledError
 
 
 class AWSFlowError(Exception):
@@ -161,18 +161,20 @@ class ActivityTaskTimedOutError(ActivityTaskError):
                     self.timeout_type)
 
 
-class ActivityTaskCanceledError(ActivityTaskError, DecisionExceptionWithTracebackMixIn):
+class ActivityTaskCanceledError(CancelledError, ActivityTaskError, DecisionExceptionWithTracebackMixIn):
     def __init__(self, event_id, activity_type, activity_id, cause,
                  latest_cancel_requested_event_id, scheduled_event_id, started_event_id,
                  _traceback=None):
-        super(ActivityTaskCanceledError, self).__init__(
-            event_id, activity_type, activity_id, cause, latest_cancel_requested_event_id,
-            scheduled_event_id, started_event_id)
+        super(ActivityTaskCanceledError, self).__init__(event_id, activity_type, activity_id)
 
-        self.cause = cause
+        self._cause = cause
         self.latest_cancel_requested_event_id = latest_cancel_requested_event_id
         self.scheduled_event_id = scheduled_event_id
         self.started_event_id = started_event_id
+
+    @property
+    def cause(self):
+        return self._cause
 
     def __repr__(self):
         return ("<%s at %s event_id=%s activity_type=%s activity_id=%s "

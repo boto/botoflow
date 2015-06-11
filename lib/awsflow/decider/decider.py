@@ -182,6 +182,7 @@ class Decider(object):
             handler.handle_event(event)
         except StopIteration:
             warnings.warn("Handler for the event {} not implemented".format(event))
+
         self._eventloop.execute_all_tasks()
 
     def _handle_execute_activity(self, activity_type, decision_dict, args, kwargs):
