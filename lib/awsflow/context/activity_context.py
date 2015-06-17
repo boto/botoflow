@@ -33,6 +33,11 @@ class ActivityContext(ContextBase):
         self.task = task
 
     def heartbeat(self, details):
+        """Heartbeats current activity, raising CancellationError if cancel requested.
+
+        Ignore request by catching teh exception; honor it by letting it raise or by
+        re-raising as subclass.
+        """
         result = self.worker.request_heartbeat(details, self.task)
         if result['cancelRequested']:
-            raise CancellationError()
+            raise CancellationError('Cancel was requested during heartbeat.')

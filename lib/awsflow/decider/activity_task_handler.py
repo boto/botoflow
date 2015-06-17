@@ -50,6 +50,11 @@ class ActivityTaskHandler(object):
             val['handler'].close()
 
     def handle_execute_activity(self, activity_type, decision_dict, args, kwargs):
+        """Makes ScheduleActivityTask decision and creates associated future.
+
+        :return: activity future
+        :rtype: awsflow.decider.activity_future.ActivityFuture
+        """
         activity_id = self._decider.get_next_id()
         decision_dict['activity_id'] = activity_id
 
@@ -73,19 +78,33 @@ class ActivityTaskHandler(object):
         return ActivityFuture(activity_future, self, activity_id)
 
     def request_cancel_activity_task_all(self):
+        """Makes RequestCancelActivityTask decisions for all open activities
+
+        :return: cancel futures for each open activity; or None if no open activities
+        :rtype: awsflow.core.AllFuture
+        """
         cancel_activity_futures = []
         for activity_id in self._open_activities:
-            cancel_activity_future = self.request_cancel_activity_task(activity_id)
-            if cancel_activity_future:
-                cancel_activity_futures.append(cancel_activity_future)
+            activity_future = self._open_activities[activity_id]['future']
+            cancel_activity_future = self.request_cancel_activity_task(activity_future, activity_id)
+            cancel_activity_futures.append(cancel_activity_future)
 
         if cancel_activity_futures:
             return AllFuture(*cancel_activity_futures)
         return None
 
     def request_cancel_activity_task(self, activity_future, activity_id):
+        """Requests to cancel an activity with the given activity_id
+
+        :return: cancel future
+        :rtype: awsflow.core.BaseFuture
+
+        If the schedule decision for the activity was not yet sent, it's future is set to
+        CancelledError and a BaseFuture is returned; otherwise, a RequestCancelActivityTask
+        decision is made, and a future that tracks the request is returned.
+        """
         if activity_id in self._open_cancels:
-            return self._open_cancels[activity_id]['future']
+            return self._open_cancels[activity_id]['future']  # duplicate request
 
         if self._decider._decisions.delete_decision(ScheduleActivityTask, activity_id):
             activity_future.set_exception(CancelledError(
@@ -99,6 +118,8 @@ class ActivityTaskHandler(object):
         return cancel_activity_future
 
     def handle_event(self, event):
+        """Determines activity id associated with event, then forwards event to appropriate handler."""
+
         activity_id = None
 
         if isinstance(event, ActivityTaskStarted):
@@ -108,7 +129,8 @@ class ActivityTaskHandler(object):
                               RequestCancelActivityTaskFailed)):
             activity_id = event.attributes['activityId']
 
-        elif isinstance(event, (ActivityTaskCompleted, ActivityTaskFailed, ActivityTaskTimedOut, ActivityTaskCanceled)):
+        elif isinstance(event, (ActivityTaskCompleted, ActivityTaskFailed, ActivityTaskTimedOut,
+                                ActivityTaskCanceled)):
             scheduled_event_id = event.attributes['scheduledEventId']
             activity_id = self._schedule_event_to_activity_id[scheduled_event_id]
 
@@ -118,23 +140,36 @@ class ActivityTaskHandler(object):
             log.warn("Tried to handle activity event, but activity_id was None: %r", event)
 
     def _handler_fsm(self, activity_type, activity_id, activity_future):
+        """FSM responsible for yielding through events until setting a result on activity_future.
+
+        This is also responsible for resolving any open cancel futures.
+
+        The event ordering can be thought of as two layers. The first layer consists of:
+            ActivityTaskScheduled, ScheduleActivityTaskFailed,
+            ActivityTaskCancelRequested, RequestCancelActivityTaskFailed
+
+        The first yield waits for one of these layer 1 events. If it is either ActivityTaskScheduled
+        or ActivityTaskCancelRequested, an additional yield is done as the activity is still ongoing.
+
+        The activity_future is resolved by a layer 2 event:
+            ActivityTaskCompleted, ActivityTaskFailed, ActivityTaskTimedOut, ActivityTaskCanceled
+        """
         event = (yield)
 
         if isinstance(event, (ActivityTaskScheduled, ScheduleActivityTaskFailed)):
             self._decider._decisions.delete_decision(ScheduleActivityTask, activity_id)
 
+        # ActivityTaskScheduled event always preceeds ActivityTaskCancelRequested event,
+        # given that no cancels are sent until the ScheduleActivityTask decision is deleted.
         if isinstance(event, (ActivityTaskScheduled, ActivityTaskCancelRequested)):
-            # need to be able to find the activity id as it's not always
-            # present in the history
             if isinstance(event, ActivityTaskScheduled):
+                # maintain mapping of schedule event id to activity id for future lookup
                 self._schedule_event_to_activity_id[event.id] = activity_id
-
-            event = (yield)
-
-            if isinstance(event, (ActivityTaskCancelRequested, RequestCancelActivityTaskFailed)):
-                self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
+                event = (yield)
 
             if isinstance(event, ActivityTaskCancelRequested):
+                self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
+                # successfully made request to cancel, so cancel future can be resolved
                 self._open_cancels[activity_id]['future'].set_result(None)
                 del self._open_cancels[activity_id]
                 event = (yield)
@@ -158,25 +193,18 @@ class ActivityTaskHandler(object):
                     event.attributes['timeoutType'])
                 activity_future.set_exception(error)
 
-            elif isinstance(event, RequestCancelActivityTaskFailed):
-                error = RequestCancelActivityTaskFailedError(
-                    event.id, activity_id, event.attributes['cause'],
-                    event.attributes['decisionTaskCompletedEventId'])
-                self._open_cancels[activity_id].set_exception(error)
-                activity_future.set_exception(error)
-                del self._open_cancels[activity_id]
-
             elif isinstance(event, ActivityTaskCanceled):
-                exception, _traceback = CancelledError("Activity was cancelled before being picked up by activity "
-                                                       "worker"), None
+                exception, _traceback = CancelledError("Activity was cancelled before being picked up by "
+                                                       "activity worker"), None
                 if event.attributes.get('details', False):
+                    # parse out exception from activity result
                     exception, _traceback = activity_type.data_converter.loads(event.attributes['details'])
 
                 error = ActivityTaskCanceledError(
-                    event.id, activity_type, activity_id, exception,
-                    event.attributes.get('latestCancelRequestedEventId'),
-                    event.attributes.get('scheduledEventId'),
-                    event.attributes.get('startedEventId'),
+                    event.id, activity_type, activity_id, cause=exception,
+                    latest_cancel_requested_event_id=event.attributes.get('latestCancelRequestedEventId'),
+                    scheduled_event_id=event.attributes.get('scheduledEventId'),
+                    started_event_id=event.attributes.get('startedEventId'),
                     _traceback=_traceback)
                 activity_future.set_exception(error)
 
@@ -188,6 +216,15 @@ class ActivityTaskHandler(object):
             cause = event.attributes['cause']
             activity_future.set_exception(
                 ScheduleActivityTaskFailedError(cause))
+
+        elif isinstance(event, RequestCancelActivityTaskFailed):
+            self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
+            # failed to cancel, so resolve cancel future with exception
+            error = RequestCancelActivityTaskFailedError(
+                event.id, activity_id, event.attributes['cause'],
+                event.attributes['decisionTaskCompletedEventId'])
+            self._open_cancels[activity_id].set_exception(error)
+            del self._open_cancels[activity_id]
 
         else:
             raise RuntimeError("Unexpected event/state: %s", event)

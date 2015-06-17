@@ -177,9 +177,13 @@ class Decider(object):
     def _handle_history_event(self, workflow_execution, event):
         log.debug("Handling history event: %s", event)
 
+        handler = None
         try:
             handler = next(handler for handler in self._handlers if isinstance(event, handler.responds_to))
-            handler.handle_event(event)
+            try:
+                handler.handle_event(event)
+            except StopIteration:  # error raised when event is sent to already closed future
+                pass
         except StopIteration:
             warnings.warn("Handler for the event {} not implemented".format(event))
 

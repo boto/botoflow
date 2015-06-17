@@ -31,6 +31,10 @@ class BunchOfActivities(object):
             time.sleep(0.2)
             get_context().heartbeat(str(i))
 
+    @activity('1.0', task_list='FAKE')
+    def wrong_tasklist_activity(self, sleep_secs):
+        return
+
     @activity('1.0')
     def heartbeating_custom_error_activity(self, repeat_num):
         for i in range(repeat_num):

@@ -1,13 +1,13 @@
 # -*- mode:python ; fill-column:120 -*-
-import logging
+import json
 import time
 import unittest
 
 from calendar import timegm
 
 from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
-                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
-                      workflow_types, logging_filters, WorkflowStarter, workflow)
+                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
+                     workflow_types, WorkflowStarter, workflow)
 from awsflow.core import CancelledError
 
 from awsflow.exceptions import ActivityTaskFailedError, WorkflowFailedError
@@ -72,8 +72,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist), 5)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionFailed')
         self.assertEqual(str(self.serializer.loads(
-            hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]),
-                         "ExecutionFailed")
+            hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]), "ExecutionFailed")
 
     def test_no_activities_with_state(self):
         class NoActivitiesWorkflow(WorkflowDefinition):
@@ -402,7 +401,6 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 6)
 
-
     def test_two_activities(self):
         class BunchOfActivitiesWorkflow(WorkflowDefinition):
 
@@ -502,7 +500,6 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), (3, 2))
 
-
     def test_any_future_activities(self):
 
         class SleepingActivities(object):
@@ -519,7 +516,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 sleep1_future = SleepingActivities.sleep(arg1)
                 sleep2_future = SleepingActivities.sleep(arg2)
-                result = yield sleep1_future | sleep2_future
+                result = yield sleep1_future | sleep2_future  # python3 only?
                 return_(result)
 
         wf_worker = WorkflowWorker(
@@ -695,7 +692,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist), 11)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
 
-    def test_one_activity_heartbeat_cancel(self):
+    def test_one_activity_heartbeat_cancel_before_schedule(self):
         class OneActivityHeartbeatCancelWorkflow(WorkflowDefinition):
             def __init__(self, workflow_execution):
                 super(OneActivityHeartbeatCancelWorkflow, self).__init__(workflow_execution)
@@ -707,8 +704,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 yield activity_future.cancel()
                 try:
                     yield activity_future
-                except CancelledError:
-                    return_(True)
+                except CancelledError as e:
+                    return_(e.message)
                 return_(False)
 
         wf_worker = WorkflowWorker(
@@ -724,6 +721,47 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         hist = self.get_workflow_execution_history()
         self.assertEqual(len(hist), 5)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(hist[-1]['workflowExecutionCompletedEventAttributes']['result'],
+                         '"Activity was cancelled before being scheduled with SWF"')
+
+    def test_one_activity_heartbeat_cancel_before_start(self):
+        class OneActivityHeartbeatCancelWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityHeartbeatCancelWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self):
+                activity_future = self.activities_client.wrong_tasklist_activity()
+                yield self.activities_client.sum(1, 2)
+                yield activity_future.cancel()
+                try:
+                    yield activity_future
+                except CancelledError as e:
+                    return_(e.cause)
+                return_(False)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatCancelWorkflow)
+
+        act_worker = ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities())
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityHeartbeatCancelWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()  # schedule both activities
+        act_worker.run_once()  # start summing activity
+        wf_worker.run_once()  # cancel wrong tasklist activity
+        wf_worker.run_once()  # finish
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 17)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        error = json.loads(hist[-1]['workflowExecutionCompletedEventAttributes']['result'])['__exc'][0][0]
+        self.assertEqual(error, 'Activity was cancelled before being picked up by activity worker')
 
     def test_one_activity_heartbeat_cancel_catch(self):
         class OneActivityHeartbeatCancelCatchWorkflow(WorkflowDefinition):
@@ -738,8 +776,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 yield activity_future.cancel()
                 try:
                     yield activity_future
-                except CancelledError:
-                    return_(True)
+                except CancelledError as e:
+                    return_(e.cause)
                 return_(False)
 
         act_worker = ThreadedActivityExecutor(ActivityWorker(
@@ -764,6 +802,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         hist = self.get_workflow_execution_history()
         self.assertEqual(len(hist), 18)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        error = json.loads(hist[-1]['workflowExecutionCompletedEventAttributes']['result'])['__exc'][0][0]
+        self.assertEqual(error[0], "awsflow.core.exceptions:CancellationError")
+        self.assertEqual(error[1]['message'], "Cancel was requested during heartbeat.")
 
 
 if __name__ == '__main__':

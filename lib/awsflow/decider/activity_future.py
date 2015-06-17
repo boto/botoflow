@@ -60,5 +60,6 @@ class ActivityFuture(BaseFuture):
         :return: Cancellation future
         :rtype: awsflow.Future
         """
-        self._cancellation_future = self._activity_task_handler.request_cancel_activity_task(self, self._activity_id)
+        self._cancellation_future = self._activity_task_handler.request_cancel_activity_task(
+            self, self._activity_id)
         return self._cancellation_future

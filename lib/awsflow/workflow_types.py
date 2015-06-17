@@ -367,7 +367,7 @@ class SignalType(BaseFlowType):
                 "Unsupported context for this call: %r" % context)
 
         with swf_exception_wrapper():
-            context.worker.client._signal_workflow_execution(
+            context.worker.client.signal_workflow_execution(
                 domain=context.worker.domain, signalName=self.name,
                 workflowId=workflow_execution.workflow_id,
                 runId=workflow_execution.run_id,
