@@ -35,8 +35,9 @@ class ActivityContext(ContextBase):
     def heartbeat(self, details):
         """Heartbeats current activity, raising CancellationError if cancel requested.
 
-        Ignore request by catching teh exception; honor it by letting it raise or by
-        re-raising as subclass.
+        Ignore request by catching the exception, or let it raise to cancel.
+
+        Alternatively, catch/re-raise as awsflow.core.CancelledError or subclass of.
         """
         result = self.worker.request_heartbeat(details, self.task)
         if result['cancelRequested']:
