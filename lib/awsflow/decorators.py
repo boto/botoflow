@@ -14,7 +14,7 @@
 import types
 
 from . import decorator_descriptors
-from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE, CANCEL_HANDLER_TYPE
+from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .workflow_types import WorkflowType, ActivityType, SignalType
 
 __all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal')
@@ -379,18 +379,3 @@ def signal(name=None):
         return decorator_descriptors.SignalFunc(func)
 
     return _signal
-
-
-def cancellation_handler():
-    """When used on a method in the WorkflowDefinition subclass, identifies a
-    handler for processing workflow cancellation requests.
-
-    Use this decorator to do any necessary cleanup before the cancellation
-    raises. By default, cancel requests are ignored. To honor the requests,
-    specify a handler that raises a awsflow.exceptions.CancelWorkflow.
-    """
-    def _cancellation_handler(func):
-        func.handler_type = CANCEL_HANDLER_TYPE
-        return decorator_descriptors.CancellationFunc(func)
-
-    return _cancellation_handler

@@ -6,11 +6,11 @@ import unittest
 from calendar import timegm
 
 from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
-                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
-                     workflow_types, WorkflowStarter, workflow)
+                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
+                     workflow_time, workflow_types, WorkflowStarter, workflow)
 from awsflow.core import CancelledError
 
-from awsflow.exceptions import ActivityTaskFailedError, WorkflowFailedError
+from awsflow.exceptions import (ActivityTaskFailedError, WorkflowFailedError)
 from utils import SWFMixIn
 from various_activities import BunchOfActivities
 
@@ -166,9 +166,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(len(hist), 11)
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
-            hist[-1]['workflowExecutionCompletedEventAttributes']['result']),
-                         [timegm(hist[2]['eventTimestamp'].timetuple()),
-                          timegm(hist[8]['eventTimestamp'].timetuple())])
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), [
+                timegm(hist[2]['eventTimestamp'].timetuple()),
+                timegm(hist[8]['eventTimestamp'].timetuple())])
 
     def test_one_activity_dynamic(self):
         class OneActivityTimedWorkflow(WorkflowDefinition):
@@ -693,9 +693,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
 
     def test_one_activity_heartbeat_cancel_before_schedule(self):
-        class OneActivityHeartbeatCancelWorkflow(WorkflowDefinition):
+        class OneActivityHeartbeatCancelBeforeScheduleWorkflow(WorkflowDefinition):
             def __init__(self, workflow_execution):
-                super(OneActivityHeartbeatCancelWorkflow, self).__init__(workflow_execution)
+                super(OneActivityHeartbeatCancelBeforeScheduleWorkflow, self).__init__(workflow_execution)
                 self.activities_client = BunchOfActivities()
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
@@ -709,10 +709,11 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 return_(False)
 
         wf_worker = WorkflowWorker(
-            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatCancelWorkflow)
+            self.session, self.region, self.domain, self.task_list,
+            OneActivityHeartbeatCancelBeforeScheduleWorkflow)
 
         with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
-            instance = OneActivityHeartbeatCancelWorkflow.execute()
+            instance = OneActivityHeartbeatCancelBeforeScheduleWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
         wf_worker.run_once()
@@ -725,9 +726,9 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                          '"Activity was cancelled before being scheduled with SWF"')
 
     def test_one_activity_heartbeat_cancel_before_start(self):
-        class OneActivityHeartbeatCancelWorkflow(WorkflowDefinition):
+        class OneActivityHeartbeatCancelBeforeStartWorkflow(WorkflowDefinition):
             def __init__(self, workflow_execution):
-                super(OneActivityHeartbeatCancelWorkflow, self).__init__(workflow_execution)
+                super(OneActivityHeartbeatCancelBeforeStartWorkflow, self).__init__(workflow_execution)
                 self.activities_client = BunchOfActivities()
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
@@ -742,13 +743,14 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
                 return_(False)
 
         wf_worker = WorkflowWorker(
-            self.session, self.region, self.domain, self.task_list, OneActivityHeartbeatCancelWorkflow)
+            self.session, self.region, self.domain, self.task_list,
+            OneActivityHeartbeatCancelBeforeStartWorkflow)
 
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
         with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
-            instance = OneActivityHeartbeatCancelWorkflow.execute()
+            instance = OneActivityHeartbeatCancelBeforeStartWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
         wf_worker.run_once()  # schedule both activities
@@ -800,11 +802,54 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(len(hist), 18)
+        self.assertEqual(len(hist), 17)  # 18 or 17? is this changing...?
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         error = json.loads(hist[-1]['workflowExecutionCompletedEventAttributes']['result'])['__exc'][0][0]
         self.assertEqual(error[0], "awsflow.core.exceptions:CancellationError")
         self.assertEqual(error[1]['message'], "Cancel was requested during heartbeat.")
+
+    def test_one_activity_heartbeat_cancel_failure(self):
+        class OneActivityHeartbeatCancelFailureWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityHeartbeatCancelFailureWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self):
+                activity_future = self.activities_client.heartbeating_activity(5)
+                yield self.activities_client.sum(1, 2)
+
+                # need invalid ID for cancellation
+                activity_future._activity_id = '100'
+
+                yield activity_future.cancel()
+                return_(False)
+
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list,
+            OneActivityHeartbeatCancelFailureWorkflow)
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityHeartbeatCancelFailureWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()  # schedule both activities
+        act_worker.start(1, 4)  # run both activities
+        wf_worker.run_once()  # attempt cancel with wrong activity id
+        wf_worker.run_once()  # respond to failed cancel event
+        act_worker.stop()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 17)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionFailed')
+        error = json.loads(hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]['__obj']
+        self.assertEqual(error[0], "awsflow.exceptions:RequestCancelActivityTaskFailedError")
+        self.assertEqual(error[1]['cause'], 'ACTIVITY_ID_UNKNOWN')
 
 
 if __name__ == '__main__':

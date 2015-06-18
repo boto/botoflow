@@ -4,7 +4,8 @@ import time
 import unittest
 
 from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
-                     ActivityWorker, WorkflowStarter, workflow_time)
+                     ActivityWorker, WorkflowStarter, workflow_time,
+                     ThreadedActivityExecutor)
 from awsflow.exceptions import ChildWorkflowTimedOutError
 from awsflow.logging_filters import AWSFlowFilter
 from various_activities import BunchOfActivities
@@ -39,6 +40,33 @@ class ChildWorkflow(WorkflowDefinition):
         return_(arg1 + arg2)
 
 
+class SelfCancellingWorkflow(WorkflowDefinition):
+    @execute(version='1.1', execution_start_to_close_timeout=60)
+    def execute(self):
+        yield self.cancel()
+        return_(True)
+
+
+class SelfCancellingWorkflowWithoutYield(WorkflowDefinition):
+    @execute(version='1.1', execution_start_to_close_timeout=60)
+    def execute(self):
+        self.cancel()
+        return_(True)
+
+
+class SelfCancellingWorkflowWithCascade(WorkflowDefinition):
+    def __init__(self, workflow_execution):
+        super(SelfCancellingWorkflowWithCascade, self).__init__(workflow_execution)
+        self.activities_client = BunchOfActivities()
+
+    @execute(version='1.1', execution_start_to_close_timeout=60)
+    def execute(self):
+        self.activities_client.heartbeating_activity(5)
+        yield self.activities_client.sum(1, 2)
+        yield self.cancel()
+        return_(True)
+
+
 class TestChildWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_child_workflow_cancel(self):
@@ -66,6 +94,65 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 1)
 
+
+class TestWorkflowCancels(SWFMixIn, unittest.TestCase):
+
+    def test_cancel_workflow(self):
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, SelfCancellingWorkflow)
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = SelfCancellingWorkflow.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 5)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
+
+    def test_cancel_and_complete_workflow_decisions_together(self):
+        # a Cancel decision cannot be sent with another (causes Validation error)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list,
+            SelfCancellingWorkflowWithoutYield)
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = SelfCancellingWorkflowWithoutYield.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 5)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+
+    def test_cancel_workflow_with_cascade_cancel(self):
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list,
+            SelfCancellingWorkflowWithCascade)
+
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
+
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = SelfCancellingWorkflowWithCascade.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()  # start first act
+        act_worker.start(1, 4)
+        wf_worker.run_once()  # cancel workflow and activity
+        act_worker.stop()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 14)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
+        self.assertEqual(hist[-2]['eventType'], 'ActivityTaskCancelRequested')
 
 if __name__ == '__main__':
     unittest.main()

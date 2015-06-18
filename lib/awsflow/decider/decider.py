@@ -27,7 +27,6 @@ from .workflow_execution_handler import WorkflowExecutionHandler
 from .activity_task_handler import ActivityTaskHandler
 from .child_workflow_execution_handler import ChildWorkflowExecutionHandler
 from .timer_handler import TimerHandler
-from .cancel_workflow_handler import CancelWorkflowHandler
 from .external_workflow_handler import ExternalWorkflowHandler
 
 log = logging.getLogger(__name__)
@@ -72,12 +71,11 @@ class Decider(object):
         self._activity_task_handler = ActivityTaskHandler(self, self.task_list)
         self._child_workflow_execution_handler = ChildWorkflowExecutionHandler(self, self.task_list)
         self._timer_handler = TimerHandler(self, self.task_list)
-        self._cancel_workflow_handler = CancelWorkflowHandler(self, self.task_list)
         self._external_workflow_handler = ExternalWorkflowHandler(self, self.task_list)
 
         self._handlers = (self._workflow_execution_handler, self._activity_task_handler,
                           self._child_workflow_execution_handler, self._timer_handler,
-                          self._cancel_workflow_handler, self._external_workflow_handler)
+                          self._external_workflow_handler)
 
         # basically garbage collect
         Future.untrack_all_coroutines()
@@ -197,38 +195,29 @@ class Decider(object):
         return self._child_workflow_execution_handler.handle_start_child_workflow_execution(
             workflow_type, workflow_instance, input)
 
-    def _cancel_workflow_execution(self, workflow_execution, details):
+    def _cancel_workflow_execution(self, details):
         """An execution-internal cancellation.
 
         Returns async call that waits until (1) the cancellation handler for the
         respective workflow definition is executed, and (2) activities/workflow
         is canceled through SWF as necessary (based upon cancellation handler).
         """
-        return self._cancel_workflow_handler.cancel_workflow_execution(
-            workflow_execution, details)
+        return self._workflow_execution_handler.cancel_workflow_execution(details)
 
-    def _request_cancel_external_workflow_execution(self, external_workflow_execution):
-        """RequestCancelExternalWorkflowExecution sends a cancel request to the target
-        external workflow execution. It is up to the target execution whether to
-        allow the request to go through or not.
+    # def _request_cancel_external_workflow_execution(self, external_workflow_execution):
+    #     """RequestCancelExternalWorkflowExecution sends a cancel request to the target
+    #     external workflow execution. It is up to the target execution whether to
+    #     allow the request to go through or not.
 
-        Returns async call that waits until the request is sent to target external
-        execution.
-        """
-        return self._external_workflow_handler.request_cancel_external_workflow_execution(
-            external_workflow_execution)
+    #     Returns async call that waits until the request is sent to target external
+    #     execution.
+    #     """
+    #     return self._external_workflow_handler.request_cancel_external_workflow_execution(
+    #         external_workflow_execution)
 
-    def _request_cancel_activity_task(self, workflow_execution, activity_id):
-        """RequestCancelActivityTask sends cancel request to activity for given id.
-
-        Returns None; does not wait for a response (TODO - implement async wait path)
-        """
-        return self._activity_task_handler.request_cancel_activity_task(
-            workflow_execution, activity_id)
-
-    def _request_cancel_activity_task_all(self, workflow_execution):
+    def _request_cancel_activity_task_all(self):
         """RequestCancelActivityTask decision for all open activities of given execution"""
-        return self._activity_task_handler.request_cancel_activity_task_all(workflow_execution)
+        return self._activity_task_handler.request_cancel_activity_task_all()
 
     def _continue_as_new_workflow_execution(self, **kwargs):
         """

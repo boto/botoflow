@@ -204,8 +204,9 @@ class RequestCancelActivityTaskFailedError(DecisionException):
 
 
 class CancelWorkflow(Exception):
-    """Raise this from a @cancellation_handler to cancel the workflow"""
-    pass
+    def __init__(self, message, cascade_cancel_to_activities=True):
+        super(CancelWorkflow, self).__init__(message)
+        self.cascade_cancel_to_activities = cascade_cancel_to_activities
 
 
 class WorkflowError(DecisionException):
