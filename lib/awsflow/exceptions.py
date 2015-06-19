@@ -203,12 +203,6 @@ class RequestCancelActivityTaskFailedError(DecisionException):
                     self.decision_task_completed_event_id)
 
 
-class CancelWorkflow(Exception):
-    def __init__(self, message, cascade_cancel_to_activities=True):
-        super(CancelWorkflow, self).__init__(message)
-        self.cascade_cancel_to_activities = cascade_cancel_to_activities
-
-
 class WorkflowError(DecisionException):
     """Base class for exceptions used to report failure of the originating
     workflow"""
@@ -260,21 +254,6 @@ class WorkflowTerminatedError(WorkflowError):
     def __init__(self, event_id, workflow_type, workflow_execution):
         super(WorkflowTerminatedError, self).__init__(event_id, workflow_type,
                                                       workflow_execution)
-
-
-class CancelWorkflowExecutionFailedError(DecisionException):
-    """Decision to cancel self failed to be processed by SWF"""
-
-    def __init__(self, event_id, workflow_execution, cause):
-        super(CancelWorkflowExecutionFailedError, self).__init__(
-            event_id)
-        self.workflow_execution = workflow_execution
-        self.cause = cause
-
-    def __repr__(self):
-        return "<%s at %s event_id=%s workflow_execution=%s cause=%r>" % (
-               self.__class__.__name__, hex(id(self)), self.event_id,
-               self.workflow_execution, self.cause)
 
 
 class ExternalWorkflowError(Exception):
@@ -386,3 +365,11 @@ class ChildWorkflowTerminatedError(ChildWorkflowError):
         super(
             ChildWorkflowTerminatedError, self).__init__(event_id, workflow_type,
                                                          workflow_execution)
+
+
+class RequestCancelExternalWorkflowExecutionInvalidError(AWSFlowError):
+    """This exception is thrown if, during workflow execution, a request to cancel
+    an external workflow is made where the external workflow is the same as the
+    calling workflow.
+    """
+    pass

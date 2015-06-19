@@ -22,7 +22,6 @@ class CancelledError(Exception):
     """
     The Future was cancelled
     """
-    pass
 
     @property
     def cause(self):

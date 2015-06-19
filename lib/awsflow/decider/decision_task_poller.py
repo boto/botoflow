@@ -41,6 +41,15 @@ class EventsIterator(six.Iterator):
         return swf_event_to_object(
             self.decision_dict['events'][self.cur_event_pos])
 
+    def contains(self, event_type):
+        """
+        :param event_type: type of event to search for
+        :type event_type: awsflow.history_events.event_bases.EventBase
+        :return: True if given event type exists among events
+        :rtype: bool
+        """
+        return any(isinstance(swf_event_to_object(event), event_type) for event in self.decision_dict['events'])
+
 
 class DecisionTask(object):
 
@@ -89,6 +98,7 @@ class DecisionTaskPoller(object):
                       'identity': self.identity}
             if next_page_token is not None:
                 kwargs['nextPageToken'] = next_page_token
+            # this throws TypeError on occassion: https://paste.amazon.com/show/nevinder/1434774485
             return self.worker.client.poll_for_decision_task(**kwargs)
 
         except KeyboardInterrupt:

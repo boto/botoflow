@@ -156,3 +156,34 @@ method. Note that when you override the name using @activity, the framework
 **will** automatically prepend the prefix to it.
 
 The activity version is specified using the version parameter of the @Activities annotation. This version is used as the default for all activities defined in the interface and can be overridden on a per-activity basis using the @Activity annotation.
+
+
+Workflow and Activity Cancellation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A cancel request will, by default, send a cancel request to all activities and
+cancel the workflow execution itself (simultaneously). This behavior can be
+changed by implementing a cancellation_handler in your WorkflowDefinition class.
+
+From within an execution, activities can be cancelled with:
+"<activity_future>.cancel()".
+
+This will raise a CancelledError exception signifying successful cancellation.
+Cancellation will not be successful in any of the following cases:
+(1) the activity is not heartbeating
+(2) the activity is heartbeating, but chooses to ignore cancel requests
+(3) the activity completes before receiving the request
+
+To heartbeat, within an activity simply do: "awsflow.get_context().heartbeat()".
+This will raise a CancellationError if a cancel is requested. If this error, a
+subclass of, or a CancelledError is raised by the activity, Python-awsflow will
+report to SWF that the activity task was cancelled. This exception then gets
+assigned to the activity future (see above).
+
+Likewise, workflows can be cancelled from within a WorkflowDefinition's execution
+by doing: "<WorkflowDefinition>self.cancel()". This sends out a cancel request to
+all open activities and cancels the workflow itself, all in a single decision
+(does not wait for activities to complete/cancel).
+
+To cancel other workflow executions, use <WorkflowDefinition>self.cancel_external()
+and supply the workflow and run IDs of the target execution as arguments.

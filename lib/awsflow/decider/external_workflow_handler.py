@@ -15,10 +15,11 @@ import logging
 
 import six
 
-from ..core import async, Future
+from ..core import Future
 from ..context import get_context
 from ..decisions import RequestCancelExternalWorkflowExecution
-from ..exceptions import RequestCancelExternalWorkflowExecutionFailedError
+from ..exceptions import (RequestCancelExternalWorkflowExecutionFailedError,
+                          RequestCancelExternalWorkflowExecutionInvalidError)
 from ..workflow_execution import workflow_execution_from_swf_event
 from ..history_events import (ExternalWorkflowExecutionCancelRequested,
                               RequestCancelExternalWorkflowExecutionInitiated,
@@ -34,55 +35,73 @@ class ExternalWorkflowHandler(object):
 
     def __init__(self, decider, task_list):
         self._decider = decider
-        self._open_cancellation_requests = defaultdict(dict)
+        self._open_cancel_requests = defaultdict(dict)
         self._task_list = task_list
 
     def handle_event(self, event):
-        workflow_execution = get_context().workflow_execution
         external_workflow_execution = workflow_execution_from_swf_event(event)
-        self._open_cancellation_requests[workflow_execution][external_workflow_execution][
-            'handler'].send(event)
+        self._open_cancel_requests[external_workflow_execution]['handler'].send(event)
 
     def request_cancel_external_workflow_execution(self, external_workflow_execution):
+        """Requests cancellation of another workflow.
+
+        :param external_workflow_execution: details of target workflow to cancel
+        :type external_workflow_execution: awsflow.workflow_execution.WorkflowExecution
+        :return: cancel Future
+        :rtype: awsflow.core.future.Future
+        :raises RequestCancelExternalWorkflowExecutionInvalidError:
+            if external_workflow_execution is the current (/calling) execution
+        """
+        workflow_execution = get_context().workflow_execution
+        if workflow_execution == external_workflow_execution:
+            raise RequestCancelExternalWorkflowExecutionInvalidError(
+                "Attempted to request cancellation of self as if external workflow")
+
         self._decider._decisions.append(RequestCancelExternalWorkflowExecution(
             workflow_id=external_workflow_execution.workflow_id,
             run_id=external_workflow_execution.run_id))
 
-        workflow_execution = get_context().workflow_execution
-        workflow_future = Future()
-        handler = self.handle_external_workflow_event(external_workflow_execution, workflow_future)
+        cancel_future = Future()
+        handler = self._handle_external_workflow_event(external_workflow_execution, cancel_future)
         six.next(handler)
-        self._open_cancellation_requests[workflow_execution][external_workflow_execution] = {
-            'handler': handler}
+        self._open_cancel_requests[external_workflow_execution] = {'handler': handler}
+        return cancel_future
 
-        @async
-        def wait_request_cancel_workflow_execution():
-            yield workflow_future
+    def _handle_external_workflow_event(self, external_workflow_execution, cancel_future):
+        """Handles external workflow events and resolves open handler(s).
 
-        return wait_request_cancel_workflow_execution()
+        Events handled:
+            RequestCancelExternalWorkflowExecutionInitiated
+                - SWF has received decision of canceling an external workflow
+            RequestCancelExternalWorkflowExecutionFailed
+                - SWF could not send cancel request to external workflow due to invalid workflowID
+            ExternalWorkflowExecutionCancelRequested
+                - SWF successfully sent cancel request to target external workflow
 
-    def handle_external_workflow_event(self, external_workflow_execution, workflow_future):
-        """handles the following events:
-
-        RequestCancelExternalWorkflowExecutionInitiated
-            - SWF has received decision of canceling an external workflow
-        RequestCancelExternalWorkflowExecutionFailed
-            - SWF could not send cancel request to external workflow due to invalid workflowID
-        ExternalWorkflowExecutionCancelRequested
-            - SWF successfully sent cancel request to target external workflow
+        :param external_workflow_execution: details of target workflow to cancel
+        :type external_workflow_execution: awsflow.workflow_execution.WorkflowExecution
+        :param cancel_future:
+        :type cancel_future: awsflow.core.future.Future
+        :return:
         """
         event = (yield)
+
         if isinstance(event, RequestCancelExternalWorkflowExecutionInitiated):
             self._decider._decisions.delete_decision(RequestCancelExternalWorkflowExecution,
                                                      external_workflow_execution)
-        elif isinstance(event, ExternalWorkflowExecutionCancelRequested):
-            workflow_future.set_result(None)
-        elif isinstance(event, RequestCancelExternalWorkflowExecutionFailed):
-            attributes = event.attributes
-            exception = RequestCancelExternalWorkflowExecutionFailedError(
-                attributes['decisionTaskCompletedEventId'],
-                attributes['initiatedEventId'],
-                attributes['runId'],
-                attributes['workflowId'],
-                attributes['cause'])
-            workflow_future.set_exception(exception)
+            event = (yield)
+
+            if isinstance(event, ExternalWorkflowExecutionCancelRequested):
+                cancel_future.set_result(None)
+
+            elif isinstance(event, RequestCancelExternalWorkflowExecutionFailed):
+                attributes = event.attributes
+                exception = RequestCancelExternalWorkflowExecutionFailedError(
+                    attributes['decisionTaskCompletedEventId'],
+                    attributes['initiatedEventId'],
+                    attributes['runId'],
+                    attributes['workflowId'],
+                    attributes['cause'])
+                cancel_future.set_exception(exception)
+
+            del self._open_cancel_requests[external_workflow_execution]

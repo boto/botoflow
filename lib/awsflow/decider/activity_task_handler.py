@@ -15,7 +15,7 @@ import logging
 
 import six
 
-from ..core import Future, AllFuture, BaseFuture, CancelledError
+from ..core import Future, BaseFuture, CancelledError
 
 from ..constants import USE_WORKER_TASK_LIST
 from ..exceptions import (ActivityTaskFailedError, ActivityTaskTimedOutError, ScheduleActivityTaskFailedError,
@@ -78,27 +78,27 @@ class ActivityTaskHandler(object):
         return ActivityFuture(activity_future, self, activity_id)
 
     def request_cancel_activity_task_all(self):
-        """Makes RequestCancelActivityTask decisions for all open activities
+        """Makes RequestCancelActivityTask decisions for all open activities.
 
-        :return: cancel futures for each open activity
-        :rtype: awsflow.core.AllFuture
+        This is to be used when a workflow is being cancelled. This does not establish
+        futures for any cancel requests; this is best effort cancellation.
         """
-        cancel_activity_futures = []
         for activity_id in self._open_activities:
-            activity_future = self._open_activities[activity_id]['future']
-            cancel_activity_future = self.request_cancel_activity_task(activity_future, activity_id)
-            cancel_activity_futures.append(cancel_activity_future)
-        return AllFuture(*cancel_activity_futures)
+            self._decider._decisions.append(RequestCancelActivityTask(activity_id))
 
     def request_cancel_activity_task(self, activity_future, activity_id):
-        """Requests to cancel an activity with the given activity_id
-
-        :return: cancel future
-        :rtype: awsflow.core.BaseFuture
+        """Requests to cancel an activity with the given activity_id.
 
         If the schedule decision for the activity was not yet sent, it's future is set to
         CancelledError and a BaseFuture is returned; otherwise, a RequestCancelActivityTask
         decision is made, and a future that tracks the request is returned.
+
+        :param activity_id: id of the activity to handle
+        :type activity_id: int
+        :param activity_future: the calling future; target for cancellation
+        :type activity_future: awsflow.decider.activity_future.ActivityFuture
+        :return: cancel future
+        :rtype: awsflow.core.future.Future
         """
         if activity_id in self._open_cancels:
             return self._open_cancels[activity_id]['future']  # duplicate request
@@ -123,16 +123,7 @@ class ActivityTaskHandler(object):
             return
 
         if isinstance(event, RequestCancelActivityTaskFailed):
-            # indicates internal issue with cancellation handling
-            self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
-            activity_id = event.attributes['activityId']
-            if activity_id in self._open_cancels:
-                self._open_cancels[activity_id]['future'].set_exception(
-                    RequestCancelActivityTaskFailedError(
-                        event.id, activity_id, event.attributes['cause'],
-                        event.attributes['decisionTaskCompletedEventId']))
-                del self._open_cancels[activity_id]
-            log.error("Internal error: Attempted cancellation of unknown activity: %r", event)
+            self._resolve_cancel_future(event.attributes['activityId'], failed_event=event)
             return
 
         if isinstance(event, (ActivityTaskScheduled, ScheduleActivityTaskFailed,
@@ -153,6 +144,14 @@ class ActivityTaskHandler(object):
         """FSM responsible for yielding through events until setting a result on activity_future.
 
         This is also responsible for resolving any open cancel futures.
+
+        :param activity_type:
+        :type activity_type: awsflow.workflow_types.ActivityType
+        :param activity_id: id of the activity to handle
+        :type activity_id: int
+        :param activity_future: to resolve once activity finishes
+        :type activity_future: awsflow.core.future.Future
+        :return:
         """
         event = (yield)
 
@@ -168,10 +167,7 @@ class ActivityTaskHandler(object):
                 event = (yield)
 
             if isinstance(event, ActivityTaskCancelRequested):
-                self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
-                cancel_future = self._open_cancels[activity_id]['future']
-                cancel_future.set_result(None)
-                del self._open_cancels[activity_id]
+                self._resolve_cancel_future(activity_id)
                 event = (yield)  # do not interrupt actual activity future
 
             if isinstance(event, ActivityTaskCompleted):
@@ -221,3 +217,26 @@ class ActivityTaskHandler(object):
             raise RuntimeError("Unexpected event/state: %s", event)
 
         del self._open_activities[activity_id]  # activity done
+        if activity_id in self._open_cancels:
+            self._resolve_cancel_future(activity_id)
+
+    def _resolve_cancel_future(self, activity_id, failed_event=None):
+        """Resolves a cancel future by setting its result to None or exception if failed_event.
+
+        :param activity_id: id of the activity that was to be cancelled
+        :type activity_id: int
+        :param failed_event: associated cancel failure event
+        :type failed_event: awsflow.history_events.RequestCancelActivityTaskFailed
+        :return:
+        """
+        self._decider._decisions.delete_decision(RequestCancelActivityTask, activity_id)
+        if activity_id not in self._open_cancels:
+            return  # no future; occurs with cancel all requests
+        cancel_future = self._open_cancels[activity_id]['future']
+        if failed_event:
+            cancel_future.set_exception(RequestCancelActivityTaskFailedError(
+                failed_event.id, activity_id, failed_event.attributes['cause'],
+                failed_event.attributes['decisionTaskCompletedEventId']))
+        else:
+            cancel_future.set_result(None)
+        del self._open_cancels[activity_id]

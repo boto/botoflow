@@ -31,8 +31,16 @@ class BunchOfActivities(object):
             time.sleep(0.2)
             get_context().heartbeat(str(i))
 
+    @activity('1.0')
+    def sleep_activity(self, sleep_secs):
+        time.sleep(sleep_secs)
+
+    @activity('1.1')
+    def cleanup_state_activity(self):
+        return
+
     @activity('1.0', task_list='FAKE')
-    def wrong_tasklist_activity(self, sleep_secs):
+    def wrong_tasklist_activity(self):
         return
 
     @activity('1.0')

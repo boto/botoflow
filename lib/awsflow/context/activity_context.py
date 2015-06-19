@@ -32,13 +32,18 @@ class ActivityContext(ContextBase):
         self.worker = worker
         self.task = task
 
-    def heartbeat(self, details):
+    def heartbeat(self, details=None):
         """Heartbeats current activity, raising CancellationError if cancel requested.
 
         Ignore request by catching the exception, or let it raise to cancel.
 
-        Alternatively, catch/re-raise as awsflow.core.CancelledError or subclass of.
+        :param details: If specified, contains details about the progress of the task.
+        :type details: str
+        :raises CancellationError: if uncaught, will record this activity as cancelled
+            in SWF history, and bubble up to the decider, where it will cancel the
+            workflow.
+        :return:
         """
-        result = self.worker.request_heartbeat(details, self.task)
+        result = self.worker.request_heartbeat(self.task, details)
         if result['cancelRequested']:
-            raise CancellationError('Cancel was requested during heartbeat.')
+            raise CancellationError('Cancel was requested during activity heartbeat')

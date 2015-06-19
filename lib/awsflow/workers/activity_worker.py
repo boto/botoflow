@@ -172,7 +172,7 @@ class ActivityWorker(BaseWorker):
 
                 # make sure kwargs are non-unicode in 2.6
                 if sys.version_info[0:2] == (2, 6):
-                    kwargs = dict([(str(k), v) \
+                    kwargs = dict([(str(k), v)
                                    for k, v in six.iteritems(kwargs)])
 
                 try:
@@ -201,7 +201,8 @@ class ActivityWorker(BaseWorker):
                         [err, tb_list[1:]])
                     with swf_exception_wrapper():
                         if isinstance(err, (CancellationError, CancelledError)):
-                            self.client.respond_activity_task_canceled(taskToken=task.token, details=details)
+                            self.client.respond_activity_task_canceled(
+                                taskToken=task.token, details=details)
                         else:
                             self.client.respond_activity_task_failed(
                                 taskToken=task.token, reason='', details=details)
@@ -211,14 +212,14 @@ class ActivityWorker(BaseWorker):
 
         return process_activity
 
-    def request_heartbeat(self, details, task):
-        """
+    def request_heartbeat(self, task, details=None):
+        """Sends heartbeat of activity in SWF and returns response.
 
-        :param details:
+        :param details: If specified, contains details about the progress of the task.
         :type details: str
-        :param task:
+        :param task: The taskToken of the ActivityTask.
         :type task: awsflow.workers.activity_task.ActivityTask
-        :return:
+        :return: dict response of {'cancelRequested': <bool> }
         """
         return self.client.record_activity_task_heartbeat(taskToken=task.token, details=details)
 

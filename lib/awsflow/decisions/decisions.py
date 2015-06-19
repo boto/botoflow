@@ -20,13 +20,12 @@ from .decision_bases import (ActivityDecisionBase, WorkflowDecisionBase,
 
 
 class CancelWorkflowExecution(WorkflowDecisionBase):
-    def __init__(self, decision_id, details=None):
+    def __init__(self, details=None):
         """
         closes the workflow execution and records a WorkflowExecutionCanceled
         event in the history.
         """
         super(CancelWorkflowExecution, self).__init__()
-        self.decision_id = decision_id
         self.decision['decisionType'] = 'CancelWorkflowExecution'
         attrs = self.decision[
             'cancelWorkflowExecutionDecisionAttributes'] = {}

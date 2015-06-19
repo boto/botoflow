@@ -19,9 +19,9 @@ from ..workflow_execution import WorkflowExecution
 from ..core import Future, AsyncEventLoop
 from ..utils import pairwise
 from ..swf_exceptions import swf_exception_wrapper
-from ..history_events import (DecisionTaskCompleted, DecisionTaskScheduled, DecisionTaskTimedOut, DecisionTaskStarted,
-                              DecisionEventBase)
-from ..decisions import DecisionList
+from ..history_events import (DecisionTaskCompleted, DecisionTaskScheduled, DecisionTaskTimedOut,
+                              DecisionTaskStarted, DecisionEventBase, CancelWorkflowExecutionFailed)
+from ..decisions import DecisionList, CancelWorkflowExecution, ScheduleActivityTask
 from .decision_task_poller import DecisionTaskPoller
 from .workflow_execution_handler import WorkflowExecutionHandler
 from .activity_task_handler import ActivityTaskHandler
@@ -122,6 +122,7 @@ class Decider(object):
                     concurrent_to_decision = False
                     decision_started = False
                 elif isinstance(event, DecisionTaskStarted):
+                    concurrent_to_decision = True
                     decision_started = True
                     if next_event is None or not isinstance(next_event, DecisionTaskTimedOut):
                         get_context()._workflow_time = event.datetime
@@ -147,6 +148,16 @@ class Decider(object):
                             get_context()._replaying = False
                         self._handle_history_event(workflow_execution, event)
 
+                        if self._decisions.has_decision_type(CancelWorkflowExecution):
+                            # peak ahead to see if this is a retry
+                            if decision_task.events.contains(CancelWorkflowExecutionFailed):
+                                self._retry_cancellation(context)
+                            else:
+                                # first cancel attempt
+                                self._purge_decisions_for_cancellation()
+                                self._process_decisions()
+                            return  # cancel decision was made; do not collect further decisions
+
                     reordered_events = list()
                     decision_completion_to_start_events = list()
                     decision_start_to_completion_events = list()
@@ -155,6 +166,21 @@ class Decider(object):
             self._process_decisions()
         finally:
             set_context(prev_context)
+
+    def _handle_history_event(self, workflow_execution, event):
+        log.debug("Handling history event: %s", event)
+
+        handler = None
+        try:
+            handler = next(handler for handler in self._handlers if isinstance(event, handler.responds_to))
+            try:
+                handler.handle_event(event)
+            except StopIteration:  # error raised when event is sent to already closed future
+                pass
+        except StopIteration:
+            warnings.warn("Handler for the event {} not implemented".format(event))
+
+        self._eventloop.execute_all_tasks()
 
     def _process_decisions(self):
         # drain all tasks before submitting more decisions
@@ -172,20 +198,28 @@ class Decider(object):
                     decisions=self._decisions.to_swf(),
                     executionContext=workflow_state)
 
-    def _handle_history_event(self, workflow_execution, event):
-        log.debug("Handling history event: %s", event)
+    def _purge_decisions_for_cancellation(self):
+        """Deletes conflicting ScheduleActivityTask decisions which cannot be paired
+        with a CancelWorkflowExecution decision.
+        """
+        for decision in self._decisions:
+            if isinstance(decision, ScheduleActivityTask):
+                self._decisions.remove(decision)
 
-        handler = None
-        try:
-            handler = next(handler for handler in self._handlers if isinstance(event, handler.responds_to))
-            try:
-                handler.handle_event(event)
-            except StopIteration:  # error raised when event is sent to already closed future
-                pass
-        except StopIteration:
-            warnings.warn("Handler for the event {} not implemented".format(event))
+    def _retry_cancellation(self, context):
+        """A CancelWorkflowExecutionFailed event occurs when pending decisions leftover;
+        this resends the cancel decision, alone, to retry.
 
-        self._eventloop.execute_all_tasks()
+        See note on this edge case:
+        http://docs.aws.amazon.com/amazonswf/latest/apireference/API_Decision.html
+        """
+        self._decisions = DecisionList()
+        self._decisions.append(CancelWorkflowExecution('retry'))
+        with swf_exception_wrapper():
+            self.worker.client.respond_decision_task_completed(
+                taskToken=self._decision_task_token,
+                decisions=self._decisions.to_swf(),
+                executionContext=context.workflow.workflow_state)
 
     def _handle_execute_activity(self, activity_type, decision_dict, args, kwargs):
         return self._activity_task_handler.handle_execute_activity(
@@ -195,29 +229,22 @@ class Decider(object):
         return self._child_workflow_execution_handler.handle_start_child_workflow_execution(
             workflow_type, workflow_instance, input)
 
-    def _cancel_workflow_execution(self, details):
-        """An execution-internal cancellation.
+    def _request_cancel_external_workflow_execution(self, external_workflow_execution):
+        """RequestCancelExternalWorkflowExecution sends a cancel request to the target
+        external workflow execution. It is up to the target execution whether to
+        allow the request to go through or not.
 
-        Returns async call that waits until (1) the cancellation handler for the
-        respective workflow definition is executed, and (2) activities/workflow
-        is canceled through SWF as necessary (based upon cancellation handler).
+        :param external_workflow_execution: target execution for cancellation
+        :type external_workflow_execution: awsflow.workflow_definition.WorkflowDefininition
+        :return: cancel Future
+        :rtype: awsflow.core.Future
         """
-        return self._workflow_execution_handler.cancel_workflow_execution(details)
-
-    # def _request_cancel_external_workflow_execution(self, external_workflow_execution):
-    #     """RequestCancelExternalWorkflowExecution sends a cancel request to the target
-    #     external workflow execution. It is up to the target execution whether to
-    #     allow the request to go through or not.
-
-    #     Returns async call that waits until the request is sent to target external
-    #     execution.
-    #     """
-    #     return self._external_workflow_handler.request_cancel_external_workflow_execution(
-    #         external_workflow_execution)
+        return self._external_workflow_handler.request_cancel_external_workflow_execution(
+            external_workflow_execution)
 
     def _request_cancel_activity_task_all(self):
-        """RequestCancelActivityTask decision for all open activities of given execution"""
-        return self._activity_task_handler.request_cancel_activity_task_all()
+        """RequestCancelActivityTask decision for all open activities of current execution."""
+        self._activity_task_handler.request_cancel_activity_task_all()
 
     def _continue_as_new_workflow_execution(self, **kwargs):
         """

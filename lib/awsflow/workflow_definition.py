@@ -16,7 +16,8 @@ from copy import copy
 import six
 from awsflow import get_context
 from awsflow.context import DecisionContext
-from awsflow.exceptions import CancelWorkflow
+from awsflow.exceptions import CancelledError
+from awsflow.workflow_execution import WorkflowExecution
 
 
 class _WorkflowDefinitionMeta(type):
@@ -196,35 +197,64 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         """
         return self._workflow_result
 
-    def cancel(self, details=None):
-        """Cancels the workflow execution by executing cancellation_handler, and
-        then (conditionally) sending SWF cancellation decisions for all open
-        activities, followed by the entire workflow.
+    def cancel(self, details=""):
+        """Cancels the workflow execution by sending cancellation decisions to SWF
 
-        Use this to cancel a workflow execution from within the execution.
+        Use this to cancel a workflow execution internally.
 
-        :returns: future of cancel request
-        :rtype: awsflow.core.future.Future
+        This does not invoke cancellation_handler.
 
-        None is returned if the cancellation_handler did not request a cancel by
-        raising CancelWorkflow.
+        :param details: of request; is recorded in SWF history
+        :type details: str
+        :raises CancelledError: always, so that execution will end.
+        """
+        self.cancel_activities()
+        raise CancelledError(details)
+
+    def cancel_activities(self):
+        """Requests cancels for all open activities"""
+        context = self._get_decision_context(self.cancel.__name__)
+        context.decider._request_cancel_activity_task_all()
+
+    def cancellation_handler(self, event):
+        """Handler invoked when workflow cancelation request received from outside source.
+
+        Default behavior is to cascade cancel signal to all activities and then raise
+        CancelledError to end the workflow as cancelled. Can be overrided.
+
+        :param event:
+        :type event: awsflow.history_events.WorkflowExecutionCancelRequested
+        """
+        self.cancel()
+
+    def cancel_external(self, external_workflow_id, external_run_id):
+        """Cancels an external workflow execution by sending request to SWF.
+
+        :param external_workflow_id: of target execution
+        :type external_workflow_id: str
+        :param external_run_id: of target execution
+        :type external_run_id: str
+        :return: cancel Future that is empty until the message was succesfully delivered
+            to target execution. Does not indicate whether the target execution accepted
+            the request or not.
+        :rtype: awsflow.core.Future
+        :raises RequestCancelExternalWorkflowExecutionInvalidError:
+            if external workflow execution is the current (/calling) execution
         """
         context = self._get_decision_context(self.cancel.__name__)
-        return context.decider._cancel_workflow_execution(details)
-
-    def cancel_external(self, external_workflow_execution):
-        """Cancels an external workflow execution by sending request to SWF
-
-        :returns: `awsflow.core.future.Future`, that is empty until the message
-            was succesfully delivered to target execution. This will not indicate
-            whether the target execution accepted the request and cancelled or not.
-        """
-        context = self._get_decision_context(self.cancel_external.__name__)
-        return context.decider._request_cancel_external_workflow_execution(
-            external_workflow_execution)
+        external_execution = WorkflowExecution(workflow_id=external_workflow_id,
+                                               run_id=external_run_id)
+        return context.decider._request_cancel_external_workflow_execution(external_execution)
 
     def _get_decision_context(self, calling_func):
-        """returns DecisionContext if in said context; otherwise, raises TypeError"""
+        """Validates in decision context and returns it.
+
+        :param calling_func: name of calling function
+        :type calling_func: str
+        :return: decision context
+        :rtype: awsflow.context.DecisionContext
+        :raises TypeError: if not in decision context
+        """
         context = None
         try:
             context = get_context()
@@ -235,12 +265,3 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
             raise TypeError("{}.{} can only be called in the decision "
                             "context".format(self.__class__.__name__, calling_func))
         return context
-
-    def cancellation_handler(self, details):
-        """Upon receiving a workflow cancelation request (internally or externally),
-        this handler is invoked.
-
-        Override in subclass to change behavior.
-        """
-        raise CancelWorkflow('Default cancellation_handler accepting cancel request',
-                             cascade_cancel_to_activities=True)

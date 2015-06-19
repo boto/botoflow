@@ -19,5 +19,5 @@ WorkflowExecution = namedtuple('WorkflowExecution', 'workflow_id run_id')
 def workflow_execution_from_swf_event(event):
     attributes = event.attributes
     if 'workflowExecution' in attributes:
-        return attributes['workflowExecution']
+        attributes = attributes['workflowExecution']
     return WorkflowExecution(attributes['workflowId'], attributes['runId'])

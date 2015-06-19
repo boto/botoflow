@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 
 
-from ..core import BaseFuture, async, return_
+from ..core import BaseFuture, AnyFuture, AllFuture
 from ..core.async_task import AsyncTask
 
 
@@ -55,7 +55,7 @@ class ActivityFuture(BaseFuture):
             self._cancellation_future.set_result(None)
 
     def cancel(self):
-        """
+        """Requests cancellation of activity.
 
         :return: Cancellation future
         :rtype: awsflow.Future
@@ -63,3 +63,25 @@ class ActivityFuture(BaseFuture):
         self._cancellation_future = self._activity_task_handler.request_cancel_activity_task(
             self, self._activity_id)
         return self._cancellation_future
+
+    def __or__(self, other):
+        if isinstance(other, BaseFuture):
+            return AnyFuture(self, other)
+        elif isinstance(other, AnyFuture):
+            other.add_future(self)
+            return other
+
+        raise TypeError("unsupported operand type(s) for "
+                        "|: '%s' and '%s'" % (self.__class__.__name__,
+                                              other.__class__.__name__))
+
+    def __and__(self, other):
+        if isinstance(other, BaseFuture):
+            return AllFuture(self, other)
+        elif isinstance(other, AllFuture):
+            other.add_future(self)
+            return other
+
+        raise TypeError("unsupported operand type(s) for "
+                        "&: '%s' and '%s'" % (self.__class__.__name__,
+                                              other.__class__.__name__))
