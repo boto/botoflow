@@ -2,8 +2,6 @@
 import time
 import unittest
 
-from calendar import timegm
-
 from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
                      workflow_time, workflow_types, WorkflowStarter, workflow)
@@ -143,8 +141,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1, arg2):
                 mytime = workflow_time.time()
                 yield BunchOfActivities.sum(arg1, arg2)
-                return_([timegm(mytime.timetuple()),
-                         timegm(workflow_time.time().timetuple())])
+                return_([mytime, workflow_time.time()])
 
         wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, OneActivityTimedWorkflow)

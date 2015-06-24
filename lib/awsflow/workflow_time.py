@@ -28,10 +28,12 @@ def time():
     """
     try:
         context = get_context()
-        if isinstance(context, DecisionContext):
-            return _time.mktime(context._workflow_time.timetuple())
     except AttributeError:
         pass
+    else:
+        if isinstance(context, DecisionContext):
+            return int(_time.mktime(context._workflow_time.timetuple()))
+
     raise TypeError("workflow_time.time() should be run inside of a workflow")
 
 
