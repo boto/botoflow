@@ -21,7 +21,7 @@ from ..utils import pairwise
 from ..swf_exceptions import swf_exception_wrapper
 from ..history_events import (DecisionTaskCompleted, DecisionTaskScheduled, DecisionTaskTimedOut,
                               DecisionTaskStarted, DecisionEventBase, CancelWorkflowExecutionFailed)
-from ..decisions import DecisionList, CancelWorkflowExecution, ScheduleActivityTask
+from ..decisions import DecisionList, CancelWorkflowExecution
 from .decision_task_poller import DecisionTaskPoller
 from .workflow_execution_handler import WorkflowExecutionHandler
 from .activity_task_handler import ActivityTaskHandler
@@ -154,7 +154,6 @@ class Decider(object):
                                 self._retry_cancellation(context)
                             else:
                                 # first cancel attempt
-                                self._purge_decisions_for_cancellation()
                                 self._process_decisions()
                             return  # cancel decision was made; do not collect further decisions
 
@@ -198,14 +197,6 @@ class Decider(object):
                     decisions=self._decisions.to_swf(),
                     executionContext=workflow_state)
 
-    def _purge_decisions_for_cancellation(self):
-        """Deletes conflicting ScheduleActivityTask decisions which cannot be paired
-        with a CancelWorkflowExecution decision.
-        """
-        for decision in self._decisions:
-            if isinstance(decision, ScheduleActivityTask):
-                self._decisions.remove(decision)
-
     def _retry_cancellation(self, context):
         """A CancelWorkflowExecutionFailed event occurs when pending decisions leftover;
         this resends the cancel decision, alone, to retry.
@@ -243,8 +234,12 @@ class Decider(object):
             external_workflow_execution)
 
     def _request_cancel_activity_task_all(self):
-        """RequestCancelActivityTask decision for all open activities of current execution."""
-        self._activity_task_handler.request_cancel_activity_task_all()
+        """RequestCancelActivityTask decision for all open activities of current execution.
+
+        :return: all futures for cancel requests
+        :rtype: awsflow.core.future.AllFuture
+        """
+        return self._activity_task_handler.request_cancel_activity_task_all()
 
     def _continue_as_new_workflow_execution(self, **kwargs):
         """

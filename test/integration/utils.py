@@ -1,5 +1,5 @@
 import logging
-
+import time
 import pytest
 from botocore import session
 
@@ -106,3 +106,32 @@ class SWFMixIn(object):
             instance = workflow_class.execute(*args, **kwargs)
             self.workflow_execution = instance.workflow_execution
             return instance.workflow_execution
+
+    def retry_until_cancelled(self, wf_worker, max_retries=3):
+        """
+        http://docs.aws.amazon.com/amazonswf/latest/apireference/API_Decision.html
+
+        Given that there may/may not be pending decisions at time of cancellation,
+        a CancelWorkflowExecutionFailed event may come down. The decider should then
+        resend the cancel decision. This could repeat (until all pending decisions are
+        cleared). This test re-runs workflow worker until it goes through.
+
+        May be worth implementing separate test that loops until we get a failure event
+        to ensure that handling is in place...
+        """
+        if max_retries < 1:
+            return
+
+        time.sleep(2)
+        hist = self.get_workflow_execution_history()
+        fail_count = 0
+        while(hist[-1]['eventType'] not in ['WorkflowExecutionCanceled', 'WorkflowExecutionTerminated']):
+            # loop until we successfully cancel
+            fail_count += 1
+            failed_cancels = len(self.get_events(hist, 'CancelWorkflowExecutionFailed'))
+            self.assertEqual(failed_cancels, fail_count)
+            wf_worker.run_once()
+            time.sleep(2)
+            if fail_count == max_retries:  # dont loop forever if bad logic in place
+                break
+            hist = self.get_workflow_execution_history()

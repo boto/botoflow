@@ -48,7 +48,8 @@ class EventsIterator(six.Iterator):
         :return: True if given event type exists among events
         :rtype: bool
         """
-        return any(isinstance(swf_event_to_object(event), event_type) for event in self.decision_dict['events'])
+        return any(isinstance(swf_event_to_object(event), event_type)
+                   for event in self.decision_dict['events'])
 
 
 class DecisionTask(object):
@@ -98,11 +99,11 @@ class DecisionTaskPoller(object):
                       'identity': self.identity}
             if next_page_token is not None:
                 kwargs['nextPageToken'] = next_page_token
-            # this throws TypeError on occassion: https://paste.amazon.com/show/nevinder/1434774485
+            # old botocore throws TypeError when unable to establish SWF connection
             return self.worker.client.poll_for_decision_task(**kwargs)
 
         except KeyboardInterrupt:
-            # seep before actually exiting as the connection is not yet closed
+            # sleep before actually exiting as the connection is not yet closed
             # on the other end
             sleep_time = 60 - (time.time() - poll_time)
             six.print_("Exiting in {0}...".format(sleep_time), file=sys.stderr)

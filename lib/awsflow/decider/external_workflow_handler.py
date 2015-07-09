@@ -16,10 +16,8 @@ import logging
 import six
 
 from ..core import Future
-from ..context import get_context
 from ..decisions import RequestCancelExternalWorkflowExecution
-from ..exceptions import (RequestCancelExternalWorkflowExecutionFailedError,
-                          RequestCancelExternalWorkflowExecutionInvalidError)
+from ..exceptions import RequestCancelExternalWorkflowExecutionFailedError
 from ..workflow_execution import workflow_execution_from_swf_event
 from ..history_events import (ExternalWorkflowExecutionCancelRequested,
                               RequestCancelExternalWorkflowExecutionInitiated,
@@ -49,14 +47,7 @@ class ExternalWorkflowHandler(object):
         :type external_workflow_execution: awsflow.workflow_execution.WorkflowExecution
         :return: cancel Future
         :rtype: awsflow.core.future.Future
-        :raises RequestCancelExternalWorkflowExecutionInvalidError:
-            if external_workflow_execution is the current (/calling) execution
         """
-        workflow_execution = get_context().workflow_execution
-        if workflow_execution == external_workflow_execution:
-            raise RequestCancelExternalWorkflowExecutionInvalidError(
-                "Attempted to request cancellation of self as if external workflow")
-
         self._decider._decisions.append(RequestCancelExternalWorkflowExecution(
             workflow_id=external_workflow_execution.workflow_id,
             run_id=external_workflow_execution.run_id))

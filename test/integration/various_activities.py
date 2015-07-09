@@ -1,7 +1,8 @@
 import time
 
-from awsflow import *
+from awsflow import activities, activity, manual_activity, get_context
 from awsflow.core.exceptions import CancellationError, CancelledError
+
 
 class MySpecialCancelledError(CancelledError):
 
@@ -17,7 +18,7 @@ class BunchOfActivities(object):
         return x + y
 
     @activity(version='1.4',
-              schedule_to_close_timeout=60*2)
+              schedule_to_close_timeout=60 * 2)
     def mul(self, x, y):
         return x * y
 
@@ -37,7 +38,7 @@ class BunchOfActivities(object):
 
     @activity('1.1')
     def cleanup_state_activity(self):
-        return
+        return 'clean'
 
     @activity('1.0', task_list='FAKE')
     def wrong_tasklist_activity(self):
@@ -58,7 +59,7 @@ class BunchOfActivities(object):
 class ManualActivities(object):
     @manual_activity(version='1.0')
     def perform_task(self, **kwargs):
-        activity_context = context.get_context()
+        activity_context = get_context()
         task_token = activity_context.task.token
 
         with open('task_token.txt', 'w') as shared_file:

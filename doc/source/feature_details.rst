@@ -158,12 +158,8 @@ method. Note that when you override the name using @activity, the framework
 The activity version is specified using the version parameter of the @Activities annotation. This version is used as the default for all activities defined in the interface and can be overridden on a per-activity basis using the @Activity annotation.
 
 
-Workflow and Activity Cancellation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A cancel request will, by default, send a cancel request to all activities and
-cancel the workflow execution itself (simultaneously). This behavior can be
-changed by implementing a cancellation_handler in your WorkflowDefinition class.
+Activity Cancellation
+^^^^^^^^^^^^^^^^^^^^^
 
 From within an execution, activities can be cancelled with:
 "<activity_future>.cancel()".
@@ -180,10 +176,22 @@ subclass of, or a CancelledError is raised by the activity, Python-awsflow will
 report to SWF that the activity task was cancelled. This exception then gets
 assigned to the activity future (see above).
 
-Likewise, workflows can be cancelled from within a WorkflowDefinition's execution
-by doing: "<WorkflowDefinition>self.cancel()". This sends out a cancel request to
-all open activities and cancels the workflow itself, all in a single decision
-(does not wait for activities to complete/cancel).
 
-To cancel other workflow executions, use <WorkflowDefinition>self.cancel_external()
-and supply the workflow and run IDs of the target execution as arguments.
+Workflow Cancellation
+^^^^^^^^^^^^^^^^^^^^^
+
+Workflow cancellations will send a cancel request to all open activities and cancel
+the workflow itself, all in a single decision without waiting for activities to
+complete/cancel.
+
+To cancel a workflow from within the executing context itself, either:
+(1) raise CancelledError, or
+(2) <WorkflowDefinition>self.cancel()
+
+To cancel a workflow from a different execution context, use cancel on the
+respective WorkflowDefinition:
+
+.. code-block:: python
+
+    external_wf = WorkflowDefinition(WorkflowExecution('workflow-id', 'run-id'))
+    external_wf.cancel()

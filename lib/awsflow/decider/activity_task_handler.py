@@ -15,7 +15,7 @@ import logging
 
 import six
 
-from ..core import Future, BaseFuture, CancelledError
+from ..core import Future, BaseFuture, AllFuture, CancelledError
 
 from ..constants import USE_WORKER_TASK_LIST
 from ..exceptions import (ActivityTaskFailedError, ActivityTaskTimedOutError, ScheduleActivityTaskFailedError,
@@ -80,11 +80,13 @@ class ActivityTaskHandler(object):
     def request_cancel_activity_task_all(self):
         """Makes RequestCancelActivityTask decisions for all open activities.
 
-        This is to be used when a workflow is being cancelled. This does not establish
-        futures for any cancel requests; this is best effort cancellation.
+        :return: all futures for cancel requests
+        :rtype: awsflow.core.future.AllFuture
         """
-        for activity_id in self._open_activities:
-            self._decider._decisions.append(RequestCancelActivityTask(activity_id))
+        futures = set()
+        for activity_id, activity_info in self._open_activities.items():
+            futures.add(self.request_cancel_activity_task(activity_info['future'], activity_id))
+        return AllFuture(*futures)
 
     def request_cancel_activity_task(self, activity_future, activity_id):
         """Requests to cancel an activity with the given activity_id.
@@ -106,6 +108,7 @@ class ActivityTaskHandler(object):
         if self._decider._decisions.delete_decision(ScheduleActivityTask, activity_id):
             activity_future.set_exception(CancelledError(
                 "Activity was cancelled before being scheduled with SWF"))
+            del self._open_activities[activity_id]
             return BaseFuture.with_result(None)
 
         self._decider._decisions.append(RequestCancelActivityTask(activity_id))

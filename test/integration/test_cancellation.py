@@ -4,11 +4,11 @@ import logging
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, return_, get_context, WorkflowWorker,
-                     WorkflowStarter)
+from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
+                     WorkflowStarter, async)
+from awsflow.workflow_execution import WorkflowExecution
 from awsflow.core import CancelledError
-from awsflow.exceptions import (RequestCancelExternalWorkflowExecutionInvalidError,
-                                RequestCancelExternalWorkflowExecutionFailedError)
+from awsflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
 from awsflow.logging_filters import AWSFlowFilter
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
@@ -203,7 +203,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         error = json.loads(hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]['__obj']
         self.assertEqual(error[0], "awsflow.exceptions:RequestCancelActivityTaskFailedError")
         self.assertEqual(error[1]['cause'], 'ACTIVITY_ID_UNKNOWN')
-        self.assertEqual(len(hist), 17)
+        self.assertTrue(len(hist) in [16, 17])
 
 
 class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
@@ -214,8 +214,11 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
             self.cancel(details)
             return_(True)
 
-        def cancellation_handler(self):
-            raise Exception("should not be called for self cancel.")
+    class SelfDirectCancellingWorkflow(WorkflowDefinition):
+        @execute(version='1.1', execution_start_to_close_timeout=60)
+        def execute(self):
+            raise CancelledError()
+            return_(True)
 
     def test_cancel_workflow_no_details(self):
         wf = TestWorkflowRaisedCancels.SelfCancellingWorkflow
@@ -244,20 +247,8 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
                          'some details')
         self.assertEqual(len(hist), 5)
 
-    def test_cancel_workflow_suppressed(self):
-        class SelfCancellingWorkflowSuppressedCancel(WorkflowDefinition):
-            @execute(version='1.1', execution_start_to_close_timeout=60)
-            def execute(self, details=None):
-                try:
-                    self.cancel(details)
-                except CancelledError:
-                    pass
-                return_(True)
-
-            def cancellation_handler(self):
-                raise Exception("should not be called for self cancel.")
-
-        wf = SelfCancellingWorkflowSuppressedCancel
+    def test_cancel_workflow_direct_raise(self):
+        wf = TestWorkflowRaisedCancels.SelfDirectCancellingWorkflow
         wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
@@ -265,28 +256,26 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
+        self.assertEqual(hist[-1]['workflowExecutionCanceledEventAttributes']['details'], '')
         self.assertEqual(len(hist), 5)
 
-    def test_cancel_workflow_clean_close(self):
-        class SelfCancellingWorkflowCleanClose(WorkflowDefinition):
+    def test_cancel_workflow_with_handler(self):
+        class SelfCancellingWorkflowWithHandler(WorkflowDefinition):
             def __init__(self, workflow_execution):
-                super(SelfCancellingWorkflowCleanClose, self).__init__(workflow_execution)
+                super(SelfCancellingWorkflowWithHandler, self).__init__(workflow_execution)
                 self.activities_client = BunchOfActivities()
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, details=None):
-                try:
-                    self.cancel(details)
-                except CancelledError as err:
-                    yield self.activities_client.cleanup_state_activity()
-                    raise err
+                self.cancel(details)
                 return_(True)
 
+            @async
             def cancellation_handler(self):
-                raise Exception("should not be called for self cancel.")
+                yield self.activities_client.cleanup_state_activity()
 
-        wf = SelfCancellingWorkflowCleanClose
+        wf = SelfCancellingWorkflowWithHandler
         wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf, 'some details')
 
@@ -299,6 +288,10 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
         self.assertEqual(hist[-1]['workflowExecutionCanceledEventAttributes']['details'],
                          'some details')
+        completed_activities = self.get_events(hist, 'ActivityTaskCompleted')
+        self.assertEqual(len(completed_activities), 1)
+        result = json.loads(completed_activities[0]['activityTaskCompletedEventAttributes']['result'])
+        self.assertEqual(result, 'clean')
         self.assertEqual(len(hist), 11)
 
     def test_cancel_workflow_with_activity_cascade(self):
@@ -314,15 +307,12 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
                 self.cancel()
                 return_(True)
 
-            def cancellation_handler(self):
-                raise Exception("should not be called for self cancel.")
-
         wf = SelfCancellingWorkflowWithCascade
         wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
         self.start_workflow(wf)
 
         wf_worker.run_once()  # start both activities
-        act_worker.start(1, 4)
+        act_worker.start(1, 2)
         wf_worker.run_once()  # cancel workflow and the heartbeat activity
         wf_worker.run_once()  # additional for potential retry
         act_worker.stop()
@@ -336,40 +326,11 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
         self.assertTrue(len(hist) in [13, 14])
 
 
-class TestCancelRequestedWorkflows(SWFMixIn, unittest.TestCase):
+class TestBotoCancelWorkflows(SWFMixIn, unittest.TestCase):
 
-    def retry_until_cancelled(self, wf_worker, max_retries=3):
-        """
-        http://docs.aws.amazon.com/amazonswf/latest/apireference/API_Decision.html
-
-        Given that there may/may not be pending decisions at time of cancellation,
-        a CancelWorkflowExecutionFailed event may come down. The decider should then
-        resend the cancel decision. This could repeat (until all pending decisions are
-        cleared). This test re-runs workflow worker until it goes through.
-
-        May be worth implementing separate test that loops until we get a failure event
-        to ensure that handling is in place...
-        """
-        if max_retries < 1:
-            return
-
-        time.sleep(2)
-        hist = self.get_workflow_execution_history()
-        fail_count = 0
-        while(hist[-1]['eventType'] not in ['WorkflowExecutionCanceled', 'WorkflowExecutionTerminated']):
-            # loop until we successfully cancel
-            fail_count += 1
-            failed_cancels = len(self.get_events(hist, 'CancelWorkflowExecutionFailed'))
-            self.assertEqual(failed_cancels, fail_count)
-            wf_worker.run_once()
-            time.sleep(2)
-            if fail_count == max_retries:  # dont loop forever if bad logic in place
-                break
-            hist = self.get_workflow_execution_history()
-
-    class CancelRequestWorkflow(WorkflowDefinition):
+    class BotoCancelRequestWorkflow(WorkflowDefinition):
         def __init__(self, workflow_execution):
-            super(TestCancelRequestedWorkflows.CancelRequestWorkflow, self).__init__(
+            super(TestBotoCancelWorkflows.BotoCancelRequestWorkflow, self).__init__(
                 workflow_execution)
             self.activities_client = BunchOfActivities()
 
@@ -385,7 +346,7 @@ class TestCancelRequestedWorkflows(SWFMixIn, unittest.TestCase):
             return_(True)
 
     def test_cancel_workflow_request(self):
-        wf = TestCancelRequestedWorkflows.CancelRequestWorkflow
+        wf = TestBotoCancelWorkflows.BotoCancelRequestWorkflow
         wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
         self.start_workflow(wf)
 
@@ -404,113 +365,8 @@ class TestCancelRequestedWorkflows(SWFMixIn, unittest.TestCase):
         hist = self.get_workflow_execution_history()
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
 
-    def test_cancel_workflow_request_custom_handler_ignore(self):
-        class CancelRequestCustomHandlerIgnoreWorkflow(WorkflowDefinition):
-            def __init__(self, workflow_execution):
-                super(CancelRequestCustomHandlerIgnoreWorkflow, self).__init__(
-                    workflow_execution)
-                self.activities_client = BunchOfActivities()
-
-            @execute(version='1.1', execution_start_to_close_timeout=60)
-            def execute(self):
-                yield self.activities_client.sleep_activity(10)
-                return_(True)
-
-            def cancellation_handler(self, event):
-                pass
-
-        wf = CancelRequestCustomHandlerIgnoreWorkflow
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
-        self.start_workflow(wf)
-
-        wf_worker.run_once()  # schedule activity
-        act_worker.start(1, 1)
-
-        self.request_cancel(self.workflow_execution)
-
-        wf_worker.run_once()  # process/ignore cancel request
-        wf_worker.run_once()  # process activity complete; finish
-        act_worker.stop()
-        act_worker.join()
-
-        time.sleep(1)
-
-        hist = self.get_workflow_execution_history()
-        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
-        cancel_requested_events = self.get_events(hist, 'WorkflowExecutionCancelRequested')
-        self.assertEqual(len(cancel_requested_events), 1)
-
-    def test_cancel_workflow_request_custom_handler_no_yield(self):
-        # test to ensure we clear any new activity decisions that are scheduled with
-        # a cancel decision
-
-        class CancelRequestCustomHandlerNoYieldWorkflow(WorkflowDefinition):
-            def __init__(self, workflow_execution):
-                super(CancelRequestCustomHandlerNoYieldWorkflow, self).__init__(
-                    workflow_execution)
-                self.activities_client = BunchOfActivities()
-
-            @execute(version='1.1', execution_start_to_close_timeout=60)
-            def execute(self):
-                yield self.activities_client.sleep_activity(10)
-                return_(True)
-
-            def cancellation_handler(self, event):
-                self.cancel_activities()
-                self.activities_client.cleanup_state_activity()  # should be ignored
-                raise CancelledError('custom cancel')
-
-        wf = CancelRequestCustomHandlerNoYieldWorkflow
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
-        self.start_workflow(wf)
-
-        wf_worker.run_once()  # schedule first activity
-        act_worker.start(1, 1)
-
-        self.request_cancel(self.workflow_execution)
-
-        wf_worker.run_once()  # handle request, cancel workflow
-        act_worker.stop()
-        act_worker.join()
-        time.sleep(1)
-
-        hist = self.get_workflow_execution_history()
-        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
-        cleanup_scheduled_events = self.get_scheduled_activities(
-            hist, 'BunchOfActivities.cleanup_state_activity')
-        self.assertEqual(len(cleanup_scheduled_events), 0)
-
 
 class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
-
-    def test_cancel_external_execution_not_external(self):
-        class ExternalExecutionCancelNotExternalWorkflow(WorkflowDefinition):
-            def __init__(self, workflow_execution):
-                super(ExternalExecutionCancelNotExternalWorkflow, self).__init__(
-                    workflow_execution)
-                self.activities_client = BunchOfActivities()
-
-            @execute(version='1.1', execution_start_to_close_timeout=60)
-            def execute(self):
-                workflow_exec = get_context().workflow_execution
-                try:
-                    self.cancel_external(external_workflow_id=workflow_exec.workflow_id,
-                                         external_run_id=workflow_exec.run_id)
-                except RequestCancelExternalWorkflowExecutionInvalidError:
-                    return_('pass')
-                return_('fail')
-
-        wf = ExternalExecutionCancelNotExternalWorkflow
-        wf_worker, act_worker = self.get_workers(wf)
-        self.start_workflow(wf)
-
-        wf_worker.run_once()
-        time.sleep(1)
-
-        hist = self.get_workflow_execution_history()
-        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
-        self.assertEqual(self.serializer.loads(
-            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 'pass')
 
     def test_cancel_external_execution_success(self):
         class ExternalExecutionCancelTargetWorkflow(WorkflowDefinition):
@@ -527,7 +383,8 @@ class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
         class ExternalExecutionCancelSourceWorkflow(WorkflowDefinition):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, target_wf_id, target_run_id):
-                yield self.cancel_external(target_wf_id, target_run_id)
+                external_wf = WorkflowDefinition(WorkflowExecution(target_wf_id, target_run_id))
+                yield external_wf.cancel()
                 return_('pass')
 
         source_wf = ExternalExecutionCancelSourceWorkflow
@@ -569,7 +426,8 @@ class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self):
                 try:
-                    yield self.cancel_external('fake', 'fake')
+                    external_wf = WorkflowDefinition(WorkflowExecution('fake', 'fake'))
+                    yield external_wf.cancel()
                 except RequestCancelExternalWorkflowExecutionFailedError:
                     return_('pass')
                 return_('fail')
@@ -587,6 +445,50 @@ class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 'pass')
         self.assertEqual(len(hist), 10)
+
+
+class TestCancelChildWorkflows(SWFMixIn, unittest.TestCase):
+    def test_cancel_child_workflow(self):
+        class CancelChildWorkflowsParentWorkflow(WorkflowDefinition):
+            @execute(version='1.2', execution_start_to_close_timeout=60)
+            def execute(self):
+                instance = yield CancelChildWorkflowsChildWorkflow.execute()
+                yield instance.cancel()
+                return_('pass')
+
+        class CancelChildWorkflowsChildWorkflow(WorkflowDefinition):
+            @execute(version='1.2', execution_start_to_close_timeout=60)
+            def execute(self):
+                arg_sum = yield BunchOfActivities.sleep_activity(30)
+                return_(arg_sum)
+
+        parent_wf = CancelChildWorkflowsParentWorkflow
+        child_wf = CancelChildWorkflowsChildWorkflow
+
+        wf_worker, act_worker = self.get_workers([parent_wf, child_wf], threaded_act_worker=True)
+        self.start_workflow(parent_wf)
+
+        wf_worker.run_once()  # start parent workflow
+        wf_worker.run_once()  # start child workflow
+        act_worker.start(1, 1)  # have child start its activity
+        wf_worker.run_once()  # cancel child
+        wf_worker.run_once()  # child intakes request and cancels
+        wf_worker.run_once()  # parent handles request scheduled event
+        wf_worker.run_once()  # parent completes
+        act_worker.stop()
+        act_worker.join()
+
+        parent_hist = self.get_workflow_execution_history()
+        self.assertEqual(parent_hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        child_cancel_events = self.get_events(parent_hist, 'ExternalWorkflowExecutionCancelRequested')
+        self.assertEqual(len(child_cancel_events), 1)
+        child_execution = child_cancel_events[0][
+            'externalWorkflowExecutionCancelRequestedEventAttributes']['workflowExecution']
+        workflow_id = child_execution['workflowId']
+        run_id = child_execution['runId']
+        child_hist = self.get_workflow_execution_history(workflow_id=workflow_id, run_id=run_id)
+        self.assertEqual(child_hist[-1]['eventType'], 'WorkflowExecutionCanceled')
+
 
 if __name__ == '__main__':
     unittest.main()

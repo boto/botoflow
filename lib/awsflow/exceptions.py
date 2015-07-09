@@ -365,11 +365,3 @@ class ChildWorkflowTerminatedError(ChildWorkflowError):
         super(
             ChildWorkflowTerminatedError, self).__init__(event_id, workflow_type,
                                                          workflow_execution)
-
-
-class RequestCancelExternalWorkflowExecutionInvalidError(AWSFlowError):
-    """This exception is thrown if, during workflow execution, a request to cancel
-    an external workflow is made where the external workflow is the same as the
-    calling workflow.
-    """
-    pass

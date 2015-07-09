@@ -38,6 +38,7 @@ class WorkflowExecutionHandler(object):
         self._data_converter = WorkflowType.DEFAULT_DATA_CONVERTER
         self._continue_as_new_on_completion = None
         self._task_list = task_list
+        self._future = None
 
     def _load_input(self, event):
         """Load initial workflow input data
@@ -63,8 +64,7 @@ class WorkflowExecutionHandler(object):
             log.warn("Tried to handle workflow event, but a handler is missing: %r", event)
 
     def _handle_cancel_request(self, event):
-        """Calls cancellation_handler of workflow, and makes CancelWorkflowExecution decision
-        if CancelledError is raised.
+        """Sets workflow execution future to CancelledError
 
         :param event: cancel request event
         :type event: awsflow.history_events.WorkflowExecutionCancelRequested
@@ -75,11 +75,8 @@ class WorkflowExecutionHandler(object):
             # workflow completed earlier during same decision making segment
             return
 
-        context = get_context()
-        try:
-            context.workflow.cancellation_handler(event)
-        except CancelledError as err:
-            self._decider._decisions.append(CancelWorkflowExecution(str(err.cause)))
+        # TODO: ability to shield from cancellation requests
+        self._future.set_exception(CancelledError())
 
     def _handle_workflow_execution_started(self, event):
         """Handle WorkflowExecutionStarted event
@@ -113,10 +110,10 @@ class WorkflowExecutionHandler(object):
         @async
         def handle_execute():
             try:
-                future = execute_method(*args, **kwargs)
+                self._future = execute_method(*args, **kwargs)
                 # any subsequent executions will be counted "continue as new"
                 self._decider.execution_started = True
-                execute_result = yield future
+                execute_result = yield self._future
                 # XXX should these be the only decisions?
 
                 if self._continue_as_new_on_completion is None:
@@ -128,6 +125,8 @@ class WorkflowExecutionHandler(object):
                     self._decider._decisions.append(self._continue_as_new_on_completion)
 
             except CancelledError as err:
+                yield context.workflow.cancellation_handler()
+                self._decider._request_cancel_activity_task_all()
                 self._decider._decisions.append(CancelWorkflowExecution(str(err.cause)))
 
             except Exception as err:
