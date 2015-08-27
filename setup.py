@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-requires = ['botocore>=0.59.0',
+requires = ['botocore>=1.1.10',
             'six>=1.2.0']
 
 args = dict(
@@ -16,7 +16,7 @@ args = dict(
     cmdclass={},
     install_requires=requires,
     license=open("LICENSE.txt").read(),
-    package_dir={'' : 'lib'},
+    package_dir={'': 'lib'},
     )
 
 

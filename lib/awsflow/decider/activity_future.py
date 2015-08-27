@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 
 
-from ..core import BaseFuture, AnyFuture, AllFuture
+from ..core import BaseFuture, AnyFuture, AllFuture, CancelledError
 from ..core.async_task import AsyncTask
 
 
@@ -60,9 +60,48 @@ class ActivityFuture(BaseFuture):
         :return: Cancellation future
         :rtype: awsflow.Future
         """
-        self._cancellation_future = self._activity_task_handler.request_cancel_activity_task(
-            self, self._activity_id)
+        if not super(ActivityFuture, self).cancelled():
+            self._cancellation_future = self._activity_task_handler.request_cancel_activity_task(
+                self, self._activity_id)
+
         return self._cancellation_future
+
+    def cancelled(self):
+        """
+        Returns True if activity was cancelled
+        :return:
+        """
+        if isinstance(self._exception, CancelledError):
+            return True
+        return False
+
+    def exception(self):
+        """
+        Returns the exception if available, or a ValueError if a result is
+        not yet set
+        """
+        if self.done():
+            return self._exception
+        else:
+            raise ValueError("Exception was not yet set")
+
+    def traceback(self):
+        if self.done():
+            return self._traceback
+        else:
+            raise ValueError("Exception is not yet set")
+
+    def result(self):
+        """
+        Return the result
+
+        :raises Exception: Any exception raised from the call will be raised.
+        :raises ValueError: if a result was not yet set
+        """
+        if self.done():
+            return self._get_result()
+        else:
+            raise ValueError("Result is not yet set")
 
     def __or__(self, other):
         if isinstance(other, BaseFuture):

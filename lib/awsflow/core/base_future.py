@@ -184,7 +184,7 @@ class BaseFuture(object):
             self.__class__.__name__, hex(id(self)), self._state.lower())
 
     def add_task(self, task):
-        if self._state not in (CANCELLED, FINISHED):
+        if not self.done():
             self._tasks.append(task)
             return
         task.execute()

@@ -4,8 +4,10 @@ import logging
 import time
 import unittest
 
+from threading import Thread
+
 from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
-                     WorkflowStarter, async)
+                     WorkflowStarter, async, workflow_time)
 from awsflow.workflow_execution import WorkflowExecution
 from awsflow.core import CancelledError
 from awsflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
@@ -14,9 +16,8 @@ from various_activities import BunchOfActivities
 from utils import SWFMixIn
 
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
 logging.getLogger().addFilter(AWSFlowFilter)
+logging.getLogger('botocore').setLevel(logging.ERROR)
 
 
 class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
@@ -84,7 +85,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self):
                 activity_future = self.activities_client.wrong_tasklist_activity()
-                yield self.activities_client.sum(1, 2)
+                yield workflow_time.sleep(2)
                 yield activity_future.cancel()
                 yield activity_future
                 return_(False)
@@ -93,8 +94,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
-        wf_worker.run_once()  # schedule both activities
-        act_worker.run_once()  # start summing activity
+        wf_worker.run_once()  # schedule activity
         wf_worker.run_once()  # cancel wrong tasklist activity (which would have never started)
         wf_worker.run_once()  # finish
         time.sleep(1)
@@ -103,7 +103,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
         self.assertEqual(hist[-1]['workflowExecutionCanceledEventAttributes']['details'],
                          'Activity was cancelled before being picked up by activity worker')
-        self.assertEqual(len(hist), 17)
+        self.assertEqual(len(hist), 16)
 
     def test_one_activity_heartbeat_cancel_raise(self):
         # test heartbeat activity raising cancel exception
@@ -116,22 +116,22 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self):
                 activity_future = self.activities_client.heartbeating_activity(10)
-                yield self.activities_client.sum(1, 2)
+                yield workflow_time.sleep(2)
                 yield activity_future.cancel()
                 yield activity_future
                 return_(False)
 
         wf = OneActivityHeartbeatCancelRaiseWorkflow
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
+        wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
+        act_worker_thread = Thread(target=act_worker.run_once)
+        act_worker_thread.start()
         wf_worker.run_once()  # schedule first two activities
-        act_worker.start(1, 4)
-        time.sleep(3)  # ensure both activities start before we cancel
+        time.sleep(1)  # ensure activity started
         wf_worker.run_once()  # cancel decision
         wf_worker.run_once()  # raise cancel
-        act_worker.stop()
-        act_worker.join()
+        act_worker_thread.join()
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
@@ -139,7 +139,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['workflowExecutionCanceledEventAttributes']['details'],
                          'Cancel was requested during activity heartbeat')
         # hist differs depending on whether the heartbeat activity started or not
-        self.assertTrue(len(hist) in [17, 18])
+        self.assertEqual(len(hist), 17)
 
     def test_one_activity_heartbeat_ignore_cancel(self):
         # test heartbeat activity raising cancel exception that is ignored by execution
@@ -181,21 +181,18 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self):
                 activity_future = self.activities_client.heartbeating_activity(5)
-                yield self.activities_client.sum(1, 2)
+                yield workflow_time.sleep(2)
                 activity_future._activity_id = '100'  # set invalid ID
                 yield activity_future.cancel()
                 return_(False)
 
         wf = OneActivityHeartbeatCancelFailureWorkflow
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
+        wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
         wf_worker.run_once()  # schedule both activities
-        act_worker.start(1, 4)
         wf_worker.run_once()  # attempt cancel with wrong activity id
         wf_worker.run_once()  # respond to failed cancel event -> raise -> fail
-        act_worker.stop()
-        act_worker.join()
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
@@ -203,7 +200,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         error = json.loads(hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]['__obj']
         self.assertEqual(error[0], "awsflow.exceptions:RequestCancelActivityTaskFailedError")
         self.assertEqual(error[1]['cause'], 'ACTIVITY_ID_UNKNOWN')
-        self.assertTrue(len(hist) in [16, 17])
+        self.assertEqual(len(hist), 15)
 
 
 class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
@@ -303,27 +300,26 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self):
                 self.activities_client.heartbeating_activity(5)
-                yield self.activities_client.sum(1, 2)
+                yield workflow_time.sleep(1)
                 self.cancel()
                 return_(True)
 
         wf = SelfCancellingWorkflowWithCascade
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
+        wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
-        wf_worker.run_once()  # start both activities
-        act_worker.start(1, 2)
+        act_worker_thread = Thread(target=act_worker.run_once)
+        act_worker_thread.start()
+        wf_worker.run_once()  # start activity
         wf_worker.run_once()  # cancel workflow and the heartbeat activity
-        wf_worker.run_once()  # additional for potential retry
-        act_worker.stop()
-        act_worker.join()
+        act_worker_thread.join()
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
         self.assertEqual(hist[-2]['eventType'], 'ActivityTaskCancelRequested')
         # hist differs depending on whether the heartbeat activity started or not
-        self.assertTrue(len(hist) in [13, 14])
+        self.assertEqual(len(hist), 13)
 
 
 class TestBotoCancelWorkflows(SWFMixIn, unittest.TestCase):
@@ -347,20 +343,19 @@ class TestBotoCancelWorkflows(SWFMixIn, unittest.TestCase):
 
     def test_cancel_workflow_request(self):
         wf = TestBotoCancelWorkflows.BotoCancelRequestWorkflow
-        wf_worker, act_worker = self.get_workers(wf, threaded_act_worker=True)
+        wf_worker, act_worker = self.get_workers(wf)
         self.start_workflow(wf)
 
         wf_worker.run_once()  # schedule first 4 activities
-        act_worker.start(1, 2)  # start some
-
+        act_worker_thread = Thread(target=lambda: (act_worker.run_once(), act_worker.run_once()))
+        act_worker_thread.start()
         self.request_cancel(self.workflow_execution)
 
         wf_worker.run_once()  # process request to cancel any non-completed activities
 
         self.retry_until_cancelled(wf_worker, max_retries=3)
 
-        act_worker.stop()
-        act_worker.join()
+        act_worker_thread.join()
 
         hist = self.get_workflow_execution_history()
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCanceled')
@@ -393,20 +388,20 @@ class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
         source_wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, 'source_task_list', source_wf, target_wf)
         target_wf_worker, target_act_worker = self.get_workers(
-            [source_wf, target_wf], threaded_act_worker=True)
+            [source_wf, target_wf])
 
         target_execution = self.start_workflow(target_wf)
         with WorkflowStarter(self.session, self.region, self.domain, 'source_task_list'):
             instance = source_wf.execute(*target_execution)
             source_execution = instance.workflow_execution
 
+        target_act_worker_thread = Thread(target=target_act_worker.run_once)
+        target_act_worker_thread.start()
         target_wf_worker.run_once()  # sched sleep act
-        target_act_worker.start(1, 1)  # start sleep act
         source_wf_worker.run_once()  # make cancel request
         target_wf_worker.run_once()  # receieve request; cancel self
         source_wf_worker.run_once()  # resolve cancel future; complete
-        target_act_worker.stop()
-        target_act_worker.join()
+        target_act_worker_thread.join()
 
         source_hist = self.get_workflow_execution_history(
             workflow_id=source_execution.workflow_id, run_id=source_execution.run_id)
@@ -459,24 +454,23 @@ class TestCancelChildWorkflows(SWFMixIn, unittest.TestCase):
         class CancelChildWorkflowsChildWorkflow(WorkflowDefinition):
             @execute(version='1.2', execution_start_to_close_timeout=60)
             def execute(self):
-                arg_sum = yield BunchOfActivities.sleep_activity(30)
+                arg_sum = yield BunchOfActivities.sleep_activity(10)
                 return_(arg_sum)
 
         parent_wf = CancelChildWorkflowsParentWorkflow
         child_wf = CancelChildWorkflowsChildWorkflow
 
-        wf_worker, act_worker = self.get_workers([parent_wf, child_wf], threaded_act_worker=True)
+        wf_worker, act_worker = self.get_workers([parent_wf, child_wf])
         self.start_workflow(parent_wf)
 
+        act_worker_thread = Thread(target=act_worker.run_once)
+        act_worker_thread.start()
         wf_worker.run_once()  # start parent workflow
         wf_worker.run_once()  # start child workflow
-        act_worker.start(1, 1)  # have child start its activity
         wf_worker.run_once()  # cancel child
         wf_worker.run_once()  # child intakes request and cancels
-        wf_worker.run_once()  # parent handles request scheduled event
         wf_worker.run_once()  # parent completes
-        act_worker.stop()
-        act_worker.join()
+        act_worker_thread.join()
 
         parent_hist = self.get_workflow_execution_history()
         self.assertEqual(parent_hist[-1]['eventType'], 'WorkflowExecutionCompleted')

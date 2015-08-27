@@ -104,6 +104,7 @@ class TestAsync(unittest.TestCase):
 
     def test_external_future(self):
         future = BaseFuture()
+
         @async
         def main():
             result = yield future
@@ -173,7 +174,6 @@ class TestAsync(unittest.TestCase):
             yield raises()
             yield count()
 
-
         ev = AsyncEventLoop()
         with ev:
             future = main()
@@ -242,12 +242,11 @@ class TestAsync(unittest.TestCase):
         self.assertTrue(isinstance(future, BaseFuture))
         self.assertEqual(3, self.counter)
 
+    @pytest.mark.xfail
     def test_async(self):
         # FIXME
-        return
         @async
         def count():
-            import pdb;pdb.set_trace()
             self.counter += 1
 
         @async
@@ -262,7 +261,6 @@ class TestAsync(unittest.TestCase):
             other()
             try:
                 result = yield future
-                import pdb; pdb.set_trace()
                 self.counter -= 1 # should not happen
             except RuntimeError:
                 self.counter += 1
@@ -274,10 +272,10 @@ class TestAsync(unittest.TestCase):
 
         @other.do_except
         def othererr(err):
-            import pdb; pdb.set_trace()
             if isinstance(err, CancellationError):
                 assert 'Should call cancel'
                 self.counter += 1
+
         @other.do_finally
         def otherfin():
             self.counter += 1
@@ -318,7 +316,6 @@ class TestAllFuture(unittest.TestCase):
         self.counter = 0
 
     def test_simple(self):
-        return
         future1 = BaseFuture()
         future2 = BaseFuture()
 
@@ -332,7 +329,6 @@ class TestAllFuture(unittest.TestCase):
         self.assertEqual(all_future.result(), (1, 2))
 
     def test_exception(self):
-        return
         future1 = BaseFuture()
         future2 = BaseFuture()
 
@@ -412,14 +408,12 @@ class TestAnyFuture(unittest.TestCase):
         self.assertFalse(future1.done())
 
     def test_exception(self):
-        return
         future1 = BaseFuture()
         future2 = BaseFuture()
 
         ev = AsyncEventLoop()
         with ev:
             any_future = AnyFuture(future1, future2)
-            future2.set_result(2)
             future1.set_exception(RuntimeError())
 
         ev.execute_all_tasks()

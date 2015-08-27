@@ -96,7 +96,7 @@ class ActivityTaskHandler(object):
         decision is made, and a future that tracks the request is returned.
 
         :param activity_id: id of the activity to handle
-        :type activity_id: int
+        :type activity_id: str
         :param activity_future: the calling future; target for cancellation
         :type activity_future: awsflow.decider.activity_future.ActivityFuture
         :return: cancel future

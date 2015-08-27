@@ -189,7 +189,7 @@ class TestJSONDataConverter(unittest.TestCase):
         e = MyCustomException(u'some error message', 'someparam')
         r = self.dumps_loads(e)
 
-        self.assertEqual(e.message, r.message)
+        self.assertEqual(str(e), str(r))
         self.assertEqual(e.other, r.other)
 
     def test_unimportable_exception(self):
