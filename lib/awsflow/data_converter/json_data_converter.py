@@ -15,6 +15,8 @@ import base64
 import copy
 import json
 
+from decimal import Decimal
+
 import six
 
 try:
@@ -55,6 +57,8 @@ class _FlowObjEncoder(json.JSONEncoder):
             return {'__set': [self._flowify_obj(o) for o in obj]}
         elif obj_type == frozenset:
             return {'__frozenset': [self._flowify_obj(o) for o in obj]}
+        elif obj_type == Decimal:
+            return {'__decimal': [self._flowify_obj(o) for o in obj.as_tuple()]}
 
         elif obj_type == type:
             clsname = "%s:%s" % (obj.__module__, obj.__name__)
@@ -172,6 +176,8 @@ def _flow_obj_decoder(dct):
         return base64.b64decode(dct['__base64str'])
     elif '__bin' in dct:
         return base64.b64decode(dct['__bin'])
+    elif '__decimal' in dct:
+        return Decimal(dct['__decimal'])
 
     module_name, attr_name = None, None
 

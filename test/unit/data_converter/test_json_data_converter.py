@@ -3,6 +3,7 @@ import unittest
 import zlib
 import six
 
+from decimal import Decimal
 from collections import namedtuple, OrderedDict
 
 from awsflow import WorkflowDefinition, execute
@@ -101,6 +102,14 @@ class TestJSONDataConverter(unittest.TestCase):
         self.assertEqual(NamedTuple, type(self.dumps_loads(named_tuple)))
         self.assertEqual(named_tuple, self.dumps_loads(named_tuple))
         self.assertEqual(nested_ntuple, self.dumps_loads(nested_ntuple))
+
+    def test_decimal(self):
+        number = Decimal(1.1)
+        assert number == self.dumps_loads(number)
+
+    def test_decimal_inf(self):
+        inf = Decimal('inf')
+        assert inf == self.dumps_loads(inf)
 
     def test_objects(self):
 
