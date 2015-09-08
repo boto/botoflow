@@ -92,6 +92,11 @@ class UnknownResourceError(SWFResponseError):
     """
     pass
 
+class UnrecognizedClientException(SWFResponseError):
+    """Raised when the client is not authenticated by SWF"""
+    pass
+
+
 class ThrottlingException(SWFResponseError):
     pass
 
@@ -108,7 +113,8 @@ _swf_fault_exception = {
     'cOperationNotPermittedFault': OperationNotPermittedError,
     'UnknownResourceFault': UnknownResourceError,
     'SWFResponseError': SWFResponseError,
-    'ThrottlingException': ThrottlingException
+    'ThrottlingException': ThrottlingException,
+    'UnrecognizedClientException': UnrecognizedClientException,
 }
 
 
