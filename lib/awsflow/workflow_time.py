@@ -23,8 +23,9 @@ def time():
     Return the current time in seconds since the Epoch.
     Fractions of a second will not be presented as in the time.time()
 
-    If the method is called not in the DecisionContext, it will throw a
-    TyperError
+    :raises TypeError: If the function is called not in DecisionContext
+    :returns: Returns the workflow's time in seconds since epoch.
+    :rtype: int
     """
     try:
         context = get_context()
@@ -42,7 +43,10 @@ def sleep(seconds):
     Value that becomes ready after the specified delay.
     It acts like time.sleep() if used together with a yield.
 
-    This method can throw a TimerCancelledError
+    :raises TypeError: If the function is called not in DecisionContext
+    :raises awsflow.core.exceptions.CancelledError: If the timer/sleep was cancelled
+    :returns: Future representing the timer
+    :rtype: awsflow.core.future.Future
     """
     try:
         context = get_context()
