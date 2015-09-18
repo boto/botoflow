@@ -4,7 +4,7 @@ import unittest
 
 from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
                       ActivityWorker, WorkflowStarter)
-from awsflow.exceptions import ChildWorkflowTimedOutError
+from awsflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
 
@@ -38,6 +38,24 @@ class TimingOutChildWorkflow(WorkflowDefinition):
     @execute(version='1.3', execution_start_to_close_timeout=1)
     def execute(self):
         return True
+
+
+class MasterWorkflowWithException(WorkflowDefinition):
+    @execute(version='1.0', execution_start_to_close_timeout=60)
+    def execute(self):
+        try:
+            instance = yield RaisingChildWorkflow.execute()
+            yield instance.workflow_result
+        except ChildWorkflowFailedError as err:
+            if isinstance(err.cause, RuntimeError):
+                return_(2)
+        return_(1)
+
+
+class RaisingChildWorkflow(WorkflowDefinition):
+    @execute(version='1.0', execution_start_to_close_timeout=60)
+    def execute(self):
+        raise RuntimeError("Cry baby")
 
 
 class TestChildWorkflows(SWFMixIn, unittest.TestCase):
@@ -87,6 +105,25 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 1)
+
+    def test_raising_child_workflows(self):
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list,
+            MasterWorkflowWithException, RaisingChildWorkflow)
+        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+            instance = MasterWorkflowWithException.execute()
+            self.workflow_execution = instance.workflow_execution
+
+        for i in range(3):
+            wf_worker.run_once()
+
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        assert len(hist) == 11
+        assert hist[-1]['eventType'] == 'WorkflowExecutionCompleted'
+        assert self.serializer.loads(hist[-1]['workflowExecutionCompletedEventAttributes']['result']) == 2
+
 
 if __name__ == '__main__':
     unittest.main()

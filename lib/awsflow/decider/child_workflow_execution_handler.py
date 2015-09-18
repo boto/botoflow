@@ -141,24 +141,21 @@ class ChildWorkflowExecutionHandler(object):
             elif isinstance(event, ChildWorkflowExecutionFailed):
                 exception, _traceback = workflow_type.data_converter.loads(event.attributes['details'])
 
-                # TODO convert the tuples to NamedTuples
                 error = ChildWorkflowFailedError(
-                    event.id, (workflow_type.name, workflow_type.version),
-                    self._decider. get_context()._workflow_execution, cause=exception,
+                    event.id, workflow_type,
+                    get_context()._workflow_execution, cause=exception,
                     _traceback=_traceback)
                 workflow_future.set_exception(error)
 
             elif isinstance(event, ChildWorkflowExecutionTimedOut):
-                # TODO convert the tuples to NamedTuples
                 error = ChildWorkflowTimedOutError(
-                    event.id, (workflow_type.name, workflow_type.version),
+                    event.id, workflow_type,
                     get_context()._workflow_execution)
                 workflow_future.set_exception(error)
 
             elif isinstance(event, ChildWorkflowExecutionTerminated):
-                # TODO convert the tuples to NamedTuples
                 error = ChildWorkflowTerminatedError(
-                    event.id, (workflow_type.name, workflow_type.version),
+                    event.id, workflow_type,
                     get_context()._workflow_execution)
                 workflow_future.set_exception(error)
             else:
@@ -167,9 +164,7 @@ class ChildWorkflowExecutionHandler(object):
         elif isinstance(event, StartChildWorkflowExecutionFailed):
             # set the exception with a cause
             cause = event.attributes['cause']
-            workflow_started_future = self._open_child_workflows \
-                [workflow_id] \
-                ['workflow_started_future']
+            workflow_started_future = self._open_child_workflows[workflow_id]['workflow_started_future']
 
             workflow_started_future.set_exception(
                 StartChildWorkflowExecutionFailedError(cause))
