@@ -69,11 +69,9 @@ class DecisionTask(object):
         self.workflow_version = decision_dict['workflowType']['version']
 
     def __repr__(self):
-        return ("<%s workflow_name=%s, workflow_version=%s, "
-                "started_event_id=%d, previous_started_event_id=%d "
-                "workflow_id=%s, run_id=%s>" % self.workflow_name,
-                self.workflow_version, self.started_event_id,
-                self.previous_started_event_id, self.workflow_id, self.run_id)
+        return ("<{0} workflow_name={1.workflow_name}, workflow_version={1.workflow_version}, "
+                "started_event_id={1.started_event_id}, previous_started_event_id={1.previous_started_event_id} "
+                "workflow_id={1.workflow_id}, run_id={1.run_id}>").format(self.__class__.__name__, self)
 
     @property
     def events(self):

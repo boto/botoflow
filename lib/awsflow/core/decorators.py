@@ -105,7 +105,6 @@ class AsyncDecorator(object):
         context = AsyncTaskContext(self.daemon, get_async_context(),
                                    name=self.func[0].__name__)
         future.context = context
-        atask = None
         if inspect.isgeneratorfunction(self.func[0]):
             # wrap in extra context that catches coroutine errors
 

@@ -103,7 +103,7 @@ class WorkflowExecutionHandler(object):
         # find the execution method
         execute_method = getattr(self._workflow_instance, func_name)
 
-        context.workflow = self._workflow_instance
+        context._workflow_instance = self._workflow_instance
 
         args, kwargs = self._load_input(event)
 
@@ -125,7 +125,7 @@ class WorkflowExecutionHandler(object):
                     self._decider._decisions.append(self._continue_as_new_on_completion)
 
             except CancelledError as err:
-                yield context.workflow.cancellation_handler()
+                yield context._workflow_instance.cancellation_handler()
                 self._decider._request_cancel_activity_task_all()
                 self._decider._decisions.append(CancelWorkflowExecution(str(err.cause)))
 
@@ -156,8 +156,8 @@ class WorkflowExecutionHandler(object):
         args, kwargs = self._load_input(event)
         signal_name = event.attributes['signalName']
 
-        context.workflow._workflow_signals[signal_name][1](
-            context.workflow, *args, **kwargs)
+        context._workflow_instance._workflow_signals[signal_name][1](
+            context._workflow_instance, *args, **kwargs)
 
     def continue_as_new_workflow_execution(self, **kwargs):
         self._continue_as_new_on_completion = ContinueAsNewWorkflowExecution(**kwargs)

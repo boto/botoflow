@@ -3,13 +3,18 @@ from .base_retry_strategy import BaseRetryStrategy
 
 class TransiencyRetryStrategy(BaseRetryStrategy):
 
-    def __init__(self, retry_on=[], raise_on=[], max_consecutive_errors=None):
+    def __init__(self, retry_on=None, raise_on=None, max_consecutive_errors=None):
         """
         :param list retry_on: exceptions to retry on
         :param list raise_on: list of exceptions to immediately raise on
         :param int max_consecutive_errors: max consecutive errors to allow
            before raising. None indicates unlimited
         """
+        if raise_on is None:
+            raise_on = []
+        if retry_on is None:
+            retry_on = []
+
         super(TransiencyRetryStrategy, self).__init__(retry_on, raise_on)
 
         self.consecutive_errors = 0

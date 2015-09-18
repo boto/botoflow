@@ -6,8 +6,8 @@ import unittest
 
 from threading import Thread
 
-from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
-                     WorkflowStarter, async, workflow_time)
+from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker, ActivityWorker,
+                     WorkflowStarter, async, workflow_time, workflow_options)
 from awsflow.workflow_execution import WorkflowExecution
 from awsflow.core import CancelledError
 from awsflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
@@ -446,32 +446,50 @@ class TestCancelChildWorkflows(SWFMixIn, unittest.TestCase):
     def test_cancel_child_workflow(self):
         class CancelChildWorkflowsParentWorkflow(WorkflowDefinition):
             @execute(version='1.2', execution_start_to_close_timeout=60)
-            def execute(self):
-                instance = yield CancelChildWorkflowsChildWorkflow.execute()
-                yield instance.cancel()
-                return_('pass')
+            def execute(self, child_task_list):
+                with workflow_options(task_list=child_task_list):
+                    instance = yield CancelChildWorkflowsChildWorkflow.execute()
+                    yield instance.cancel()
+                    try:
+                        yield instance.workflow_result
+                    except CancelledError:
+                        return_('pass')
 
         class CancelChildWorkflowsChildWorkflow(WorkflowDefinition):
-            @execute(version='1.2', execution_start_to_close_timeout=60)
+            @execute(version='1.3', execution_start_to_close_timeout=60)
             def execute(self):
                 arg_sum = yield BunchOfActivities.sleep_activity(10)
                 return_(arg_sum)
 
+        child_task_list = self.task_list + '_child'
+
         parent_wf = CancelChildWorkflowsParentWorkflow
-        child_wf = CancelChildWorkflowsChildWorkflow
+        child_worker = WorkflowWorker(self.session, self.region, self.domain, child_task_list,
+                                      CancelChildWorkflowsChildWorkflow)
 
-        wf_worker, act_worker = self.get_workers([parent_wf, child_wf])
-        self.start_workflow(parent_wf)
+        wf_worker = WorkflowWorker(self.session, self.region, self.domain, self.task_list,
+                                   parent_wf)
+        act_worker = ActivityWorker(self.session, self.region, self.domain, child_task_list, BunchOfActivities())
 
-        act_worker_thread = Thread(target=act_worker.run_once)
+        self.start_workflow(parent_wf, child_task_list)
+
+        def activity_wrapper():
+            try:
+                act_worker.run_once()
+            except Exception:
+                pass
+
+        act_worker_thread = Thread(target=activity_wrapper)
         act_worker_thread.start()
         wf_worker.run_once()  # start parent workflow
-        wf_worker.run_once()  # start child workflow
+        child_worker.run_once()  # start child workflow
         wf_worker.run_once()  # cancel child
-        wf_worker.run_once()  # child intakes request and cancels
-        wf_worker.run_once()  # parent completes
+        child_worker.run_once()  # child intakes request and cancels
+        time.sleep(1)
+        wf_worker.run_once()  # parent waits for cancellation to complete
         act_worker_thread.join()
 
+        time.sleep(1)
         parent_hist = self.get_workflow_execution_history()
         self.assertEqual(parent_hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         child_cancel_events = self.get_events(parent_hist, 'ExternalWorkflowExecutionCancelRequested')

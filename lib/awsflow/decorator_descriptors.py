@@ -38,7 +38,6 @@ class SignalFunc(object):
         # hard to know serde ahead of time, so we get it from our workflow
         # instance and set it onto the signal
         if signal_type.data_converter is None:
-            context = get_context()
             signal_type.data_converter = instance._data_converter
         if signal_type.workflow_execution is None:
             signal_type.workflow_execution = instance.workflow_execution
@@ -123,8 +122,8 @@ class WorkflowExecuteFunc(object):
         except AttributeError:  # not in context
             pass
 
-        if isinstance(context, (StartWorkflowContext)) \
-           or (isinstance(context, (DecisionContext))
+        if isinstance(context, StartWorkflowContext) \
+           or (isinstance(context, DecisionContext)
                and context.decider.execution_started):
 
             # called on a class or instance does not matter

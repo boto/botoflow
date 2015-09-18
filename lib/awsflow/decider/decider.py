@@ -56,6 +56,7 @@ class Decider(object):
         self.identity = identity
         self.get_workflow = get_workflow
 
+        # noinspection PyCallingNonCallable
         self._poller = _Poller(worker, domain, task_list, identity)
 
     def _reset(self):
@@ -143,10 +144,10 @@ class Decider(object):
 
                     reordered_events = itertools.chain(
                         reordered_events, decision_start_to_completion_events)
-                    for event in reordered_events:
-                        if event.id >= non_replay_event_id:
+                    for ord_event in reordered_events:
+                        if ord_event.id >= non_replay_event_id:
                             get_context()._replaying = False
-                        self._handle_history_event(workflow_execution, event)
+                        self._handle_history_event(ord_event)
 
                         if self._decisions.has_decision_type(CancelWorkflowExecution):
                             # peak ahead to see if this is a retry
@@ -166,10 +167,9 @@ class Decider(object):
         finally:
             set_context(prev_context)
 
-    def _handle_history_event(self, workflow_execution, event):
+    def _handle_history_event(self, event):
         log.debug("Handling history event: %s", event)
 
-        handler = None
         try:
             handler = next(handler for handler in self._handlers if isinstance(event, handler.responds_to))
             try:
@@ -188,7 +188,7 @@ class Decider(object):
         if self._decision_task_token is not None:
             # get the workflow_state (otherwise known as execution context)
             # workflow is attached to context by _workflow_execution_handler
-            workflow_state = get_context().workflow.workflow_state
+            workflow_state = get_context()._workflow_instance.workflow_state
 
             log.debug("Sending workflow decisions: %s", self._decisions)
             with swf_exception_wrapper():
@@ -210,15 +210,15 @@ class Decider(object):
             self.worker.client.respond_decision_task_completed(
                 taskToken=self._decision_task_token,
                 decisions=self._decisions.to_swf(),
-                executionContext=context.workflow.workflow_state)
+                executionContext=context._workflow_instance.workflow_state)
 
     def _handle_execute_activity(self, activity_type, decision_dict, args, kwargs):
         return self._activity_task_handler.handle_execute_activity(
             activity_type, decision_dict, args, kwargs)
 
-    def _handle_start_child_workflow_execution(self, workflow_type, workflow_instance, input):
+    def _handle_start_child_workflow_execution(self, workflow_type, workflow_instance, wf_input):
         return self._child_workflow_execution_handler.handle_start_child_workflow_execution(
-            workflow_type, workflow_instance, input)
+            workflow_type, workflow_instance, wf_input)
 
     def _request_cancel_external_workflow_execution(self, external_workflow_execution):
         """RequestCancelExternalWorkflowExecution sends a cancel request to the target

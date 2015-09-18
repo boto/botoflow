@@ -16,6 +16,7 @@ from .async_task_context import AsyncTaskContext
 
 class AsyncRootTaskContext(AsyncTaskContext):
 
+    # noinspection PyMissingConstructor
     def __init__(self, eventloop):
         self._setup()
         self.eventloop = eventloop

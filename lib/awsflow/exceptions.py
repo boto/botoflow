@@ -14,7 +14,7 @@
 import sys
 import traceback
 
-from .core.exceptions import CancellationError, CancelledError
+from .core.exceptions import CancelledError
 
 
 class AWSFlowError(Exception):

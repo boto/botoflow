@@ -11,6 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+__all__ = ('WorkflowDefinition', )
+
 from copy import copy
 
 import six
@@ -20,7 +22,8 @@ from awsflow.exceptions import CancelledError
 
 
 class _WorkflowDefinitionMeta(type):
-    def __new__(cls, name, bases, dct):
+
+    def __new__(mcs, name, bases, dct):
         newdct = dict(dct)
 
         # copy workflow and signal methods from our bases if we don't have a
@@ -56,16 +59,15 @@ class _WorkflowDefinitionMeta(type):
             workflow_type._reset_name(name, force=True)
             workflow_types[workflow_type] = workflow_func[1].__name__
 
-        if not hasattr(cls, '_workflow_types'):
+        if not hasattr(mcs, '_workflow_types'):
             newdct['_workflow_types'] = workflow_types
 
-        return type.__new__(cls, name, bases, newdct)
+        return type.__new__(mcs, name, bases, newdct)
 
     @staticmethod
     def _extract_workflows_and_signals(dct):
         workflow_types = {}
         signals = {}
-
         for val in six.itervalues(dct):
             if hasattr(val, 'func'):
                 func = val.func
@@ -215,7 +217,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         :raises CancelledError: if workflow to cancel is of current context
         """
         context = self._get_decision_context(self.cancel.__name__)
-        if self.workflow_execution == context.workflow.workflow_execution:
+        if self.workflow_execution == context._workflow_execution:
             raise CancelledError(details)
         return context.decider._request_cancel_external_workflow_execution(self.workflow_execution)
 

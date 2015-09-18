@@ -15,6 +15,7 @@ import sys
 import traceback
 import time
 import functools
+import inspect
 import logging
 
 import six
@@ -92,6 +93,9 @@ class ActivityWorker(BaseWorker):
         self._activity_names_to_methods = dict()
 
         for activity in self._activity_definitions:
+            if inspect.isclass(activity):
+                raise TypeError("Activity definition must be an instance, not a class: {!r}".format(activity))
+
             # extract activities info from the class
             for name in dir(activity):
                 try:
@@ -112,26 +116,24 @@ class ActivityWorker(BaseWorker):
         """
         Registers the activities with SWF
         """
-        activities = map(lambda a:a['activityType'],
-                         self.client.list_activity_types(domain=self.domain,
-                                                         registrationStatus='REGISTERED')['typeInfos'])
+        # get all the activities that are already registered, so we don't try to re-register them
+        with swf_exception_wrapper():
+            already_registered = {act['activityType']['name']: act['activityType']['version']
+                                  for act in self.client.list_activity_types(
+                domain=self.domain, registrationStatus='REGISTERED')['typeInfos']}
 
-        already_registered = {}
-        for a in activities:
-            already_registered[a['name']] = a['version']
-
-        for act_name, func_info in \
-            six.iteritems(self._activity_names_to_methods):
+        for act_name, func_info in six.iteritems(self._activity_names_to_methods):
             activity_type = func_info[1]
 
             if act_name in already_registered:
                 if already_registered[act_name] == activity_type.version:
-                    log.debug("Skipping registration of %s %s because it's already registered" % (act_name, activity_type.version))
+                    log.debug("Skipping registration of %s %s because it's already registered",
+                              act_name, activity_type.version)
                     continue
 
             if activity_type.skip_registration:
                 log.debug("Skipping activity '%s %s' registration because skip_registration is set to True",
-                         activity_type.name, activity_type.version)
+                          activity_type.name, activity_type.version)
                 continue
 
             kwargs = activity_type.to_registration_options_dict(
@@ -143,8 +145,7 @@ class ActivityWorker(BaseWorker):
                 with swf_exception_wrapper():
                     self.client.register_activity_type(**kwargs)
             except TypeAlreadyExistsError:
-                log.debug("Activity '%s %s' already registered",
-                          activity_type.name, activity_type.version)
+                log.debug("Activity '%s %s' already registered", activity_type.name, activity_type.version)
 
     def poll_for_activities(self):
         """

@@ -189,7 +189,7 @@ class WorkflowType(BaseFlowType):
         elif isinstance(context, DecisionContext):
             if context.decider.execution_started:
 
-                if context.workflow == _instance:
+                if context._workflow_instance == _instance:
                     continue_as_new_dict = self.to_continue_as_new_dict(
                         [args, kwargs], context.decider.task_list)
 
@@ -373,10 +373,10 @@ class ActivityType(BaseFlowType):
 
 class SignalType(BaseFlowType):
 
-    def __init__(self, name, data_converter=None, workflow_execution=None):
+    def __init__(self, name, data_converter=None):
         """
-        :param serde: (optional) Serializer to use for serializing inputs
-        :type: awsflow.serializers.AbstractSerializer
+        :param data_converter: (optional) Serializer to use for serializing inputs
+        :type: awsflow.data_converter.AbstractDataConverter
         """
         self.name = name
         self.data_converter = data_converter
@@ -418,3 +418,7 @@ class SignalType(BaseFlowType):
                 workflowId=workflow_execution.workflow_id,
                 runId=workflow_execution.run_id,
                 input=serialized_input)
+
+    def __repr__(self):
+        return "<{0}(name={1.name}, data_converter={1.data_converter}, " \
+               "workflow_execution={1.workflow_execution}".format(self.__class__.__name__, self)

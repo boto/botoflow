@@ -10,7 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import warnings
+
+import logging
 
 import six
 
@@ -18,6 +19,8 @@ from .event_bases import (ActivityEventBase, ChildWorkflowEventBase,
                           DecisionEventBase, ExternalWorkflowEventBase,
                           WorkflowEventBase, TimerEventBase, EventBase,
                           MarkerEventBase, DecisionTaskEventBase)
+
+log = logging.getLogger(__name__)
 
 
 def swf_event_to_object(event_dict):
@@ -28,7 +31,11 @@ def swf_event_to_object(event_dict):
     try:
         event_class = _event_type_name_to_class[event_dict['eventType']]
     except KeyError:
-        warnings.warn("Event type {} is not implemented".format(event_dict['eventType']))
+        # we cannot guarantee we do the right thing in the decider if there's an unsupported event type.
+        logging.critical("Event type '%' is not implemented. Cannot continue processing decisions!",
+                         event_dict['eventType'])
+        raise NotImplementedError(
+            "Event type '{}' is not implemented. Cannot continue processing decisions!".format(event_dict['eventType']))
 
     return event_class(event_dict['eventId'],
                        event_dict['eventTimestamp'],

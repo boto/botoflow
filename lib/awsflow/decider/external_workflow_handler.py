@@ -15,13 +15,15 @@ import logging
 
 import six
 
-from ..core import Future
+from ..core import Future, get_async_context
+from ..core.async_task_context import AsyncTaskContext
 from ..decisions import RequestCancelExternalWorkflowExecution
 from ..exceptions import RequestCancelExternalWorkflowExecutionFailedError
 from ..workflow_execution import workflow_execution_from_swf_event
 from ..history_events import (ExternalWorkflowExecutionCancelRequested,
                               RequestCancelExternalWorkflowExecutionInitiated,
                               RequestCancelExternalWorkflowExecutionFailed)
+
 log = logging.getLogger(__name__)
 
 
@@ -53,6 +55,9 @@ class ExternalWorkflowHandler(object):
             run_id=external_workflow_execution.run_id))
 
         cancel_future = Future()
+        context = AsyncTaskContext(False, get_async_context())
+        cancel_future.context = context
+
         handler = self._handle_external_workflow_event(external_workflow_execution, cancel_future)
         six.next(handler)
         self._open_cancel_requests[external_workflow_execution] = {'handler': handler}

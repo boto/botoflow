@@ -281,8 +281,7 @@ class StartTimer(TimerDecisionBase):
         and record a TimerFired event.
         """
         super(StartTimer, self).__init__(timer_id)
-        self.decision = {}
-        self.decision['decisionType'] = 'StartTimer'
+        self.decision = {'decisionType': 'StartTimer'}
         attrs = self.decision['startTimerDecisionAttributes'] = {}
         attrs['startToFireTimeout'] = start_to_fire_timeout
         attrs['timerId'] = timer_id

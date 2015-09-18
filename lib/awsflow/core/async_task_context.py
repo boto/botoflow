@@ -41,7 +41,7 @@ class AbstractAsyncTaskContext(object):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __exit__(self):
+    def __exit__(self, exc_type, err, tb):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -203,7 +203,7 @@ class AsyncTaskContext(AbstractAsyncTaskContext):
         set_async_context(self)
         return self
 
-    def __exit__(self, type, err, tb):
+    def __exit__(self, exc_type, err, tb):
         set_async_context(self._parent_context)
         self._parent_context = None  # gc
 

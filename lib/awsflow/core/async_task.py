@@ -33,8 +33,7 @@ class AsyncTask(object):
     AsyncTask contains a method with arguments to be run at some time
     """
 
-    def __init__(self, function, args=tuple(), kwargs=dict(), daemon=False,
-                 context=None, name=None):
+    def __init__(self, function, args=tuple(), kwargs=None, daemon=False, context=None, name=None):
         """
         :param function: function to call at some time.
         :type function: FunctionType
@@ -51,6 +50,9 @@ class AsyncTask(object):
           task = Task(sum, (1,2))
           task.run()
         """
+        if not kwargs:
+            kwargs = {}
+
         self.cancellable = True
         self.cancelled = False
         self.exception = None
@@ -70,7 +72,8 @@ class AsyncTask(object):
         set_async_context(self.context)
         return self.context
 
-    def __exit__(self, type, err, tb):
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, err, tb):
         set_async_context(self.context.parent)
 
     def _run(self):

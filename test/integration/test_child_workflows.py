@@ -1,12 +1,19 @@
 # -*- mode:python ; fill-column:120 -*-
 import time
 import unittest
+import logging
 
 from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
-                      ActivityWorker, WorkflowStarter)
+                      ActivityWorker, WorkflowStarter, workflow_options)
 from awsflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
 from various_activities import BunchOfActivities
+from awsflow.logging_filters import AWSFlowFilter
+
 from utils import SWFMixIn
+
+
+logging.getLogger().addFilter(AWSFlowFilter)
+logging.getLogger('botocore').setLevel(logging.ERROR)
 
 
 class MasterWorkflow(WorkflowDefinition):
@@ -42,10 +49,11 @@ class TimingOutChildWorkflow(WorkflowDefinition):
 
 class MasterWorkflowWithException(WorkflowDefinition):
     @execute(version='1.0', execution_start_to_close_timeout=60)
-    def execute(self):
+    def execute(self, child_tasklist):
         try:
-            instance = yield RaisingChildWorkflow.execute()
-            yield instance.workflow_result
+            with workflow_options(task_list=child_tasklist):
+                instance = yield RaisingChildWorkflow.execute()
+                yield instance.workflow_result
         except ChildWorkflowFailedError as err:
             if isinstance(err.cause, RuntimeError):
                 return_(2)
@@ -107,20 +115,28 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 1)
 
     def test_raising_child_workflows(self):
+        child_tasklist = self.task_list + '_child'
+
         wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list,
-            MasterWorkflowWithException, RaisingChildWorkflow)
+            MasterWorkflowWithException)
+        child_wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, child_tasklist,
+            RaisingChildWorkflow)
+
         with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
-            instance = MasterWorkflowWithException.execute()
+            instance = MasterWorkflowWithException.execute(child_tasklist)
             self.workflow_execution = instance.workflow_execution
 
-        for i in range(3):
-            wf_worker.run_once()
+        wf_worker.run_once()
+        wf_worker.run_once()
+        child_wf_worker.run_once()
+        wf_worker.run_once()
 
         time.sleep(1)
 
         hist = self.get_workflow_execution_history()
-        assert len(hist) == 11
+        assert len(hist) == 14
         assert hist[-1]['eventType'] == 'WorkflowExecutionCompleted'
         assert self.serializer.loads(hist[-1]['workflowExecutionCompletedEventAttributes']['result']) == 2
 

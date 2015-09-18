@@ -101,6 +101,10 @@ class ThrottlingException(SWFResponseError):
     pass
 
 
+class InternalFailureError(SWFResponseError):
+    """Raised when there's an internal SWF failure"""
+    pass
+
 # SWF __type/fault string to awsflow exception mapping
 _swf_fault_exception = {
     'DomainDeprecatedFault': DomainDeprecatedError,
@@ -115,6 +119,7 @@ _swf_fault_exception = {
     'SWFResponseError': SWFResponseError,
     'ThrottlingException': ThrottlingException,
     'UnrecognizedClientException': UnrecognizedClientException,
+    'InternalFailure': InternalFailureError
 }
 
 

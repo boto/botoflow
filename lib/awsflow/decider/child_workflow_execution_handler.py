@@ -14,7 +14,8 @@
 import logging
 import six
 
-from ..core import Future, async, return_
+from ..core import Future, async, return_, CancelledError, get_async_context
+from ..core.async_task_context import AsyncTaskContext
 from ..utils import camel_keys_to_snake_case
 from ..context import get_context
 from ..workflow_execution import workflow_execution_from_swf_event
@@ -23,7 +24,7 @@ from ..exceptions import (ChildWorkflowFailedError, ChildWorkflowTimedOutError, 
                           StartChildWorkflowExecutionFailedError)
 from ..history_events import (StartChildWorkflowExecutionInitiated, StartChildWorkflowExecutionFailed,
                               ChildWorkflowExecutionStarted, ChildWorkflowExecutionCompleted,
-                              ChildWorkflowExecutionFailed,
+                              ChildWorkflowExecutionFailed, ChildWorkflowExecutionCanceled,
                               ChildWorkflowExecutionTimedOut, ChildWorkflowExecutionTerminated)
 
 log = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class ChildWorkflowExecutionHandler(object):
 
     responds_to = (StartChildWorkflowExecutionFailed, StartChildWorkflowExecutionInitiated,
                    ChildWorkflowExecutionCompleted, ChildWorkflowExecutionFailed, ChildWorkflowExecutionStarted,
-                   ChildWorkflowExecutionTerminated, ChildWorkflowExecutionTimedOut)
+                   ChildWorkflowExecutionTerminated, ChildWorkflowExecutionTimedOut, ChildWorkflowExecutionCanceled)
 
     def __init__(self, decider, task_list):
         """
@@ -49,12 +50,12 @@ class ChildWorkflowExecutionHandler(object):
         self._open_child_workflows = {}
         self._task_list = task_list
 
-    def handle_start_child_workflow_execution(self, workflow_type, workflow_instance, input):
+    def handle_start_child_workflow_execution(self, workflow_type, workflow_instance, wf_input):
         run_id = get_context().workflow_execution.run_id
         workflow_id = "%s:%s" % (run_id, self._decider.get_next_id())
 
         decision_dict = camel_keys_to_snake_case(
-            workflow_type.to_decision_dict(input, workflow_id, self._task_list))
+            workflow_type.to_decision_dict(wf_input, workflow_id, self._task_list))
 
         decision = StartChildWorkflowExecution(**decision_dict)
         self._decider._decisions.append(decision)
@@ -65,7 +66,12 @@ class ChildWorkflowExecutionHandler(object):
 
         # set the future that represents the result of our activity
         workflow_future = Future()
+        context = AsyncTaskContext(False, get_async_context())
+
+        workflow_future.context = context
         workflow_started_future = Future()
+        workflow_started_future.context = context
+
         handler = self._handler_fsm(workflow_type,
                                     workflow_id,
                                     workflow_future)
@@ -102,7 +108,7 @@ class ChildWorkflowExecutionHandler(object):
 
         elif isinstance(event, (ChildWorkflowExecutionStarted, ChildWorkflowExecutionCompleted,
                                 ChildWorkflowExecutionFailed, ChildWorkflowExecutionTimedOut,
-                                ChildWorkflowExecutionTerminated)):
+                                ChildWorkflowExecutionTerminated, ChildWorkflowExecutionCanceled)):
             scheduled_event_id = event.attributes['initiatedEventId']
             workflow_id = self._event_to_workflow_id[scheduled_event_id]
 
@@ -112,6 +118,14 @@ class ChildWorkflowExecutionHandler(object):
             log.warn("Tried to handle child workfow event, but workflow_id was None: %r", event)
 
     def _handler_fsm(self, workflow_type, workflow_id, workflow_future):
+        """
+
+        :param workflow_type:
+        :param workflow_id:
+        :param workflow_future:
+        :type workflow_future: awsflow.core.Future
+        :return:
+        """
         event = (yield)
         # TODO support ChildWorkflowExecutionTerminated event
 
@@ -137,6 +151,9 @@ class ChildWorkflowExecutionHandler(object):
             if isinstance(event, ChildWorkflowExecutionCompleted):
                 result = workflow_type.data_converter.loads(event.attributes['result'])
                 workflow_future.set_result(result)
+
+            elif isinstance(event, ChildWorkflowExecutionCanceled):
+                workflow_future.set_exception(CancelledError(event.attributes['details']))
 
             elif isinstance(event, ChildWorkflowExecutionFailed):
                 exception, _traceback = workflow_type.data_converter.loads(event.attributes['details'])

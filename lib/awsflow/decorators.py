@@ -121,18 +121,18 @@ def execute(version,
         available. The maximum length is 1024 characters, so a long docstring
         will be truncated to that length.
     :type description: str or None
-    :param bool skip_registartion: Indicates that the workflow type should not
+    :param bool skip_registration: Indicates that the workflow type should not
         be registered with Amazon SWF.
     """
     _workflow_type = WorkflowType(
         version,
-        task_list=USE_WORKER_TASK_LIST,
+        task_list=task_list,
         execution_start_to_close_timeout=execution_start_to_close_timeout,
-        task_start_to_close_timeout=30,
-        child_policy=CHILD_TERMINATE,
+        task_start_to_close_timeout=task_start_to_close_timeout,
+        child_policy=child_policy,
         data_converter=data_converter,
         description=description,
-        skip_registration=False)
+        skip_registration=skip_registration)
 
     def _execute(func):
         # set description
@@ -257,7 +257,7 @@ def activity(version,
         is 1024 characters, so a long docstring will be truncated to that
         length.
     :type description: str or None
-    :param bool skip_registartion: Indicates that the activity type should not
+    :param bool skip_registration: Indicates that the activity type should not
         be registered with Amazon SWF.
     :param bool manual: Indicates that this is a manual activity, if set to true.
     """
@@ -491,12 +491,13 @@ def manual_activity(version,
         is 1024 characters, so a long docstring will be truncated to that
         length.
     :type description: str or None
-    :param bool skip_registartion: Indicates that the activity type should not
+    :param bool skip_registration: Indicates that the activity type should not
         be registered with Amazon SWF.
     """
 
     return activity(version, name, task_list, heartbeat_timeout,
                     schedule_to_start_timeout, start_to_close_timeout,
+                    schedule_to_close_timeout,
                     description, skip_registration, manual=True)
 
 

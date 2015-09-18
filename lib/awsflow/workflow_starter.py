@@ -23,7 +23,6 @@ import time
 import logging
 
 from .context import StartWorkflowContext, get_context, set_context
-from .workers.swf_op_callable import SWFOp
 from .utils import random_sha1_hash
 from .swf_exceptions import swf_exception_wrapper
 from .exceptions import (
@@ -74,7 +73,8 @@ class WorkflowStarter(object):
         set_context(StartWorkflowContext(self))
         return self
 
-    def __exit__(self, type, value, traceback):
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, value, traceback):
         set_context(self._other_context)
 
     def wait_for_completion(self, workflow_instance, poll_sleep_time, attempt_count=None):
@@ -146,29 +146,35 @@ class WorkflowStarter(object):
                                   workflow_execution, exc, traceback)
 
     def _get_last_event(self, workflow_execution):
-        with swf_exception_wrapper():
-            # start with no token to request the first page of events
-            next_page_token = None
-            while True:
-                kwargs = {'domain': self.domain,
-                          'execution':
-                            {'workflowId': workflow_execution.workflow_id,
-                             'runId': workflow_execution.run_id}}
-                if next_page_token:
-                    # if we have a token, request the next page of events
-                    kwargs['nextPageToken'] = next_page_token
+        workflow_execution_history = None
+        try:
+            with swf_exception_wrapper():
+                # start with no token to request the first page of events
+                next_page_token = None
+                while True:
+                    kwargs = {'domain': self.domain,
+                              'execution':
+                                {'workflowId': workflow_execution.workflow_id,
+                                 'runId': workflow_execution.run_id}}
+                    if next_page_token:
+                        # if we have a token, request the next page of events
+                        kwargs['nextPageToken'] = next_page_token
 
-                workflow_execution_history = self.client.get_workflow_execution_history(**kwargs)
+                    workflow_execution_history = self.client.get_workflow_execution_history(**kwargs)
 
-                try:
-                    # paginated results: record token to request next page
-                    next_page_token = workflow_execution_history['nextPageToken']
-                except KeyError:
-                    # no more pages
-                    break
+                    try:
+                        # paginated results: record token to request next page
+                        next_page_token = workflow_execution_history['nextPageToken']
+                    except KeyError:
+                        # no more pages
+                        break
+        except Exception as err:
+            log.error("Failed to retrieve the workflow execution history from SWF, error %r", err, exc_info=True)
+            raise err
 
         # return the final event in the workflow execution history
-        return workflow_execution_history['events'][-1]
+        if workflow_execution_history is not None and 'events' in workflow_execution_history:
+            return workflow_execution_history['events'][-1]
 
     def _start_workflow_execution(self, workflow_type, *args, **kwargs):
         """Calls SWF to start the workflow using our workflow_type"""

@@ -22,6 +22,7 @@ from .base_future import BaseFuture, Return
 
 try:  # PY3k
     import collections.abc
+    # noinspection PyUnresolvedReferences
     Iterable = collections.abc.Iterable
 except ImportError:
     import collections
@@ -127,7 +128,7 @@ class Future(BaseFuture):
             self.context = None  # gc
             self.untrack_coroutine(coroutine)
             return
-        except StopIteration as err:
+        except StopIteration:
             self.set_result(None)
             self.context = None  # gc
             self.untrack_coroutine(coroutine)
@@ -185,8 +186,7 @@ class Future(BaseFuture):
 
     def _progress_coroutine_except(self, coroutine, err):
         if DEBUG:
-            log.debug("Future._progress_coroutine_except %r %r",
-                      self, self._except_func)
+            log.debug("Future._progress_coroutine_except %r", self)
 
         self.track_coroutine(coroutine)
 

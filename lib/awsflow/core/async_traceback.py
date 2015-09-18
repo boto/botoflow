@@ -67,7 +67,7 @@ def extract_tb(limit=None):
     leading and trailing whitespace stripped; if the source is not
     available it is None.
     """
-
+    prev_tb = None
     try:
         prev_tb = sys.exc_info()[2]
     except AttributeError:

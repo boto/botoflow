@@ -37,7 +37,8 @@ class AsyncEventLoop(object):
         set_async_context(self.root_context)
         return self.root_context
 
-    def __exit__(self, type, err, tb):
+    # noinspection PyUnusedLocal
+    def __exit__(self, exc_type, err, tb):
         set_async_context(None)
 
     def execute(self, task):

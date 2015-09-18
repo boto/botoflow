@@ -20,14 +20,13 @@ class DecisionContext(ContextBase):
         self.decider = decider
 
         self._workflow_time = 0
-
-        self._workflow_execution = None
         self._replaying = True
 
         self._activity_options_overrides = dict()
         self._workflow_options_overrides = dict()
 
-        self.__workflow_execution = WorkflowExecution(None, None)
+        self._workflow_instance = None
+        self._workflow_execution = WorkflowExecution(None, None)
 
     @property
     def _replaying(self):
@@ -66,3 +65,16 @@ class DecisionContext(ContextBase):
         """INTERNAL: Never set the time yourself
         """
         self.__time = value
+
+    @property
+    def _workflow_instance(self):
+        """Returns the currently executing workflow instance
+
+        :rtype: awsflow.workflow_definition.WorkflowDefinition
+        """
+        return self.__workflow_instance
+
+    @_workflow_instance.setter
+    def _workflow_instance(self, value):
+        self.__workflow_instance = value
+

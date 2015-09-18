@@ -3,7 +3,13 @@ from abc import abstractmethod
 
 class BaseRetryStrategy(object):
 
-    def __init__(self, retry_on=[], raise_on=[]):
+    def __init__(self, retry_on=None, raise_on=None):
+        if retry_on is None:
+            retry_on = []
+
+        if raise_on is None:
+            raise_on = []
+
         if retry_on and raise_on:
             raise AttributeError("Cannot have retry_on and raise_on in "
                                  "the same retry strategy")

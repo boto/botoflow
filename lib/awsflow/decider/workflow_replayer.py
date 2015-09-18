@@ -14,7 +14,7 @@
 import json
 
 from .decider import Decider
-from .decision_task_poller import DecisionTaskPoller, DecisionTask
+from .decision_task_poller import DecisionTaskPoller
 from ..utils import extract_workflows_dict
 
 

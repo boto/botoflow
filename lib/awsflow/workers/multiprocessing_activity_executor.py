@@ -51,8 +51,8 @@ class MultiprocessingActivityExecutor(MultiprocessingExecutor):
         poller_semaphore = self._process_manager().Semaphore(pollers)
 
         def run_poller_worker_with_exc(executor_pickle):
+            executor = dill.loads(executor_pickle)
             try:
-                executor = dill.loads(executor_pickle)
                 executor._process_queue.get()
                 # ignore any SIGINT, so it looks closer to threading
                 signal.signal(signal.SIGINT, signal.SIG_IGN)

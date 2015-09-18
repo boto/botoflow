@@ -1,7 +1,8 @@
 from functools import wraps
 
 
-def transiency_retry(retry_on=[], raise_on=[], max_consecutive_errors=None):
+# noinspection PyUnusedLocal
+def transiency_retry(retry_on=None, raise_on=None, max_consecutive_errors=None):
     """
     :param list retry_on: exceptions to retry on
     :param list raise_on: list of exceptions to immediately raise on

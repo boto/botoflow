@@ -93,9 +93,8 @@ class _FlowObjEncoder(json.JSONEncoder):
                     flow_dict[key] = self._flowify_obj(val)
 
                 return flow_dict
-            else:
-                flow_dict = None
 
+            else:
                 if hasattr(obj, '__getstate__'):
                     flow_dict = obj.__getstate__()
                 else:
@@ -131,9 +130,6 @@ class _FlowObjEncoder(json.JSONEncoder):
 
         if obj_cls in (set, frozenset, type, six.binary_type) or isinstance(obj, tuple):
             return self._flowify_obj(obj)
-
-        flow_dict = None
-
 
         if hasattr(obj, '__getstate__'):
             flow_dict = obj.__getstate__()
