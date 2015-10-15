@@ -1,3 +1,4 @@
+import json
 import copy
 import zlib
 import six
@@ -70,59 +71,40 @@ def dumps_loads(serde, obj):
     return serde.loads(serde.dumps(obj))
 
 
-def test_tuples(serde):
-    assert serde.dumps(tuple()) == '{"__tuple":[]}'
-    assert type(dumps_loads(serde, tuple())) == tuple
+named_tuple = NamedTuple(1, 'a')
 
-    nested_tuple = tuple([(1,2), (3, 4)])
-    assert dumps_loads(serde, nested_tuple) == nested_tuple
+identity_object_parameters = [
+    (tuple(), '__tuple'),
+    (tuple([(1,2), (3, 4)]), '__tuple'),
+    (set([1,2,3]), '__set'),
+    (set([frozenset([1, 2]), frozenset([3, 4])]), '__set'),
+    (frozenset([1,2,3]), '__frozenset'),
+    (frozenset([frozenset([1, 2]), frozenset([3, 4])]), '__frozenset'),
+    (NamedTuple(1, 'b'), '__namedtuple'),
+    (NamedTuple(1, NamedTuple(2, 'b')), '__namedtuple'),
+    (Decimal(1.1), '__decimal'),
+    (Decimal('inf'), '__decimal'),
+    (SimpleObj, '__class'),
+    ('test', None),
+    (six.unichr(40960) + u'abcd' + six.unichr(1972), None),
+    (WorkflowDefinition, None),
+    (OrderedDict(((3, 'c'), (4, 'd'))), '__ordereddict'),
+    (OrderedDict(((1, 'a'), (2, OrderedDict(((3, 'c'), (4, 'd')))))), '__ordereddict'),
+]
 
-def test_sets(serde):
-    assert serde.dumps(set([1,2,3])) == '{"__set":[1,2,3]}'
-    assert type(dumps_loads(serde, set())) == set
-
-    nested_set = set([frozenset([1, 2]), frozenset([3, 4])])
-    assert dumps_loads(serde, nested_set) == nested_set
-
-def test_frozensets(serde):
-    assert serde.dumps(frozenset([1,2,3])) == '{"__frozenset":[1,2,3]}'
-    assert type(dumps_loads(serde, frozenset())) == frozenset
-
-    nested_frozenset = frozenset([frozenset([1, 2]), frozenset([3, 4])])
-    assert dumps_loads(serde, nested_frozenset) == nested_frozenset
-
-def test_namedtuples(serde):
-    named_tuple = NamedTuple(1, 'a')
-    nested_ntuple = NamedTuple(1, NamedTuple(2, 'b'))
-
-    assert serde.dumps(named_tuple) == \
-        '{"__namedtuple":["test_json_data_converter:NamedTuple",[1,"a"]]}'
+@pytest.mark.parametrize('obj', [p[0] for p in identity_object_parameters])
+def test_json_conversion_identity(serde, obj):
+    assert dumps_loads(serde, obj) == obj
 
 
-    assert type(dumps_loads(serde, named_tuple)) == NamedTuple
-    assert dumps_loads(serde, named_tuple) == named_tuple
-    assert dumps_loads(serde, nested_ntuple) == nested_ntuple
+@pytest.mark.parametrize('obj, root_key', [(p[0], p[1]) for p in identity_object_parameters if p[1] is not None])
+def test_json_dump_type_key(serde, obj, root_key):
+    assert list(json.loads(serde.dumps(obj)).keys())[0] == root_key
 
-def test_decimal(serde):
-    number = Decimal(1.1)
-    assert number == dumps_loads(serde, number)
-
-def test_decimal_inf(serde):
-    inf = Decimal('inf')
-    assert inf == dumps_loads(serde, inf)
 
 def test_objects(serde):
     assert dumps_loads(serde, SimpleObj('test')).input == 'test'
 
-def test_class(serde):
-    assert dumps_loads(serde, SimpleObj) == SimpleObj
-
-def test_string(serde):
-    assert dumps_loads(serde, 'test') == 'test'
-
-def test_unicode(serde):
-    ustring = six.unichr(40960) + u'abcd' + six.unichr(1972)
-    assert dumps_loads(serde, ustring) == ustring
 
 def test_zlib(serde):
     # This test is really about ensuring that binary data isn't corrupted
@@ -175,16 +157,6 @@ def test_nested_subclass(serde):
     assert result.sublst.secondval() == 'testtwo'
     assert result.sublst.attr == ListSubclass.attr
     assert type(result.sublst) == ListSubclass
-
-def test_ordereddict(serde):
-    inner_dct = OrderedDict(((3, 'c'), (4, 'd')))
-    dct = OrderedDict(((1, 'a'), (2, inner_dct)))
-
-    assert dumps_loads(serde, dct) == dct
-    assert serde.dumps(dct) == '{"__ordereddict":[[1,"a"],[2,{"__ordereddict":[[3,"c"],[4,"d"]]}]]}'
-
-def test_workflow_definition(serde):
-    assert serde.loads(serde.dumps(MyWorkflowDefinition)) == MyWorkflowDefinition
 
 def test_exceptions(serde):
     e = MyCustomException(u'some error message', 'someparam')
