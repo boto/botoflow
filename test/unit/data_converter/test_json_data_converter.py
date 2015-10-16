@@ -2,6 +2,7 @@ import json
 import copy
 import zlib
 import six
+import datetime
 
 from decimal import Decimal
 from collections import namedtuple, OrderedDict
@@ -90,11 +91,12 @@ identity_object_parameters = [
     (WorkflowDefinition, None),
     (OrderedDict(((3, 'c'), (4, 'd'))), '__ordereddict'),
     (OrderedDict(((1, 'a'), (2, OrderedDict(((3, 'c'), (4, 'd')))))), '__ordereddict'),
+    (datetime.datetime.utcnow(), '__datetime'),
 ]
 
 @pytest.mark.parametrize('obj', [p[0] for p in identity_object_parameters])
 def test_json_conversion_identity(serde, obj):
-    assert dumps_loads(serde, obj) == obj
+    assert dumps_loads(serde, obj) == obj, "Dumped: {}".format(serde.dumps(obj))
 
 
 @pytest.mark.parametrize('obj, root_key', [(p[0], p[1]) for p in identity_object_parameters if p[1] is not None])

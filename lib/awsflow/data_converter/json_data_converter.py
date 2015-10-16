@@ -15,6 +15,7 @@ import base64
 import copy
 import json
 
+import datetime
 from decimal import Decimal
 
 import six
@@ -27,6 +28,7 @@ except (ImportError, AttributeError):
 
 from .abstract_data_converter import AbstractDataConverter
 
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 class _FlowObjEncoder(json.JSONEncoder):
     """
@@ -59,7 +61,8 @@ class _FlowObjEncoder(json.JSONEncoder):
             return {'__frozenset': [self._flowify_obj(o) for o in obj]}
         elif obj_type == Decimal:
             return {'__decimal': [self._flowify_obj(o) for o in obj.as_tuple()]}
-
+        elif obj_type == datetime.datetime:
+            return {'__datetime': self._flowify_obj(obj.strftime(DATETIME_FORMAT))}
         elif obj_type == type:
             clsname = "%s:%s" % (obj.__module__, obj.__name__)
             return {'__class': clsname}
@@ -174,6 +177,8 @@ def _flow_obj_decoder(dct):
         return base64.b64decode(dct['__bin'])
     elif '__decimal' in dct:
         return Decimal(dct['__decimal'])
+    elif '__datetime' in dct:
+        return datetime.datetime.strptime(dct['__datetime'], DATETIME_FORMAT)
 
     module_name, attr_name = None, None
 
