@@ -28,7 +28,8 @@ except (ImportError, AttributeError):
 
 from .abstract_data_converter import AbstractDataConverter
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+
 
 class _FlowObjEncoder(json.JSONEncoder):
     """
@@ -51,7 +52,6 @@ class _FlowObjEncoder(json.JSONEncoder):
             return obj
         # python3 binary data
         elif six.PY3 and obj_type == six.binary_type:
-            #import pdb;pdb.set_trace()
             return {'__bin': base64.b64encode(obj).decode('latin-1')}
         elif obj_type == tuple:
             return {'__tuple': [self._flowify_obj(o) for o in obj]}
@@ -63,6 +63,8 @@ class _FlowObjEncoder(json.JSONEncoder):
             return {'__decimal': [self._flowify_obj(o) for o in obj.as_tuple()]}
         elif obj_type == datetime.datetime:
             return {'__datetime': self._flowify_obj(obj.strftime(DATETIME_FORMAT))}
+        elif obj_type == datetime.timedelta:
+            return {'__timedelta': self._flowify_obj([obj.days, obj.seconds, obj.microseconds])}
         elif obj_type == type:
             clsname = "%s:%s" % (obj.__module__, obj.__name__)
             return {'__class': clsname}
@@ -179,6 +181,8 @@ def _flow_obj_decoder(dct):
         return Decimal(dct['__decimal'])
     elif '__datetime' in dct:
         return datetime.datetime.strptime(dct['__datetime'], DATETIME_FORMAT)
+    elif '__timedelta' in dct:
+        return datetime.timedelta(*dct['__timedelta'])
 
     module_name, attr_name = None, None
 

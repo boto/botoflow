@@ -92,6 +92,7 @@ identity_object_parameters = [
     (OrderedDict(((3, 'c'), (4, 'd'))), '__ordereddict'),
     (OrderedDict(((1, 'a'), (2, OrderedDict(((3, 'c'), (4, 'd')))))), '__ordereddict'),
     (datetime.datetime.utcnow(), '__datetime'),
+    (datetime.timedelta(days=2, seconds=3, microseconds=4, milliseconds=5, minutes=6, hours=7, weeks=8), '__timedelta')
 ]
 
 @pytest.mark.parametrize('obj', [p[0] for p in identity_object_parameters])
