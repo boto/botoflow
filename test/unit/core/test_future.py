@@ -5,7 +5,7 @@ import pytest
 from awsflow.core.async_event_loop import AsyncEventLoop
 from awsflow.core.decorators import async
 from awsflow.core.base_future import BaseFuture, return_
-from awsflow.core.future import AllFuture, AnyFuture
+from awsflow.core.future import AllFuture, AnyFuture, Future
 from awsflow.core.exceptions import CancellationError
 from awsflow.logging_filters import AWSFlowFilter
 
@@ -388,6 +388,19 @@ class TestAllFuture(unittest.TestCase):
 
         self.assertEqual(2, self.counter)
 
+    def test_no_futures_yield_empty_tuple(self):
+        @async
+        def main():
+            results = yield []
+            return_(results)
+
+        ev = AsyncEventLoop()
+        with ev:
+            future = main()
+        ev.execute_all_tasks()
+
+        self.assertFalse(future.result())
+
 
 class TestAnyFuture(unittest.TestCase):
 
@@ -471,6 +484,20 @@ class TestAnyFuture(unittest.TestCase):
         ev.execute_all_tasks()
 
         self.assertEqual(3, self.counter)
+
+    def test_no_futures_yield_empty_tuple(self):
+        @async
+        def main():
+            results = yield AnyFuture()
+            return_(results)
+
+        ev = AsyncEventLoop()
+        with ev:
+            future = main()
+        ev.execute_all_tasks()
+
+        self.assertFalse(future.result())
+
 
 if __name__ == '__main__':
     unittest.main()

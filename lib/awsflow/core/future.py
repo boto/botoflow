@@ -205,6 +205,12 @@ class AnyFuture(BaseFuture):
         for future in futures:
             self.add_future(future)
 
+        # if an empty list was supplied, immediately set an empty tuple
+        # as the result since there is nothing to await and we are
+        # returning iterable results
+        if not futures:
+            self.set_result(tuple())
+
     def add_future(self, future):
         task = AsyncTask(self._future_callback, (future,),
                          name=self._future_callback.__name__)
@@ -226,6 +232,12 @@ class AllFuture(AnyFuture):
 
     def __init__(self, *futures):
         super(AllFuture, self).__init__(*futures)
+        
+        # if an empty list was supplied, immediately set an empty tuple
+        # as the result since there is nothing to await and we are
+        # returning iterable results
+        if not futures:
+            self.set_result(tuple())
 
     def _future_callback(self, future):
         results = list()
