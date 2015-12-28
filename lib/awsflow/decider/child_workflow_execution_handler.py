@@ -146,6 +146,13 @@ class ChildWorkflowExecutionHandler(object):
 
                 workflow_instance.workflow_execution = workflow_execution_from_swf_event(event)
                 workflow_started_future.set_result(workflow_instance)
+            elif isinstance(event, StartChildWorkflowExecutionFailed):
+                # set the exception with a cause
+                cause = event.attributes['cause']
+                workflow_started_future = self._open_child_workflows[workflow_id]['workflowStartedFuture']
+
+                workflow_started_future.set_exception(
+                    StartChildWorkflowExecutionFailedError(cause))
 
             event = (yield)
             if isinstance(event, ChildWorkflowExecutionCompleted):
@@ -181,7 +188,7 @@ class ChildWorkflowExecutionHandler(object):
         elif isinstance(event, StartChildWorkflowExecutionFailed):
             # set the exception with a cause
             cause = event.attributes['cause']
-            workflow_started_future = self._open_child_workflows[workflow_id]['workflow_started_future']
+            workflow_started_future = self._open_child_workflows[workflow_id]['workflowStartedFuture']
 
             workflow_started_future.set_exception(
                 StartChildWorkflowExecutionFailedError(cause))
