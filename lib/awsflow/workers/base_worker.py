@@ -50,7 +50,13 @@ class BaseWorker(object):
             self.task_list)
 
     def _fix_endpoint(self):
-        if self.client._endpoint.timeout < 65:
+        timeout = self.client._endpoint.timeout
+
+        # newer versions of botocore create a timeout tuple of the form (connect_timeout, read_timeout)
+        # older versions just use a scalar int
+        if isinstance(timeout, tuple) and timeout[1] < 65:
+            self.client._endpoint.timeout = (timeout[0], 65)
+        elif not isinstance(timeout, tuple) and timeout < 65:
             self.client._endpoint.timeout = 65
 
     def __setstate__(self, dct):
