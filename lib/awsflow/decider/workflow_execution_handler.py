@@ -51,7 +51,24 @@ class WorkflowExecutionHandler(object):
         if 'input' not in event.attributes:
             return [], {}
         else:
-            return self._data_converter.loads(event.attributes['input'])
+            value = self._data_converter.loads(event.attributes['input'])
+
+            # this makes it easier to submit keyword argument inputs from Java workflows.
+            if isinstance(value, (tuple, list)):
+                try:
+                    args, kwargs = value
+                except ValueError:  # malformed list-like
+                    log.error("Malformed list-like input: wrong item count: %d", len(value))
+                    raise
+            elif isinstance(value, dict):
+                args = []
+                kwargs = value
+            else:
+                # last ditch; try for list-like behaviour, but...
+                args, kwargs = value
+
+            return args, kwargs
+
 
     def handle_event(self, event):
         if isinstance(event, WorkflowExecutionStarted):
