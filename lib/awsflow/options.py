@@ -112,7 +112,7 @@ class workflow_options(object):
     def __init__(self, task_list=_NOT_SET, workflow_id=_NOT_SET, version=_NOT_SET,
                  execution_start_to_close_timeout=_NOT_SET,
                  task_start_to_close_timeout=_NOT_SET, child_policy=_NOT_SET,
-                 name=_NOT_SET, data_converter=_NOT_SET):
+                 name=_NOT_SET, data_converter=_NOT_SET, tag_list=_NOT_SET):
         """Override workflow execution options
 
         :param str task_list: The task list for the decision tasks for executions of this workflow type.
@@ -127,6 +127,7 @@ class workflow_options(object):
         :param data_converter: Specifies the type of the DataConverter to use for serializing/deserializing data when
             sending requests to and receiving results from workflow executions of this workflow type.
         :type data_converter: awsflow.data_converter.abstract_data_converter.AbstractDataConverter
+        :param list tag_list: List of tags to associate with the workflow.
         """
         self._overrides = dict()
 
@@ -147,6 +148,8 @@ class workflow_options(object):
             self._overrides['name'] = str_or_NONE(name)
         if data_converter != _NOT_SET:
             self._overrides['data_converter'] = str_or_NONE(data_converter)
+        if tag_list != _NOT_SET:
+            self._overrides['tag_list'] = [str_or_NONE(tag) for tag in tag_list]
 
     def __enter__(self):
         context = get_context()

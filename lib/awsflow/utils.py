@@ -117,3 +117,16 @@ def camel_keys_to_snake_case(dictionary):
         translated_key = _remainder_cap_replace.sub(r'\1_\2', translated_key).lower()
         output[translated_key] = dictionary[original_key]
     return output
+
+
+def snake_keys_to_camel_case(dictionary):
+    """
+    Translate a dictionary containing snake_case keys into dictionary with
+    camelCase keys as required for decision dicts.
+    """
+    output = {}
+    for original_key in dictionary.keys():
+        components = original_key.split('_')
+        translated_key = components[0] + ''.join([component.title() for component in components[1:]])
+        output[translated_key] = dictionary[original_key]
+    return output

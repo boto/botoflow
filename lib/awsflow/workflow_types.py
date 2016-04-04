@@ -18,6 +18,7 @@ import abc
 
 from copy import copy
 
+from .utils import snake_keys_to_camel_case
 from .swf_exceptions import swf_exception_wrapper
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
 from .utils import str_or_NONE
@@ -127,12 +128,7 @@ class WorkflowType(BaseFlowType):
 
         _decision_dict = {}
         _decision_dict.update(decision_dict)
-        _decision_dict.update(context._workflow_options_overrides.items())
-
-        # apply overrides for workflowId
-        if 'workflow_id' in _decision_dict and _decision_dict['workflow_id'] is not None:
-            _decision_dict['workflowId'] = _decision_dict['workflow_id']
-            del _decision_dict['workflow_id']
+        _decision_dict.update(snake_keys_to_camel_case(context._workflow_options_overrides))
 
         return _decision_dict
 
