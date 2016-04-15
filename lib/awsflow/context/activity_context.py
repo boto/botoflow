@@ -47,3 +47,7 @@ class ActivityContext(ContextBase):
         result = self.worker.request_heartbeat(self.task, details)
         if result['cancelRequested']:
             raise CancellationError('Cancel was requested during activity heartbeat')
+
+    @property
+    def workflow_execution(self):
+        return self.task.workflow_execution
