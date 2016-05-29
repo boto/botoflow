@@ -142,8 +142,8 @@ class ActivityTaskTimedOutError(ActivityTaskError):
     SWF. This could happen if the activity task could not be assigned to the
     worker within the require time period or could not be completed by the
     worker in the required time. You can set these timeouts on the activity
-    using the :py:func:`~awsflow.decorators.activity` decorator or using the
-    :py:func:`~awsflow.options_overrides.activity_options` context manager
+    using the :py:func:`~botoflow.decorators.activity` decorator or using the
+    :py:func:`~botoflow.options_overrides.activity_options` context manager
     when calling the activity method.
     """
 

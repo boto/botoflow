@@ -6,12 +6,12 @@ import unittest
 
 from threading import Thread
 
-from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker, ActivityWorker,
-                     WorkflowStarter, async, workflow_time, workflow_options)
-from awsflow.workflow_execution import WorkflowExecution
-from awsflow.core import CancelledError
-from awsflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
-from awsflow.logging_filters import AWSFlowFilter
+from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker, ActivityWorker,
+                      WorkflowStarter, async, workflow_time, workflow_options)
+from botoflow.workflow_execution import WorkflowExecution
+from botoflow.core import CancelledError
+from botoflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
+from botoflow.logging_filters import AWSFlowFilter
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
 
@@ -198,7 +198,7 @@ class TestActivityRaisedCancels(SWFMixIn, unittest.TestCase):
         hist = self.get_workflow_execution_history()
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionFailed')
         error = json.loads(hist[-1]['workflowExecutionFailedEventAttributes']['details'])[0]['__obj']
-        self.assertEqual(error[0], "awsflow.exceptions:RequestCancelActivityTaskFailedError")
+        self.assertEqual(error[0], "botoflow.exceptions:RequestCancelActivityTaskFailedError")
         self.assertEqual(error[1]['cause'], 'ACTIVITY_ID_UNKNOWN')
         self.assertEqual(len(hist), 15)
 

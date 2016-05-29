@@ -46,7 +46,7 @@ class ExternalWorkflowHandler(object):
         """Requests cancellation of another workflow.
 
         :param external_workflow_execution: details of target workflow to cancel
-        :type external_workflow_execution: awsflow.workflow_execution.WorkflowExecution
+        :type external_workflow_execution: botoflow.workflow_execution.WorkflowExecution
         :return: cancel Future
         :rtype: awsflow.core.future.Future
         """
@@ -75,7 +75,7 @@ class ExternalWorkflowHandler(object):
                 - SWF successfully sent cancel request to target external workflow
 
         :param external_workflow_execution: details of target workflow to cancel
-        :type external_workflow_execution: awsflow.workflow_execution.WorkflowExecution
+        :type external_workflow_execution: botoflow.workflow_execution.WorkflowExecution
         :param cancel_future:
         :type cancel_future: awsflow.core.future.Future
         :return:

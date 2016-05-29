@@ -4,12 +4,12 @@ import unittest
 
 from calendar import timegm
 
-from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
+from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       workflow_types, logging_filters, WorkflowStarter, workflow, activities, retry_activity,
                       retry_on_exception, swf_exceptions)
 
-from awsflow.exceptions import ActivityTaskTimedOutError, ActivityTaskFailedError
+from botoflow.exceptions import ActivityTaskTimedOutError, ActivityTaskFailedError
 from utils import SWFMixIn
 
 

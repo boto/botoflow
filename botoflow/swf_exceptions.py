@@ -105,7 +105,7 @@ class InternalFailureError(SWFResponseError):
     """Raised when there's an internal SWF failure"""
     pass
 
-# SWF __type/fault string to awsflow exception mapping
+# SWF __type/fault string to botoflow exception mapping
 _swf_fault_exception = {
     'DomainDeprecatedFault': DomainDeprecatedError,
     'DomainAlreadyExistsFault': DomainAlreadyExistsError,

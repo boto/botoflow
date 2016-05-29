@@ -11,7 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ('time', 'sleep')
+__all__ = ('time', 'sleep', 'is_replaying')
+
+from time import mktime
 
 from .context import get_context, DecisionContext
 
@@ -29,12 +31,10 @@ def time():
     """
     try:
         context = get_context()
+        if isinstance(context, DecisionContext):
+            return int(mktime(context._workflow_time.timetuple()))
     except AttributeError:
         pass
-    else:
-        if isinstance(context, DecisionContext):
-            return int(_time.mktime(context._workflow_time.timetuple()))
-
     raise TypeError("workflow_time.time() should be run inside of a workflow")
 
 
@@ -44,9 +44,9 @@ def sleep(seconds):
     It acts like time.sleep() if used together with a yield.
 
     :raises TypeError: If the function is called not in DecisionContext
-    :raises awsflow.core.exceptions.CancelledError: If the timer/sleep was cancelled
+    :raises botoflow.core.exceptions.CancelledError: If the timer/sleep was cancelled
     :returns: Future representing the timer
-    :rtype: awsflow.core.future.Future
+    :rtype: botoflow.core.future.Future
     """
     try:
         context = get_context()
@@ -65,7 +65,7 @@ def is_replaying():
     (False) new decisions.
 
     This could be useful for filtering out logs for transitions that have
-    already completed. See: ``awsflow.logging_filters.AWSFlowFilter``.
+    already completed. See: ``botoflow.logging_filters.AWSFlowFilter``.
 
     :returns: True if the current state in the workflow being replayed.
     :rtype: bool

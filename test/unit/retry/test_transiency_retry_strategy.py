@@ -1,5 +1,5 @@
 import pytest
-from awsflow.retry.transiency_retry_strategy import TransiencyRetryStrategy
+from botoflow.retry.transiency_retry_strategy import TransiencyRetryStrategy
 
 
 def test_init():

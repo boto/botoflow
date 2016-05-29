@@ -3,7 +3,7 @@ import pytest
 
 @pytest.yield_fixture(scope='session')
 def core_debug():
-    from awsflow.core import (
+    from botoflow.core import (
         async_context, async_event_loop, async_task, async_task_context,
         base_future, decorators, future)
 

@@ -226,7 +226,7 @@ class Decider(object):
         allow the request to go through or not.
 
         :param external_workflow_execution: target execution for cancellation
-        :type external_workflow_execution: awsflow.workflow_definition.WorkflowDefininition
+        :type external_workflow_execution: botoflow.workflow_definition.WorkflowDefininition
         :return: cancel Future
         :rtype: awsflow.core.Future
         """

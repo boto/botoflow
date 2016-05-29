@@ -1,6 +1,6 @@
 import unittest
 
-from awsflow.decisions import decision_list, decisions
+from botoflow.decisions import decision_list, decisions
 class TestDecisionList(unittest.TestCase):
 
     def test_delete_decision(self):

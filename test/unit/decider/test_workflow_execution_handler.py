@@ -3,7 +3,7 @@ import json
 from mock import Mock, patch
 import pytest
 
-from awsflow.decider.workflow_execution_handler import WorkflowExecutionHandler
+from botoflow.decider.workflow_execution_handler import WorkflowExecutionHandler
 
 @pytest.fixture
 def handler():

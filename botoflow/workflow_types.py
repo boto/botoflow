@@ -372,7 +372,7 @@ class SignalType(BaseFlowType):
     def __init__(self, name, data_converter=None):
         """
         :param data_converter: (optional) Serializer to use for serializing inputs
-        :type: awsflow.data_converter.AbstractDataConverter
+        :type: botoflow.data_converter.AbstractDataConverter
         """
         self.name = name
         self.data_converter = data_converter

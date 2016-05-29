@@ -1,6 +1,6 @@
-from awsflow.core import AsyncEventLoop
+from botoflow.core import AsyncEventLoop
 
-from awsflow.context import ContextBase
+from botoflow.context import ContextBase
 
 
 class WorkflowTestingContext(ContextBase):

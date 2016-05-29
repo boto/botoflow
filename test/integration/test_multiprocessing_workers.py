@@ -2,7 +2,7 @@ import time
 import unittest
 
 
-from awsflow import (
+from botoflow import (
     MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, WorkflowStarter,
     WorkflowWorker, ActivityWorker)
 from multiprocessing_workflows import (

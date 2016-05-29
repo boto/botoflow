@@ -31,7 +31,7 @@ class DecisionContext(ContextBase):
     @property
     def _replaying(self):
         """Do not use directly, instead please use
-        ``awsflow.workflow_time.is_replaying``
+        ``botoflow.workflow_time.is_replaying``
         """
         return self.__replaying
 
@@ -42,7 +42,7 @@ class DecisionContext(ContextBase):
     @property
     def workflow_execution(self):
         """Returns the current workflow execution information
-        :rtype: awsflow.workflow_execution.WorkflowExecution
+        :rtype: botoflow.workflow_execution.WorkflowExecution
         """
         return self.__workflow_execution
 
@@ -53,7 +53,7 @@ class DecisionContext(ContextBase):
     @property
     def _workflow_time(self):
         """Do not use directly, instead please use
-        ``awsflow.workflow_time.time``
+        ``botoflow.workflow_time.time``
 
         :returns: workflow time
         :rtype: datetime.datetime

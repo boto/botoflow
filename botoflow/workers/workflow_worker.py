@@ -31,7 +31,7 @@ def get_workflow_entrypoint(definition_class, workflow_name, workflow_version):
     :py:class:`~.GenericWorkflowWorker`
 
     :param definition_class: Class which defines the workflow
-    :type definition_class: child class of awsflow.workflow_definition.WorkflowDefinition
+    :type definition_class: child class of botoflow.workflow_definition.WorkflowDefinition
     :param str workflow_name: The name of the workflow
     :param str workflow_version: The version of the workflow
     :return: Return a tuple of (*definition_class*, *workflow_type", *entrypoint_func_name") 
@@ -48,7 +48,7 @@ class GenericWorkflowWorker(BaseWorker):
     specified task list. When a decision task is received, it first
     looks up the workflow definition class using *get_workflow* and then
     creates an instance of it and calls the @
-    :py:func:`~awsflow.decorators.execute` decorated method to process
+    :py:func:`~botoflow.decorators.execute` decorated method to process
     the task.
 
     :param session: botocore session object.
@@ -129,7 +129,7 @@ class WorkflowWorker(GenericWorkflowWorker):
     implementation type. The worker class runs a loop to poll for decision
     tasks in the specified task list. When a decision task is received, it
     creates an instance of the workflow implementation and calls the @
-    :py:func:`~awsflow.decorators.execute` decorated method to process the
+    :py:func:`~botoflow.decorators.execute` decorated method to process the
     task.
 
     :param session: botocore session object.

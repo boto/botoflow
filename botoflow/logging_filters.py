@@ -13,22 +13,22 @@
 
 import logging
 
-import awsflow
+import botoflow
 
 
 class AWSFlowFilter(logging.Filter):
     """You can use this filter with Python's `logging` module to filter out
-    awsflow logs that are being replayed by the decider.
+    botoflow logs that are being replayed by the decider.
 
     For example::
 
         import logging
-        from awsflow.logging_filters import AWSFlowFilter
+        from botoflow.logging_filters import AWSFlowFilter
 
         logging.basicConfig(level=logging.DEBUG,
             format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
 
-        logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+        logging.getLogger('botoflow').addFilter(AWSFlowFilter())
 
     """
 
@@ -38,7 +38,7 @@ class AWSFlowFilter(logging.Filter):
 
     def filter(self, record):
         try:
-            if self._filter_replaying and awsflow.get_context().replaying:
+            if self._filter_replaying and botoflow.get_context().replaying:
                 return 0
         except AttributeError:
             pass

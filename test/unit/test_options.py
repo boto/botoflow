@@ -1,7 +1,7 @@
 import unittest
-from awsflow.context import set_context, DecisionContext
+from botoflow.context import set_context, DecisionContext
 
-from awsflow.options import activity_options, workflow_options
+from botoflow.options import activity_options, workflow_options
 
 class TestOptions(unittest.TestCase):
 

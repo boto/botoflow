@@ -16,9 +16,9 @@ __all__ = ('WorkflowDefinition', )
 from copy import copy
 
 import six
-from awsflow import get_context, async, return_
-from awsflow.context import DecisionContext
-from awsflow.exceptions import CancelledError
+from botoflow import get_context, async, return_
+from botoflow.context import DecisionContext
+from botoflow.exceptions import CancelledError
 
 
 class _WorkflowDefinitionMeta(type):
@@ -94,8 +94,8 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
 
     .. code-block:: python
 
-        from awsflow import execute, Return, WorkflowDefinition
-        from awsflow.constants import MINUTES
+        from botoflow import execute, Return, WorkflowDefinition
+        from botoflow.constants import MINUTES
 
         from my_activities import MyActivities
 
@@ -128,7 +128,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
     @property
     def workflow_execution(self):
         """Will contain the
-        :py:class:`awsflow.workflow_execution.WorkflowExecution` named tuple
+        :py:class:`botoflow.workflow_execution.WorkflowExecution` named tuple
         of the currently running workflow.
 
         An example of the workflow_execution after starting a workflow:
@@ -193,7 +193,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         like to `yield` on and still be able to call signals on that
         sub-workflow.
 
-        :returns: `awsflow.core.future.Future`, or None if the workflow has
+        :returns: `botoflow.core.future.Future`, or None if the workflow has
             not been started.
         """
         return self._workflow_result

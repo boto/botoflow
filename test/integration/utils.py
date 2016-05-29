@@ -3,14 +3,14 @@ import time
 import pytest
 from botocore import session
 
-from awsflow.data_converter import JSONDataConverter
+from botoflow.data_converter import JSONDataConverter
 
-from awsflow import (WorkflowWorker, ActivityWorker, WorkflowStarter, ThreadedActivityExecutor)
+from botoflow import (WorkflowWorker, ActivityWorker, WorkflowStarter, ThreadedActivityExecutor)
 from various_activities import BunchOfActivities
 
 log = logging.getLogger(__name__)
 
-logging.getLogger('awsflow').debug('Blah')
+logging.getLogger('botoflow').debug('Blah')
 
 
 class SWFMixIn(object):

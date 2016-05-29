@@ -1,5 +1,5 @@
 =====================================
-AWS Flow Framework in Python concepts
+botoflow concepts
 =====================================
 
 This section describes concepts that are important to understand and use the
@@ -47,7 +47,7 @@ Replay
    This needs to be better adapted to AWS Flow futures
 
 
-When you run the HelloWorld example, the AWS Flow Framework in Python will call its entry
+When you run the HelloWorld example, the botoflow will call its entry
 point method, `hello_world`. This method will result in the creation of two
 tasks: one for `get_name` and another for `print_greeting`. Since the
 `print_greeting` task depends on the result of get_name, it cannot be executed
@@ -124,7 +124,7 @@ completion. The input data can be provided by passing arguments when calling
 the workflow entry point method. Similarly, data can be passed to activities
 when calling the activity method. The return value of an activity method is
 returned to the caller through the
-:py:class:`~awsflow.core.future.Future`. AWS Flow Framework in Python takes care of
+:py:class:`~awsflow.core.future.Future`. botoflow takes care of
 marshaling the data across the wire using a component called DataConverter. The
 default
 :py:class:`~awsflow.data_converter.json_data_converter.JSONDataConverter` used
@@ -138,7 +138,7 @@ Besides initial inputs, there are cases where you might need to give additional
 input to the workflow execution while it is running. For example, you may need
 to process an external event that happens after the workflow execution has been
 started. To accomplish this, Amazon SWF provides the ability to send signals to
-a running workflow instance. In the AWS Flow Framework in Python, you can define the
+a running workflow instance. In the botoflow, you can define the
 signals that your workflow can accept as methods in the workflow definition and
 decorate them with the @ :py:func:`~awsflow.decorators.signal`. Methods
 decorated with @ :py:func:`~awsflow.decorators.signal` get invoked when a
@@ -157,7 +157,7 @@ lists to get tasks. When you create a worker, you provide the name of the task
 list that you want the worker to poll. Similarly, a task list can be specified
 when you schedule a task using the
 :py:class:`awsflow.options.activity_options` context manager. If you don't
-specify a task list, the AWS Flow Framework in Python will use a default one to schedule
+specify a task list, the botoflow will use a default one to schedule
 the task. The default task list is specified when a type is registered with
 Amazon SWF.
 

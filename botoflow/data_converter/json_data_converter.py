@@ -34,7 +34,7 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 class _FlowObjEncoder(json.JSONEncoder):
     """
     This custom JSON encoder tries to RPCify the objects into a special format,
-    that can be read by awsflow decoder. In addition to regular new-style
+    that can be read by botoflow decoder. In addition to regular new-style
     class based objects, it tries to encode tuples separately from lists so
     that on decode tuples are recreated as tuples (not list).
     """

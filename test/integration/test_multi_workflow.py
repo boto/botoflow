@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from awsflow import WorkflowWorker, ActivityWorker, WorkflowStarter
+from botoflow import WorkflowWorker, ActivityWorker, WorkflowStarter
 from multiprocessing_workflows import OneMultiWorkflow, TwoMultiWorkflow
 from various_activities import BunchOfActivities
 from utils import SWFMixIn

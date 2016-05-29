@@ -2,10 +2,10 @@
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, return_, ThreadedActivityExecutor, GenericWorkflowWorker, ActivityWorker,
-                     WorkflowStarter)
+from botoflow import (WorkflowDefinition, execute, return_, ThreadedActivityExecutor, GenericWorkflowWorker, ActivityWorker,
+                      WorkflowStarter)
 
-from awsflow.utils import extract_workflows_dict
+from botoflow.utils import extract_workflows_dict
 from utils import SWFMixIn
 from various_activities import BunchOfActivities
 

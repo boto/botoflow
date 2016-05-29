@@ -3,13 +3,13 @@ Setting up the Development Environment
 ======================================
 
 The following sections provide instructions for setting up your development
-environment for the AWS Flow Framework in Python.
+environment for the botoflow.
 
 
 Prerequisites
 -------------
 
-To develop applications that use the AWS Flow Framework in Python, you will need:
+To develop applications that use the botoflow, you will need:
 
 * A working Python 2.7+ environment.
 * `BotoCore <https://pypi.python.org/pypi/botocore>`_ (and it's dependencies).
@@ -21,7 +21,7 @@ Developing a Workflow
 ---------------------
 
 After you have set up the development environment, you can start developing
-workflows with the AWS Flow Framework in Python. The typical steps involved in developing
+workflows with the botoflow. The typical steps involved in developing
 a workflow are as follows:
 
 #. Define activity and workflow contracts. First, analyze your application
@@ -41,7 +41,7 @@ a workflow are as follows:
    and dispatching them to the appropriate implementation method. AWS Flow
    Framework provides worker classes that make implementing these host programs
    trivial.
-#. Test your workflow. TODO: AWS Flow Framework in Python does not yet provide nice
+#. Test your workflow. TODO: botoflow does not yet provide nice
    testing facilities
 #. Deploy the workers. You can now deploy your workers as desired - for
    example, you can deploy them to instances in the cloud or in your own data

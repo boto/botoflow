@@ -1,6 +1,6 @@
-from awsflow.swf_exceptions import swf_exception_wrapper
-from awsflow.data_converter import JSONDataConverter
-from awsflow.core.exceptions import CancellationError
+from botoflow.swf_exceptions import swf_exception_wrapper
+from botoflow.data_converter import JSONDataConverter
+from botoflow.core.exceptions import CancellationError
 
 
 class ManualActivityCompletionClient(object):
@@ -10,7 +10,7 @@ class ManualActivityCompletionClient(object):
         :param swf_client: botocore SWF client
         :type swf_client: botocore.clients.Client
         :param data_converter: DataConverter to use for marshaling data
-        :type data_converter: awsflow.data_converter.BaseDataConverter
+        :type data_converter: botoflow.data_converter.BaseDataConverter
         """
         self._swf_client = swf_client
         self.data_converter = data_converter

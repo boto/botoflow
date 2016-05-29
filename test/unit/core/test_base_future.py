@@ -3,14 +3,14 @@ import pytest
 import logging
 from collections import namedtuple
 
-import awsflow.core.base_future as futuremod
-from awsflow.core.async_event_loop import AsyncEventLoop
-from awsflow.core.async_task import AsyncTask
-from awsflow.logging_filters import AWSFlowFilter
+import botoflow.core.base_future as futuremod
+from botoflow.core.async_event_loop import AsyncEventLoop
+from botoflow.core.async_task import AsyncTask
+from botoflow.logging_filters import AWSFlowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(AWSFlowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

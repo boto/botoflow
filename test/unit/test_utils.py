@@ -1,6 +1,6 @@
 import unittest
 
-from awsflow.utils import camel_keys_to_snake_case, snake_keys_to_camel_case
+from botoflow.utils import camel_keys_to_snake_case, snake_keys_to_camel_case
 
 
 class TestUtils(unittest.TestCase):

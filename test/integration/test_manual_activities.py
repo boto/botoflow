@@ -4,11 +4,11 @@ import unittest
 import os
 from threading import Thread
 
-from awsflow import (WorkflowDefinition, execute, return_,
-                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker,
-                     WorkflowStarter)
+from botoflow import (WorkflowDefinition, execute, return_,
+                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker,
+                      WorkflowStarter)
 
-from awsflow.manual_activity_completion_client import ManualActivityCompletionClient
+from botoflow.manual_activity_completion_client import ManualActivityCompletionClient
 from utils import SWFMixIn
 from various_activities import BunchOfActivities, ManualActivities
 

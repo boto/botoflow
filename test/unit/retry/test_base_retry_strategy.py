@@ -1,6 +1,6 @@
 import pytest
 
-from awsflow.retry.base_retry_strategy import BaseRetryStrategy
+from botoflow.retry.base_retry_strategy import BaseRetryStrategy
 
 
 def test_init():

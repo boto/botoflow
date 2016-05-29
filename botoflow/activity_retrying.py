@@ -65,7 +65,7 @@ class Retrying(retrying.Retrying):
                                        stop_func=stop_func, wait_func=wait_func)
 
         # unfortunately retrying uses ms everywhere and we are using seconds (as in floats 0.5 is valid)
-        # to remain consistent with awsflow, we fix all the times before passing the to retrying
+        # to remain consistent with botoflow, we fix all the times before passing the to retrying
 
         self._stop_max_attempt_number = 3 if stop_max_attempt_number is None else stop_max_attempt_number
         self._stop_max_delay = 1000 if stop_max_delay is None else int(stop_max_delay * 1000)

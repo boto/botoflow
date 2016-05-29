@@ -1,5 +1,5 @@
 import pytest
-from awsflow.core import async_event_loop
+from botoflow.core import async_event_loop
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

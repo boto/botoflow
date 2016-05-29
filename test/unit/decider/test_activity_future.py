@@ -4,8 +4,8 @@ except ImportError:
     from mock import MagicMock
 
 
-from awsflow.core import AsyncEventLoop, BaseFuture, Future, async, return_
-from awsflow.decider.activity_future import ActivityFuture
+from botoflow.core import AsyncEventLoop, BaseFuture, Future, async, return_
+from botoflow.decider.activity_future import ActivityFuture
 
 
 def test_activity_future():

@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from awsflow.core.exceptions import CancellationError
+from botoflow.core.exceptions import CancellationError
 
 from .context_base import ContextBase
 

@@ -1,8 +1,8 @@
 import pytest
 from mock import patch
 
-from awsflow import WorkflowDefinition, execute, activities, activity, return_, Future, async
-from awsflow.test.workflow_testing_context import WorkflowTestingContext
+from botoflow import WorkflowDefinition, execute, activities, activity, return_, Future, async
+from botoflow.test.workflow_testing_context import WorkflowTestingContext
 
 
 @activities(schedule_to_start_timeout=60,

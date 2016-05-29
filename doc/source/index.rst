@@ -1,10 +1,10 @@
-.. AWS Flow documentation master file, created by
+.. botoflow documentation master file, created by
    sphinx-quickstart on Mon Feb 25 16:12:26 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 ============================
-AWS Flow Framework in Python
+botoflow
 ============================
 
 .. warning::
@@ -15,7 +15,7 @@ AWS Flow Framework in Python
 
 Introduction:
 
-The AWS Flow Framework in Python is a programming framework that works together with
+The botoflow is a programming framework that works together with
 Amazon Simple Workflow Service (Amazon SWF) to help developers build
 asynchronous and distributed applications that process work asynchronously and
 distribute the processing across components that execute remotely.  Using the

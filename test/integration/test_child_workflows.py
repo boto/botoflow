@@ -3,11 +3,11 @@ import time
 import unittest
 import logging
 
-from awsflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
+from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
                       ActivityWorker, WorkflowStarter, workflow_options)
-from awsflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
+from botoflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
 from various_activities import BunchOfActivities
-from awsflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import AWSFlowFilter
 
 from utils import SWFMixIn
 

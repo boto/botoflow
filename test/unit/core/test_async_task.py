@@ -2,16 +2,16 @@ import unittest
 import logging
 import pytest
 
-from awsflow.core.async_event_loop import AsyncEventLoop
-from awsflow.core.async_task import AsyncTask
-from awsflow.core.decorators import task
-from awsflow.core.base_future import BaseFuture
-from awsflow.core.exceptions import CancellationError
-from awsflow.logging_filters import AWSFlowFilter
+from botoflow.core.async_event_loop import AsyncEventLoop
+from botoflow.core.async_task import AsyncTask
+from botoflow.core.decorators import task
+from botoflow.core.base_future import BaseFuture
+from botoflow.core.exceptions import CancellationError
+from botoflow.logging_filters import AWSFlowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(AWSFlowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

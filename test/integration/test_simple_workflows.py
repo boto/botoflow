@@ -2,11 +2,11 @@
 import time
 import unittest
 
-from awsflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
+from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
                      workflow_time, workflow_types, WorkflowStarter, workflow)
 
-from awsflow.exceptions import (ActivityTaskFailedError, WorkflowFailedError)
+from botoflow.exceptions import (ActivityTaskFailedError, WorkflowFailedError)
 from utils import SWFMixIn
 from various_activities import BunchOfActivities
 
@@ -162,8 +162,8 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), [
-                timegm(hist[2]['eventTimestamp'].timetuple()),
-                timegm(hist[8]['eventTimestamp'].timetuple())])
+                int(time.mktime(hist[2]['eventTimestamp'].timetuple())),
+                int(time.mktime(hist[8]['eventTimestamp'].timetuple()))])
 
     def test_one_activity_dynamic(self):
         class OneActivityTimedWorkflow(WorkflowDefinition):

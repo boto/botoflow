@@ -9,8 +9,8 @@ from collections import namedtuple, OrderedDict
 
 import pytest
 
-from awsflow import WorkflowDefinition, execute
-from awsflow.data_converter import JSONDataConverter
+from botoflow import WorkflowDefinition, execute
+from botoflow.data_converter import JSONDataConverter
 
 
 class SimpleObj(object):

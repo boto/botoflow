@@ -1,7 +1,7 @@
 import time
 
-from awsflow import activities, activity, manual_activity, get_context
-from awsflow.core.exceptions import CancellationError, CancelledError
+from botoflow import activities, activity, manual_activity, get_context
+from botoflow.core.exceptions import CancellationError, CancelledError
 
 
 class MySpecialCancelledError(CancelledError):

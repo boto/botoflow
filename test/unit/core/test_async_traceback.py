@@ -4,14 +4,14 @@ import pytest
 
 import six
 
-from awsflow.core.async_event_loop import AsyncEventLoop
-from awsflow.core.decorators import async, task
-from awsflow.core.async_traceback import format_exc, print_exc
-from awsflow.logging_filters import AWSFlowFilter
+from botoflow.core.async_event_loop import AsyncEventLoop
+from botoflow.core.decorators import async, task
+from botoflow.core.async_traceback import format_exc, print_exc
+from botoflow.logging_filters import AWSFlowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('awsflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(AWSFlowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

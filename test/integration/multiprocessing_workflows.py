@@ -1,4 +1,4 @@
-from awsflow import *
+from botoflow import *
 
 from various_activities import BunchOfActivities
 

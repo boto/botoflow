@@ -2,9 +2,9 @@
 import time
 import unittest
 
-from awsflow import (workflow_time, WorkflowDefinition, WorkflowWorker,
-                     signal, execute, return_, WorkflowStarter,
-                     Future)
+from botoflow import (workflow_time, WorkflowDefinition, WorkflowWorker,
+                      signal, execute, return_, WorkflowStarter,
+                      Future)
 from utils import SWFMixIn
 
 

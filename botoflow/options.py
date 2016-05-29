@@ -28,7 +28,7 @@ class _NOT_SET(object):
 class activity_options(object):
     """This context manager helps override activity task options.
 
-    Please see :py:func:`awsflow.decorators.activity` for available keyword
+    Please see :py:func:`botoflow.decorators.activity` for available keyword
     arguments and their descriptions.
 
     Example usage::

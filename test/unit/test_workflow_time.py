@@ -7,9 +7,9 @@ except ImportError:
 
 from datetime import datetime
 
-from awsflow import workflow_time
-from awsflow.context import DecisionContext
-from awsflow.decider import Decider
+from botoflow import workflow_time
+from botoflow.context import DecisionContext
+from botoflow.decider import Decider
 
 
 @patch.object(workflow_time, 'get_context')

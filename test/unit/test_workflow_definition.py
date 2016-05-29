@@ -1,6 +1,6 @@
 
-from awsflow import execute, signal
-from awsflow import workflow_definition as wodef
+from botoflow import execute, signal
+from botoflow import workflow_definition as wodef
 
 
 class SpamWorkflow(wodef.WorkflowDefinition):

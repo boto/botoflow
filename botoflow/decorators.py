@@ -87,7 +87,7 @@ def execute(version,
     """Use this decorator indicates the entry point of the workflow.
 
     The entry point of the workflow can be invoked remotely by your application
-    using clients that are generated automatically by the AWS Flow Framework.
+    using clients that are generated automatically by the botoflow.
 
     :param str version: Required version of the workflow type. Maximum length
         is 64 characters.
@@ -98,9 +98,9 @@ def execute(version,
         more details.
     :param str task_list: The default task list for the decision tasks for
         executions of this workflow type. The default can be overridden using
-        :py:func`~awsflow.options_overrides.workflow_options` when starting a
+        :py:func`~botoflow.options_overrides.workflow_options` when starting a
         workflow execution. Set to
-        :py:data:`~awsflow.constants.USE_WORKER_TASK_LIST` by default. This is
+        :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by default. This is
         a special value which indicates that the task list used by the worker,
         which is performing the registration, should be used.
     :param int task_start_to_close_timeout: Specifies the
@@ -110,7 +110,7 @@ def execute(version,
         SWF API reference for more details. The default is 30 seconds.
     :param str child_policy: Specifies the policy to use for the child
         workflows if an execution of this type is terminated. The default value
-        is :py:data:`~awsflow.constants.CHILD_TERMINATE`.
+        is :py:data:`~botoflow.constants.CHILD_TERMINATE`.
     :param data_converter: Specifies the type of the DataConverter to use for
         serializing/deserializing data when sending requests to and receiving
         results from workflow executions of this workflow type.  Set to `None`
@@ -223,8 +223,8 @@ def activity(version,
         prefix to it. You are free to use your own naming scheme.
     :param str task_list: Specifies the default task list to be registered with
         Amazon SWF for this activity type.  The default can be overridden using
-        :py:func`~awsflow.options_overrides.activity_options` when calling the
-        activity. Set to :py:data:`~awsflow.constants.USE_WORKER_TASK_LIST` by
+        :py:func`~botoflow.options_overrides.activity_options` when calling the
+        activity. Set to :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by
         default. This is a special value which indicates that the task list
         used by the worker, which is performing the registration, should be
         used.
@@ -457,8 +457,8 @@ def manual_activity(version,
         prefix to it. You are free to use your own naming scheme.
     :param str task_list: Specifies the default task list to be registered with
         Amazon SWF for this activity type.  The default can be overridden using
-        :py:func`~awsflow.options_overrides.activity_options` when calling the
-        activity. Set to :py:data:`~awsflow.constants.USE_WORKER_TASK_LIST` by
+        :py:func`~botoflow.options_overrides.activity_options` when calling the
+        activity. Set to :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by
         default. This is a special value which indicates that the task list
         used by the worker, which is performing the registration, should be
         used.

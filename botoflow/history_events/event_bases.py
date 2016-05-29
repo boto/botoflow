@@ -13,7 +13,16 @@
 
 
 class EventBase(object):
+
     def __init__(self, event_id, datetime, attributes):
+        """
+        :param event_id: event id
+        :type event_id: int
+        :param datetime: datetime of event
+        :type datetime: datetime.datetime
+        :param attributes: event attributes
+        :type attributes: dict
+        """
         self.id = event_id
         self.datetime = datetime
         self.attributes = attributes

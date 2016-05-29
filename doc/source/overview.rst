@@ -26,7 +26,7 @@ along with complex logic to synchronize them. All this "plumbing" is extraneous
 to business logic and makes the application code unnecessarily complicated and
 hard to maintain.
 
-The AWS Flow Framework in Python provides a solution that makes application development
+The botoflow provides a solution that makes application development
 simple while enabling developers to get all the benefits of asynchronous and
 distributed processing in their applications. It accomplishes this through a
 powerful programming model layered on Amazon SWF.
@@ -62,7 +62,7 @@ greeting message that is printed to the console.
             yield HelloWorldActivities.print_hello(name)
 
 The example above defines a workflow and two activities. Workflows and
-activities are the basic building blocks in AWS Flow Framework in Python. An activity is
+activities are the basic building blocks in botoflow. An activity is
 a unit of functionality that is invoked asynchronously through Amazon SWF; in
 other words, it is the implementation of a task. A workflow, on the other hand,
 is the control flow that coordinates the execution of activities. Using a
@@ -136,10 +136,10 @@ activity at that point in the code (in this case to pass the name to
 `print_greeting()`, we need the result of `get_name()` immediately).
 
 
-AWS Flow Framework in Python and Amazon Simple Workflow Service
+botoflow and Amazon Simple Workflow Service
 ---------------------------------------------------------------
 
-AWS Flow Framework in Python uses the Amazon Simple Workflow Service (SWF) to schedule
+botoflow uses the Amazon Simple Workflow Service (SWF) to schedule
 tasks for execution by remote components, to get their results back, and to
 store the overall execution state of the application. Amazon SWF makes it
 possible for your application components to be deployed on separate machines
@@ -170,7 +170,7 @@ Durable Execution State
 -----------------------
 
 In the Hello World example, the activity takes only a few seconds to execute,
-but the AWS Flow Framework in Python allows activities to take arbitrarily long to
+but the botoflow allows activities to take arbitrarily long to
 complete. For example, an activity may be used to perform complex computation
 that takes several hours. In order to reliably execute such long running
 processes, the execution state of workflow must be stored durably. The
@@ -265,7 +265,7 @@ workers to run behind firewalls since you are not required to open externally
 visible ports. This allows your applications to use resources in the cloud as
 well as on on-premise data centers.
 
-Together, the AWS Flow Framework in Python and Amazon SWF make it easy to create scalable
+Together, the botoflow and Amazon SWF make it easy to create scalable
 and fault tolerant applications that perform asynchronous tasks that may be
 long running, remote, or both.
 

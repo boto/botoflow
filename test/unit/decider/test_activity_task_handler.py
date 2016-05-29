@@ -1,8 +1,8 @@
 from mock import MagicMock, call, patch
 
-from awsflow.constants import USE_WORKER_TASK_LIST
-from awsflow.core import AllFuture, Future, AsyncEventLoop
-from awsflow.decider import activity_task_handler
+from botoflow.constants import USE_WORKER_TASK_LIST
+from botoflow.core import AllFuture, Future, AsyncEventLoop
+from botoflow.decider import activity_task_handler
 
 
 def test_init():

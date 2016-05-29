@@ -44,7 +44,7 @@ class ActivityWorker(BaseWorker):
     instance for every decision task, the :py:class:`~.ActivityWorker` simply
     uses the `object` you provided.
 
-    The ActivityWorker class uses the AWS Flow Framework decorators to
+    The ActivityWorker class uses the botoflow decorators to
     determine the registration and execution options.
 
     :param session: botocore session object.
