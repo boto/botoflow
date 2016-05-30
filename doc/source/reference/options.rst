@@ -2,9 +2,9 @@
 options
 =======
 
-awsflow.options
+botoflow.options
 ----------------
 
-.. automodule:: awsflow.options
+.. automodule:: botoflow.options
    :members:
    :undoc-members:

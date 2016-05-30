@@ -4,9 +4,9 @@ utils
 
 **INTERNAL**
 
-awsflow.utils
+botoflow.utils
 --------------
 
-.. automodule:: awsflow.utils
+.. automodule:: botoflow.utils
    :members:
    :undoc-members:

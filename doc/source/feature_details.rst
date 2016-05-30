@@ -12,7 +12,7 @@ Workflow and Activity Contracts
 
 Python classes and decorators are used to declare the signatures of workflows
 and activities. For example, a workflow type MyWorkflow is defined as a
-subclass of :py:class:`~awsflow.workflow_definition.WorkflowDefinition`:
+subclass of :py:class:`~botoflow.workflow_definition.WorkflowDefinition`:
 
 .. code-block:: python
 
@@ -28,28 +28,28 @@ subclass of :py:class:`~awsflow.workflow_definition.WorkflowDefinition`:
 
 In the example above, the workflow interface MyWorkflow contains a method,
 `start_my_workflow`, for starting a new execution. This method is decorated
-with @ :py:func:`~awsflow.decorators.execute`. In a given workflow, at least
-one method can be decorated with @ :py:func:`~awsflow.decorators.execute`. This
+with @ :py:func:`~botoflow.decorators.execute`. In a given workflow, at least
+one method can be decorated with @ :py:func:`~botoflow.decorators.execute`. This
 method is the entry point of the workflow logic, and the framework calls this
 method to execute the workflow logic when a decision task is received.
 
 The workflow also defines the signals that may be sent to the workflow. The
 signal method gets invoked when a signal with a matching name is received by
 the workflow execution. For example, the `MyWorkflow` declares a signal method,
-`signal1`, decorated with @ :py:func:`~awsflow.decorators.signal`.
+`signal1`, decorated with @ :py:func:`~botoflow.decorators.signal`.
 
-The @ :py:func:`~awsflow.decorators.signal` decoratr is required on signal
+The @ :py:func:`~botoflow.decorators.signal` decoratr is required on signal
 methods. Signals cannot `return` (if you return a value from a signal, it will
 be ignored). A workflow may have zero or more signal methods defined in it.
 
-Methods annotated with @ :py:func:`~awsflow.decorators.execute` and @
-:py:func:`~awsflow.decorators.signal` annotations may have any number of
+Methods annotated with @ :py:func:`~botoflow.decorators.execute` and @
+:py:func:`~botoflow.decorators.signal` annotations may have any number of
 parameters including positional and keyword arguments (`*args, **kwds`).
 
 
 Additionally, you are also able to report the latest state of a workflow
 execution, using a
-:py:attr:`~awsflow.workflow_definition.WorkflowDefinition.workflow_state`. This
+:py:attr:`~botoflow.workflow_definition.WorkflowDefinition.workflow_state`. This
 state is not the entire application state of the workflow. The intended use of
 this feature is to allow you to store up to 32KB of data to indicate the
 latest status of the execution. For example, in an order processing workflow,
@@ -62,7 +62,7 @@ any serializable object, which fits your needs, to this property.
 
 
 Activities on the other hand can be any `object` with some or all of it's
-methods decorated with @ :py:func:`~awsflow.decorators.activity`. In addition,
+methods decorated with @ :py:func:`~botoflow.decorators.activity`. In addition,
 there's another decorator that can be applied to the class to set some activity
 defaults.
 
@@ -98,12 +98,12 @@ in the implementations you add to the workers. The framework looks for types
 that implement workflows and activities and registers them with Amazon SWF. By
 default, the framework uses the interface definitions to infer registration
 options for workflow and activity types. The workflow worker registers all workflow types
-it is configured with that have the @ :py:func:`~awsflow.decorators.execute`
+it is configured with that have the @ :py:func:`~botoflow.decorators.execute`
 annotation. Similarly, each activity method is required to be annotated with
-the @ :py:func:`~awsflow.decorators.activity` decorator and optionally the
-class can be decorated with @ :py:func:`~awsflow.decorators.activities`.  The
+the @ :py:func:`~botoflow.decorators.activity` decorator and optionally the
+class can be decorated with @ :py:func:`~botoflow.decorators.activities`.  The
 activity worker registers all activity types that it is configured with the
-:py:func:`~awsflow.decorators.activity` decorator. The registration is
+:py:func:`~botoflow.decorators.activity` decorator. The registration is
 performed automatically when you start one of the workers. Workflow and
 activity types that have have the `skip_registration` attribute set to `True`
 will not be registered with Amazon SWF.
@@ -114,7 +114,7 @@ if the type is already registered it will not be re-registered and no error
 will be reported. If you need to modify registered settings, you should
 register a new version of the type. You can also override registered settings
 when starting a new execution or calling an activity using
-:py:mod:`awsflow.options` context managers.
+:py:mod:`botoflow.options` context managers.
 
 The registration requires a type name and some other registration options. The
 default implementation determines these as follows:
@@ -127,11 +127,11 @@ The framework determines the name of the workflow type from the workflow
 definition and the @execute decorated method. The form of the default workflow
 type name is `class.__name__`. The default name of the workflow type in the
 above example is: *MyWorkflow*. You can override the default name using the
-name parameter of the @ :py:func:`~awsflow.decorators.workflow` decorator. The
+name parameter of the @ :py:func:`~botoflow.decorators.workflow` decorator. The
 name must not be an empty string.
 
 The workflow version is specified using the `version` parameter of the @
-:py:func:`~awsflow.decorators.execute`. There is no default for the `version`
+:py:func:`~botoflow.decorators.execute`. There is no default for the `version`
 and it must be explicitly specified. Version is a free form string and you are
 free to use your own versioning scheme.
 
@@ -140,7 +140,7 @@ Signal Name
 ^^^^^^^^^^^
 
 The name of the signal can be specified using the name parameter of the @
-:py:func:`~awsflow.decorators.signal`. If not specified, it is defaulted to
+:py:func:`~botoflow.decorators.signal`. If not specified, it is defaulted to
 the name of the signal method.
 
 
@@ -150,8 +150,8 @@ Activity Type Name and Version
 The framework determines the name of the activity type from the activity class name. The form of the default activity type name is {prefix}{name}. The
 {prefix} is set to the name of the activity class followed by a '.' and
 the {name} is set to the method name. The default {prefix} can be overridden in
-the @ :py:func:`~awsflow.decorators.activities` decorator with `activity_name_prefix` parameter. You can also specify
-the activity type name using the @ :py:func:`~awsflow.decorators.activity` decorator on the activity
+the @ :py:func:`~botoflow.decorators.activities` decorator with `activity_name_prefix` parameter. You can also specify
+the activity type name using the @ :py:func:`~botoflow.decorators.activity` decorator on the activity
 method. Note that when you override the name using @activity, the framework
 **will** automatically prepend the prefix to it.
 
@@ -170,9 +170,9 @@ Cancellation will not be successful in any of the following cases:
 (2) the activity is heartbeating, but chooses to ignore cancel requests
 (3) the activity completes before receiving the request
 
-To heartbeat, within an activity simply do: "awsflow.get_context().heartbeat()".
+To heartbeat, within an activity simply do: "botoflow.get_context().heartbeat()".
 This will raise a CancellationError if a cancel is requested. If this error, a
-subclass of, or a CancelledError is raised by the activity, Python-awsflow will
+subclass of, or a CancelledError is raised by the activity, Python-botoflow will
 report to SWF that the activity task was cancelled. This exception then gets
 assigned to the activity future (see above).
 

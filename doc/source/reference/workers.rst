@@ -2,10 +2,10 @@
 workers
 =======
 
-awsflow.workers
+botoflow.workers
 ----------------
 
-.. automodule:: awsflow.workers
+.. automodule:: botoflow.workers
    :show-inheritance:
    :members:
    :undoc-members:
@@ -13,7 +13,7 @@ awsflow.workers
 .workers.activity_task
 ----------------------
 
-.. automodule:: awsflow.workers.activity_task
+.. automodule:: botoflow.workers.activity_task
    :show-inheritance:
    :members:
    :undoc-members:
@@ -21,7 +21,7 @@ awsflow.workers
 .workers.activity_worker
 ------------------------
 
-.. automodule:: awsflow.workers.activity_worker
+.. automodule:: botoflow.workers.activity_worker
    :show-inheritance:
    :members:
    :undoc-members:
@@ -29,7 +29,7 @@ awsflow.workers
 .workers.base_worker
 --------------------
 
-.. automodule:: awsflow.workers.base_worker
+.. automodule:: botoflow.workers.base_worker
    :show-inheritance:
    :members:
    :undoc-members:
@@ -37,7 +37,7 @@ awsflow.workers
 .workers.multiprocessing_activity_worker
 ----------------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_activity_executor
+.. automodule:: botoflow.workers.multiprocessing_activity_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -45,7 +45,7 @@ awsflow.workers
 .workers.multiprocessing_worker
 -------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_executor
+.. automodule:: botoflow.workers.multiprocessing_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -53,7 +53,7 @@ awsflow.workers
 .workers.multiprocessing_workflow_worker
 ----------------------------------------
 
-.. automodule:: awsflow.workers.multiprocessing_workflow_executor
+.. automodule:: botoflow.workers.multiprocessing_workflow_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -61,7 +61,7 @@ awsflow.workers
 .workers.threaded_activity_worker
 ---------------------------------
 
-.. automodule:: awsflow.workers.threaded_activity_executor
+.. automodule:: botoflow.workers.threaded_activity_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -69,7 +69,7 @@ awsflow.workers
 .workers.threaded_worker
 ------------------------
 
-.. automodule:: awsflow.workers.threaded_executor
+.. automodule:: botoflow.workers.threaded_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -77,7 +77,7 @@ awsflow.workers
 .workers.threaded_workflow_worker
 ---------------------------------
 
-.. automodule:: awsflow.workers.threaded_workflow_executor
+.. automodule:: botoflow.workers.threaded_workflow_executor
    :show-inheritance:
    :members:
    :undoc-members:
@@ -85,7 +85,7 @@ awsflow.workers
 .workers.workflow_worker
 ------------------------
 
-.. automodule:: awsflow.workers.workflow_worker
+.. automodule:: botoflow.workers.workflow_worker
    :show-inheritance:
    :members:
    :undoc-members:

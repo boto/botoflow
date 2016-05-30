@@ -167,7 +167,7 @@ html_show_sourcelink = False
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'awsflow_doc'
+htmlhelp_basename = 'botoflow_doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------

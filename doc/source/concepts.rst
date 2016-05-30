@@ -29,7 +29,7 @@ Workflow
 
 Workflow is the control flow that coordinates activities. A workflow is defined
 by subclassing from a
-:py:class:`~awsflow.workflow_definition.WorkflowDefinition` class. This
+:py:class:`~botoflow.workflow_definition.WorkflowDefinition` class. This
 class may contain a method decorated with an @execute() decorator, which is
 the entry point of the workflow. The entry point of the workflow can be invoked
 remotely by your application by calling the method in an appropriate context.
@@ -124,10 +124,10 @@ completion. The input data can be provided by passing arguments when calling
 the workflow entry point method. Similarly, data can be passed to activities
 when calling the activity method. The return value of an activity method is
 returned to the caller through the
-:py:class:`~awsflow.core.future.Future`. botoflow takes care of
+:py:class:`~botoflow.core.future.Future`. botoflow takes care of
 marshaling the data across the wire using a component called DataConverter. The
 default
-:py:class:`~awsflow.data_converter.json_data_converter.JSONDataConverter` used
+:py:class:`~botoflow.data_converter.json_data_converter.JSONDataConverter` used
 by the framework is based on simplejson and pickle concepts.
 
 
@@ -140,8 +140,8 @@ to process an external event that happens after the workflow execution has been
 started. To accomplish this, Amazon SWF provides the ability to send signals to
 a running workflow instance. In the botoflow, you can define the
 signals that your workflow can accept as methods in the workflow definition and
-decorate them with the @ :py:func:`~awsflow.decorators.signal`. Methods
-decorated with @ :py:func:`~awsflow.decorators.signal` get invoked when a
+decorate them with the @ :py:func:`~botoflow.decorators.signal`. Methods
+decorated with @ :py:func:`~botoflow.decorators.signal` get invoked when a
 signal with a matching name is received by Amazon SWF. You can use the
 workflow instance objects to send signals (as you would call an
 instancemethod). When a signal is received, the framework unmarshals the data
@@ -156,7 +156,7 @@ managed by Amazon SWF. Each task is scheduled in a list and workers poll task
 lists to get tasks. When you create a worker, you provide the name of the task
 list that you want the worker to poll. Similarly, a task list can be specified
 when you schedule a task using the
-:py:class:`awsflow.options.activity_options` context manager. If you don't
+:py:class:`botoflow.options.activity_options` context manager. If you don't
 specify a task list, the botoflow will use a default one to schedule
 the task. The default task list is specified when a type is registered with
 Amazon SWF.

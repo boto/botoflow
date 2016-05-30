@@ -70,12 +70,12 @@ workflow you can arbitrarily compose tasks, simply by calling activity methods.
 
 For clean separation, the framework uses different base classes/decorators to
 define the signature or contract of activities and workflows. The activities
-class is decorated with @ :py:func:`~awsflow.decorators.activities` and @
-:py:func:`~awsflow.decorators.activity`, and workflow is a subclass of
-:py:class:`~awsflow.workflow_definition.WorkflowDefinition`. The workflow
+class is decorated with @ :py:func:`~botoflow.decorators.activities` and @
+:py:func:`~botoflow.decorators.activity`, and workflow is a subclass of
+:py:class:`~botoflow.workflow_definition.WorkflowDefinition`. The workflow
 class in our example is HelloWorldWorkflow and has only one method:
 `hello_world` that is decorated with @
-:py:func:`~awsflow.decorators.execute`. Similarly, the activities, `get_name`
+:py:func:`~botoflow.decorators.execute`. Similarly, the activities, `get_name`
 and `print_greeting`, are represented by methods in the activities class. The
 workflow implementation invokes the `get_name` activity to get the user's
 name/message and calls the `print_greeting` activity to print a greeting to the
@@ -117,12 +117,12 @@ Non-Blocking Code Using Tasks
 
 Note that in the previous example, the `get_ame` activity was returning a `str`
 but when called from within the workflow, it returns
-:py:class:`~awsflow.core.future.Future`. When you call this method from within
+:py:class:`~botoflow.core.future.Future`. When you call this method from within
 the workflow, it returns immediately. This is because it only schedules a task
 for execution and does not block, waiting for it to complete. This means that
 the actual result of the activity is not available to the caller when the call
 returns. Therefore, the method returns an object of type
-:py:class:`~awsflow.core.future.Future` as a placeholder for the "future"
+:py:class:`~botoflow.core.future.Future` as a placeholder for the "future"
 result of executing the remote activity. The actual result is returned only
 after the activity has completed, and the time needed to dispatch the task
 through Amazon SWF.
@@ -130,7 +130,7 @@ through Amazon SWF.
 One more thing to note in this example is the `yield` keyword for both
 `get_name()` and `print_greeting()` calls. The `yield` keyword in this case is
 used to indicate that we want to wait for the
-:py:class:`~awsflow.core.future.Future` object to complete the call and return
+:py:class:`~botoflow.core.future.Future` object to complete the call and return
 the actual value. You use it to indicate that you need the result of the
 activity at that point in the code (in this case to pass the name to
 `print_greeting()`, we need the result of `get_name()` immediately).
@@ -157,7 +157,7 @@ A program written using the framework consists of three types of components:
 
 * Implementation of individual tasks (that is, activities).
 * The coordination logic that orchestrates these tasks (the
-  :py:class:`~awsflow.workflow_definition.WorkflowDefinition`).
+  :py:class:`~botoflow.workflow_definition.WorkflowDefinition`).
 * A component that initiates the coordination logic.
 
 Each of these components can be hosted on separate workers or worker pools and

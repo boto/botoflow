@@ -2,9 +2,9 @@
 decorators
 ==========
 
-awsflow.decorators
+botoflow.decorators
 -------------------
 
-.. automodule:: awsflow.decorators
+.. automodule:: botoflow.decorators
    :members:
    :undoc-members:

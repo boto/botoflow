@@ -2,31 +2,31 @@
 decisions
 =========
 
-awsflow.decisions
+botoflow.decisions
 ------------------
 
-.. automodule:: awsflow.decisions
+.. automodule:: botoflow.decisions
    :members:
    :undoc-members:
 
-awsflow.decisions.decision_bases
+botoflow.decisions.decision_bases
 ---------------------------------
 
-.. automodule:: awsflow.decisions.decision_bases
+.. automodule:: botoflow.decisions.decision_bases
    :members:
    :undoc-members:
 
-awsflow.decisions.decision_list
+botoflow.decisions.decision_list
 --------------------------------
 
-.. automodule:: awsflow.decisions.decision_list
+.. automodule:: botoflow.decisions.decision_list
    :members:
    :undoc-members:
 
-awsflow.decisions.decisions
+botoflow.decisions.decisions
 ----------------------------
 
-.. automodule:: awsflow.decisions.decisions
+.. automodule:: botoflow.decisions.decisions
    :members:
    :undoc-members:
 

@@ -2,9 +2,9 @@
 workflow_types
 ==============
 
-awsflow.workflow_types
+botoflow.workflow_types
 ----------------------
 
-.. automodule:: awsflow.workflow_types
+.. automodule:: botoflow.workflow_types
    :members:
    :undoc-members:

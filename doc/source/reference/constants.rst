@@ -2,10 +2,10 @@
 constants
 =========
 
-awsflow.constants
+botoflow.constants
 ------------------
 
-.. automodule:: awsflow.constants
+.. automodule:: botoflow.constants
    :members:
    :undoc-members:
 

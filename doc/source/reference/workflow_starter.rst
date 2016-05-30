@@ -2,9 +2,9 @@
 workflow_starter
 ================
 
-awsflow.workflow_starter
+botoflow.workflow_starter
 ------------------------
 
-.. automodule:: awsflow.workflow_starter
+.. automodule:: botoflow.workflow_starter
    :members:
    :undoc-members:

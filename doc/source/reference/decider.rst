@@ -2,31 +2,31 @@
 decider
 =======
 
-awsflow.decider
+botoflow.decider
 ----------------
 
-.. automodule:: awsflow.decider
+.. automodule:: botoflow.decider
    :members:
    :undoc-members:
 
-awsflow.decider.decider
+botoflow.decider.decider
 ------------------------
 
-.. automodule:: awsflow.decider.decider
+.. automodule:: botoflow.decider.decider
    :members:
    :undoc-members:
 
-awsflow.decider.decision_task_poller
+botoflow.decider.decision_task_poller
 -------------------------------------
 
-.. automodule:: awsflow.decider.decision_task_poller
+.. automodule:: botoflow.decider.decision_task_poller
    :members:
    :undoc-members:
 
-awsflow.decider.workflow_replayer
+botoflow.decider.workflow_replayer
 ----------------------------------
 
-.. automodule:: awsflow.decider.workflow_replayer
+.. automodule:: botoflow.decider.workflow_replayer
    :members:
    :undoc-members:
 

@@ -2,38 +2,38 @@
 context
 =======
 
-awsflow.context
+botoflow.context
 ---------------
 
-.. automodule:: awsflow.context
+.. automodule:: botoflow.context
    :members:
    :undoc-members:
 
-awsflow.context.activity_context
+botoflow.context.activity_context
 --------------------------------
 
-.. automodule:: awsflow.context.activity_context
+.. automodule:: botoflow.context.activity_context
    :members:
    :undoc-members:
 
-awsflow.context.context_base
+botoflow.context.context_base
 ----------------------------
 
-.. automodule:: awsflow.context.context_base
+.. automodule:: botoflow.context.context_base
    :members:
    :undoc-members:
 
-awsflow.context.decision_context
+botoflow.context.decision_context
 --------------------------------
 
-.. automodule:: awsflow.context.decision_context
+.. automodule:: botoflow.context.decision_context
    :members:
    :undoc-members:
 
-awsflow.context.start_workflow_context
+botoflow.context.start_workflow_context
 --------------------------------------
 
-.. automodule:: awsflow.context.start_workflow_context
+.. automodule:: botoflow.context.start_workflow_context
    :members:
    :undoc-members:
 

@@ -2,9 +2,9 @@
 exceptions
 ==========
 
-awsflow.exceptions
+botoflow.exceptions
 -------------------
 
-.. automodule:: awsflow.exceptions
+.. automodule:: botoflow.exceptions
    :members:
    :undoc-members:
