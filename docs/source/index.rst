@@ -12,8 +12,9 @@ botoflow
     This documentation as well as the underlying APIs are 'work in progress'
     (!) and may/will change before the first release.
 
-
-Introduction:
+--------------
+About Botoflow
+--------------
 
 The botoflow is a programming framework that works together with
 Amazon Simple Workflow Service (Amazon SWF) to help developers build
@@ -39,16 +40,48 @@ encoding, long running tasks, and background processing.
 
 
 
-Contents:
+Overview
+--------
 
 .. toctree::
    :maxdepth: 2
 
    overview
+
+Concepts
+--------
+
+.. toctree::
+   :maxdepth: 2
+	      
    concepts
+
+Setting up Development Environment
+----------------------------------
+
+.. toctree::
+   :maxdepth: 2
+	      
    setting_up_dev_env
+
+
+Feature Details
+---------------
+
+.. toctree::
+   :maxdepth: 2
+	      
    feature_details
+
+
+API Reference
+-------------
+
+.. toctree::
+   :maxdepth: 3
+	      
    reference/index
+   
 
 ==================
 Indices and tables
