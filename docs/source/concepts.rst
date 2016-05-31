@@ -1,6 +1,5 @@
-=====================================
-botoflow concepts
-=====================================
+Concepts
+========
 
 This section describes concepts that are important to understand and use the
 AWS Flow Framework correctly.
