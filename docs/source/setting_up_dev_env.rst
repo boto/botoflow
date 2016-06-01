@@ -11,9 +11,10 @@ Prerequisites
 
 To develop applications that use the botoflow, you will need:
 
-* A working Python 2.7+ environment.
+* A working Python 2.7 or 3.4+ environment.
 * `BotoCore <https://pypi.python.org/pypi/botocore>`_ (and it's dependencies).
-* AWS Flow.
+* `Dill <https://pypi.python.org/pypi/dill`_ (required for multiprocessing executor).
+* Botoflow.
 * An active AWS account signed up for `Simple Workflow Service <http://aws.amazon.com/swf>`_.
 
 

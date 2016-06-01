@@ -38,13 +38,9 @@ Future/yield
 
 TODO
 
+
 Replay
 ------
-
-.. TODO::
-
-   This needs to be better adapted to AWS Flow futures
-
 
 When you run the HelloWorld example, the botoflow will call its entry
 point method, `hello_world`. This method will result in the creation of two
@@ -119,13 +115,12 @@ Exchanging Data with Activities and Workflows
 ---------------------------------------------
 
 Workflow executions can take input at the start and produce output on
-completion. The input data can be provided by passing arguments when calling
-the workflow entry point method. Similarly, data can be passed to activities
-when calling the activity method. The return value of an activity method is
-returned to the caller through the
-:py:class:`~botoflow.core.future.Future`. botoflow takes care of
-marshaling the data across the wire using a component called DataConverter. The
-default
+completion. The input data can be provided by passing arguments when calling the
+workflow entry point method. Similarly, data can be passed to activities when
+calling the activity method. The return value of an activity method is returned
+to the caller through the :py:class:`~botoflow.core.future.Future`. Botoflow
+takes care of marshaling the data across the wire using a component called
+DataConverter. The default
 :py:class:`~botoflow.data_converter.json_data_converter.JSONDataConverter` used
 by the framework is based on simplejson and pickle concepts.
 
@@ -137,7 +132,7 @@ Besides initial inputs, there are cases where you might need to give additional
 input to the workflow execution while it is running. For example, you may need
 to process an external event that happens after the workflow execution has been
 started. To accomplish this, Amazon SWF provides the ability to send signals to
-a running workflow instance. In the botoflow, you can define the
+a running workflow instance. In botoflow, you can define the
 signals that your workflow can accept as methods in the workflow definition and
 decorate them with the @ :py:func:`~botoflow.decorators.signal`. Methods
 decorated with @ :py:func:`~botoflow.decorators.signal` get invoked when a
@@ -154,11 +149,10 @@ In Amazon SWF, tasks are organized into named lists that are automatically
 managed by Amazon SWF. Each task is scheduled in a list and workers poll task
 lists to get tasks. When you create a worker, you provide the name of the task
 list that you want the worker to poll. Similarly, a task list can be specified
-when you schedule a task using the
-:py:class:`botoflow.options.activity_options` context manager. If you don't
-specify a task list, the botoflow will use a default one to schedule
-the task. The default task list is specified when a type is registered with
-Amazon SWF.
+when you schedule a task using the :py:class:`botoflow.options.activity_options`
+context manager. If you don't specify a task list, botoflow will use a default
+one to schedule the task. The default task list is specified when a type is
+registered with Amazon SWF.
 
 There are situations where you want some tasks to be assigned to a specific
 worker or a group of workers. For example, in an image processing scenario, you
@@ -205,6 +199,8 @@ host-specific task list:
 
     from socket import gethostname
     swf_session = botocore.session.get_session()
-    worker = ActivityWorker(swf_session, 'us-east-1', 'domain1', gethostname(), ImageActivities())
+    worker = ActivityWorker(session=swf_session, aws_region='us-east-1',
+                            domain='domain1', task_list=gethostname(),
+			    ImageActivities())
     worker.run()
 

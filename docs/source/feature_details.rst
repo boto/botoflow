@@ -172,7 +172,7 @@ Cancellation will not be successful in any of the following cases:
 
 To heartbeat, within an activity simply do: "botoflow.get_context().heartbeat()".
 This will raise a CancellationError if a cancel is requested. If this error, a
-subclass of, or a CancelledError is raised by the activity, Python-botoflow will
+subclass of, or a CancelledError is raised by the activity, botoflow will
 report to SWF that the activity task was cancelled. This exception then gets
 assigned to the activity future (see above).
 

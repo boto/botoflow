@@ -3,11 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. warning::
-
-    This documentation as well as the underlying APIs are 'work in progress'
-    (!) and may/will change before the first release.
-
 
 About Botoflow
 --------------
@@ -33,6 +28,11 @@ can be readily distributed across processes and machines. The framework is
 ideal for a broad set of use cases such as business process workflows, media
 encoding, long running tasks, and background processing.
 
+
+.. warning::
+
+    This documentation as well as the underlying APIs are 'work in progress'
+    (!) and may/will change before the first release.
 
 
 

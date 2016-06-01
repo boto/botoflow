@@ -26,7 +26,7 @@ along with complex logic to synchronize them. All this "plumbing" is extraneous
 to business logic and makes the application code unnecessarily complicated and
 hard to maintain.
 
-The botoflow provides a solution that makes application development
+Botoflow provides a solution that makes application development
 simple while enabling developers to get all the benefits of asynchronous and
 distributed processing in their applications. It accomplishes this through a
 powerful programming model layered on Amazon SWF.
@@ -136,10 +136,10 @@ activity at that point in the code (in this case to pass the name to
 `print_greeting()`, we need the result of `get_name()` immediately).
 
 
-botoflow and Amazon Simple Workflow Service
----------------------------------------------------------------
+Botoflow and Amazon Simple Workflow Service
+-------------------------------------------
 
-botoflow uses the Amazon Simple Workflow Service (SWF) to schedule
+Botoflow uses the Amazon Simple Workflow Service (SWF) to schedule
 tasks for execution by remote components, to get their results back, and to
 store the overall execution state of the application. Amazon SWF makes it
 possible for your application components to be deployed on separate machines
@@ -265,7 +265,9 @@ workers to run behind firewalls since you are not required to open externally
 visible ports. This allows your applications to use resources in the cloud as
 well as on on-premise data centers.
 
-Together, the botoflow and Amazon SWF make it easy to create scalable
+Together, botoflow and Amazon SWF make it easy to create scalable
 and fault tolerant applications that perform asynchronous tasks that may be
 long running, remote, or both.
+
+
 
