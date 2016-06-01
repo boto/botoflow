@@ -36,3 +36,9 @@ pip-log.txt
 env
 env2
 env3
+
+# Emacs
+*~
+\#*\#
+.\#*
+
