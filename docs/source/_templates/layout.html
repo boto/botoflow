@@ -1,6 +1,7 @@
 {% extends "!layout.html" %}
-{% block sidebarlogo %}
+{% block extraheadbboo %}
     <object data="_static/botoflow_logo.svg" type="image/svg+xml">
     </object>
     {{ super() }}
 {% endblock %}
+{% set css_files = css_files + ['_static/style.css'] %}
