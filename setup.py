@@ -4,7 +4,8 @@ import botoflow
 
 requires = ['botocore>=1.1.10',
             'six>=1.2.0',
-            'dill>=0.2']
+            'dill>=0.2',
+            'retrying>=1.3.3']
 
 args = dict(
     name='botoflow',
