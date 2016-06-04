@@ -34,6 +34,6 @@ class SubSpamWorkflow(SpamWorkflow):
 
 
 def test_meta_subclass():
-    assert SubSpamWorkflow._workflow_types.values() == ['execute0', 'execute1']
+    assert set(SubSpamWorkflow._workflow_types.values()) == {'execute0', 'execute1'}
     assert SubSpamWorkflow._workflow_signals['signal0'][1] == SubSpamWorkflow.signal0
     assert SubSpamWorkflow._workflow_signals['signal1'][1] == SpamWorkflow.signal1
