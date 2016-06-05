@@ -8,4 +8,4 @@ test:
     - tox
 
   post:
-    - mkdir -p $CIRCLE_TEST_REPORTS/pytest; cp build/junit.xml $CIRCLE_TEST_REPORTS/pytest/
+    - mkdir -p $CIRCLE_TEST_REPORTS/pytest; cp -av build/xunit/* $CIRCLE_TEST_REPORTS/
