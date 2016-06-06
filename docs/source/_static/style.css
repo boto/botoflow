@@ -42,6 +42,16 @@ div.sphinxsidebar h3 {
     font-family: 'Arial', 'Georgia', serif;
 }
 
+div.sphinxsidebar input {
+    border: 2px solid #38ec86;
+}
+
+div.sphinxsidebar textarea:focus, div.sphinxsidebar input:focus, div.sphinxsidebar input[type]:focus, div.sphinxsidebar .uneditable-input:focus {
+    border-color: rgba(56, 236, 134, 0.8);
+    box-shadow: 0 1px 1px rgba(56, 236, 134, 0.075) inset, 0 0 8px rgba(56, 236, 134, 0.6);
+    outline: 0 none;
+}
+
 div h1 {
     font-family: 'Arial', 'Georgia', serif;
     background-color: #666A7A;
