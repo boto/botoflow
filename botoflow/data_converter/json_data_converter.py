@@ -245,18 +245,29 @@ def _flow_obj_decoder(dct):
 
 
 class JSONDataConverter(AbstractDataConverter):
-    """This is a custom JSON serializer. It tries to serialize objects from
-    new-style classes, moreover, it tries to follow the pickle's __setstate__
-    and __getstate__ methods for customizing serialization and deserialization.
+    """This is the **recomended** and default data converter. It
+    (de)serializes most Python types as JSON data, which
+    :py:mod:`json` cannot do, but allows you to have a more or less
+    human readable view of the data (if you for example were using the
+    AWS SWF console to check on the progress of your workflow
+    activities). 
 
-    Because it is not pickle, it will *NOT* work in all the situations that
-    Pickle does and vice-versa. For example, bytes have to be encoded manually
-    in Python2 (as there's no easy way to know what to do).
+    It tries to serialize objects from new-style classes, moreover, it
+    tries to follow the pickle's __setstate__ and __getstate__ methods
+    for customizing serialization and deserialization.
+
+    Because it is not pickle, it will **NOT** work in all the
+    situations that Pickle does and vice-versa. For example, bytes
+    have to be encoded manually in Python2 (as there's no easy way to
+    know what to do, and hence one of the big reasons for Python3).
 
     We try to support most of the base types for ease of use, but the
-    serialized data might be a bit 'chatty' and bump into SWF data limitations.
+    serialized data might be a bit 'chatty' and bump into SWF data
+    limitations.
 
-    WARNING: this data converter does not support old-style classes.
+    .. warning::
+
+        This data converter does not support old-style classes.
     """
 
     def __init__(self):
