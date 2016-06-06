@@ -1,88 +1,39 @@
-====
-core
-====
+Asynchronous Framework Core
+===========================
 
-botoflow.core
-------------
+At the core of botoflow is asynchronous framework utilizing :py:class:`~botoflow.core.future.Future`, similar to the Future described in :pep:`3156`. Since this code was developed before arrival of :pep:`3156` and :py:mod:`asyncio`.
 
-.. automodule:: botoflow.core
-   :members:
-   :undoc-members:
+.. todo::
 
-botoflow.core.async_context
---------------------------
+   Eventually we will deprecate this approach in favor of using just :py:mod:`asyncio` as the core. This will take some time as we want to have  *Python 2.7* support, for as long as the language itself is supported.
 
-.. automodule:: botoflow.core.async_context
-   :members:
-   :undoc-members:
 
-botoflow.core.async_event_loop
------------------------------
+Core event loop
+---------------
 
 .. automodule:: botoflow.core.async_event_loop
    :members:
-   :undoc-members:
 
-botoflow.core.async_root_task_context
-------------------------------------
-
-.. automodule:: botoflow.core.async_root_task_context
-   :members:
-   :undoc-members:
-
-botoflow.core.async_task
------------------------
-
-.. automodule:: botoflow.core.async_task
-   :members:
-   :undoc-members:
-
-botoflow.core.async_task_context
--------------------------------
-
-.. automodule:: botoflow.core.async_task_context
-   :members:
-   :undoc-members:
-
-botoflow.core.async_traceback
-----------------------------
+Async Traceback support and manipulation
+----------------------------------------
 
 .. automodule:: botoflow.core.async_traceback
    :members:
-   :undoc-members:
 
-botoflow.core.base_future
-------------------------
-
-.. automodule:: botoflow.core.base_future
-   :members:
-   :undoc-members:
-
-botoflow.core.decorators
------------------------
+Decorators
+----------
 
 .. automodule:: botoflow.core.decorators
    :members:
-   :undoc-members:
 
-botoflow.core.exceptions
------------------------
+Exceptions
+----------
 
 .. automodule:: botoflow.core.exceptions
    :members:
-   :undoc-members:
 
-botoflow.core.future
+Future and the like
 -------------------
 
 .. automodule:: botoflow.core.future
    :members:
-   :undoc-members:
-
-botoflow.core.utils
-------------------
-
-.. automodule:: botoflow.core.utils
-   :members:
-   :undoc-members:
-
