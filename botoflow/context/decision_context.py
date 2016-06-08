@@ -14,7 +14,10 @@
 from .context_base import ContextBase
 from ..workflow_execution import WorkflowExecution
 
+
 class DecisionContext(ContextBase):
+    """Decision context provides information about current workflow execution
+    """
 
     def __init__(self, decider):
         self.decider = decider
@@ -41,7 +44,8 @@ class DecisionContext(ContextBase):
 
     @property
     def workflow_execution(self):
-        """Returns the current workflow execution information
+        """
+        :returns: the current workflow execution information
         :rtype: botoflow.workflow_execution.WorkflowExecution
         """
         return self.__workflow_execution

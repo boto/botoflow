@@ -105,6 +105,8 @@ our workflow execution.
 .. seqdiag::
 
     seqdiag flow {
+        edge_length = 250;
+	
         Application   -->> WorkflowLogic [label = "HelloWorldWorkflow.hello_world()"];
         WorkflowLogic -->> Activity      [label = "HelloWorldActivities.get_name()"];
         WorkflowLogic <<-- Activity      [label = "return name"];
@@ -205,34 +207,6 @@ down, because the execution state is stored by Amazon SWF, the workflow
 execution can continue as soon as the activity workers and deciders come back
 up.
 
-.. blockdiag::
-
-    blockdiag {
-        orientation = portrait;
-        Amazon_SWF [shape = cloud, label = "Amazon SWF"];
-
-        group {
-            label = "Host pool";
-            color = "magenta";
-            Activity_Workers [stacked, label = "Activity Workers"];
-        }
-
-        group {
-            label = "Workflow starter";
-            color = "#77FF77";
-
-            HelloWorldWorkflow;
-        }
-
-        group {
-            HelloWorldActivities [stacked];
-        }
-
-        HelloWorldWorkflow -> Amazon_SWF;
-        HelloWorldActivities -> Amazon_SWF;
-        Activity_Workers <-> Amazon_SWF;
-
-    }
 
 Distributed Execution
 ---------------------

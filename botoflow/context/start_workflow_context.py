@@ -15,8 +15,18 @@ from .context_base import ContextBase
 
 
 class StartWorkflowContext(ContextBase):
+    """Context provided when running within :py:class:`botoflow.workflow_starter.WorkflowStarter`.
 
-    def __init__(self, worker):
-        self.worker = worker
+    This gives you an opportunity to get access to the worker and workflow_execution. Generally though it's used
+    for storing internal states.
+
+    .. py:attribute:: workflow_starter
+
+        :rtype: botoflow.workflow_starter.WorkflowStarter
+
+    """
+
+    def __init__(self, workflow_starter):
+        self.workflow_starter = workflow_starter
 
         self._workflow_options_overrides = dict()

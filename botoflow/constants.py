@@ -11,30 +11,86 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-"""This module contains various constants
+"""This module contains various workflow, activity and time constants.
 
-:data USE_WORKER_TASK_LIST: Use task list of the ActivityWorker or
-    WorkflowWorker that is used to register activity or workflow as the defalt
+Tasklist settings
++++++++++++++++++
+
+.. py:data:: USE_WORKER_TASK_LIST
+
+    Use task list of the ActivityWorker or WorkflowWorker that is used to register activity or workflow as the default
     task list for the activity or workflow type.
 
-:data NO_DEFAULT_TASK_LIST: Do not specify task list on registration. Which
-    means that task list is required when scheduling activity.
+.. py:data:: NO_DEFAULT_TASK_LIST
 
-:data CHILD_TERMINATE: The child executions will be terminated.
+    Do not specify task list on registration. Which means that task list is required when scheduling activity.
 
-:data CHILD_REQUEST_CANCEL: Request to cancel will be attempted for each child
-    execution by recording a 'WorkflowExecutionCancelRequested' event in its
-    history. It is up to the decider to take appropriate actions when it
-    receives an execution history with this event.
 
-:data CHILD_ABANDON: Child policy to abandon (let the child workflow continue)
-    the parent workflow
+Child workflow termination policy settings
+++++++++++++++++++++++++++++++++++++++++++
 
-:data SECONDS: 2*SECONDS = 2
-:data MINUTES: 2*MINUTES = 120
-:data HOURS: 2*HOURS = 7200
-:data DAYS: 2*DAYS = 172800
-:data WEEKS: 2*WEEKS = 1209600
+You can learn more about *Child Workflows* from the official
+`SWF Developer Guide <http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-adv.html#swf-dev-adv-child-workflows>`_.
+
+.. py:data:: CHILD_TERMINATE
+
+    The child executions will be terminated.
+
+.. py:data:: CHILD_REQUEST_CANCEL
+
+    Request to cancel will be attempted for each child execution by recording a
+    :py:class:`~botoflow.history_events.events.WorkflowExecutionCancelRequested` event in its history. It is up to the
+    decider to take appropriate actions when it receives an execution history with this event.
+
+.. py:data:: CHILD_ABANDON
+
+    Child policy to abandon the parent workflow. If there are any child workflows still running the will be allowed
+    to continue without notice.
+
+
+Time multipliers
+++++++++++++++++
+
+The time multiplier constants are just an attempt at making setting various workflow or activity timeouts more readable.
+
+Consider the following examples and their readability:
+
+.. code-block:: python
+
+    @activities(schedule_to_start_timeout=120,
+                start_to_close_timeout=23400)
+    class ImportantBusinessActivities(object): ...
+
+    # using the time multiplier constants
+    from botoflow.constants import MINUTES, HOURS
+
+    @activities(schedule_to_start_timeout=2*MINUTES,
+                start_to_close_timeout=30*MINUTES + 6*HOURS)
+    class ImportantBusinessActivities(object): ...
+
+
+.. py:data:: SECONDS
+
+    ``2*SECONDS = 2``
+
+.. py:data:: MINUTES
+
+    ``2*MINUTES = 120``
+
+
+.. py:data:: HOURS
+
+    ``2*HOURS = 7200``
+
+
+.. py:data:: DAYS
+
+    ``2*DAYS = 172800``
+
+
+.. py:data:: WEEKS
+
+    ``2*WEEKS = 1209600``
 
 """
 

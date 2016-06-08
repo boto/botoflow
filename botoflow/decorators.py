@@ -43,8 +43,8 @@ def workflow(name):
     """Using this decorator you can override the workflow name (class name) to
     use.
 
-    This cam be very useful, when you're writing a newer version of the same
-    workflow, but you want to write it in a new class.
+    This can be very useful when you're writing a newer version of the same
+    workflow, but you want to write it in a different class.
 
     .. code-block:: python
 
@@ -61,12 +61,12 @@ def workflow(name):
             def example_start_v2(self, a, b, c):
                 pass
 
-    Now you have two classes that handle *ExampleWorkflow*, but with version
-    1.0 and version 2.0, which you can start by caling corresponding
-    example_start() and example_start_v2()
+    In the example above, you have two classes that handle *ExampleWorkflow*, but with version
+    1.0 and version 2.0, which you can start by calling the corresponding
+    example_start() and example_start_v2() class methods.
 
     :param str name: Specifies the name of the workflow type. If not set, the
-        name will be defaulted to the workflow definition class name.
+        default is to use the workflow definition class name.
 
     """
     def _workflow(cls):
@@ -84,10 +84,11 @@ def execute(version,
             data_converter=None,
             description=None,
             skip_registration=False):
-    """Use this decorator indicates the entry point of the workflow.
+    """This decorator indicates the entry point of the workflow.
 
     The entry point of the workflow can be invoked remotely by your application
-    using clients that are generated automatically by the botoflow.
+    using :py:class`~botoflow.workflow_starter.WorkflowStarter` or direct API call from ``boto3`` or
+    `AWS CLI <http://docs.aws.amazon.com/cli/latest/reference/swf/start-workflow-execution.html>`_.
 
     :param str version: Required version of the workflow type. Maximum length
         is 64 characters.
@@ -302,85 +303,106 @@ def retry_activity(stop_max_attempt_number=None, stop_max_delay=None, wait_fixed
                    wait_random_max=None, wait_incrementing_start=None, wait_incrementing_increment=None,
                    wait_exponential_multiplier=None, wait_exponential_max=None, retry_on_exception=None,
                    retry_on_result=None, wrap_exception=False, stop_func=None, wait_func=None):
-    """Retry activity decorator
+    """Decorator to indicate retrying policy for the activity
 
-    (based on the :py:mod:`retrying` library)
+    Based on the `retrying <https://pypi.python.org/pypi/retrying>`_ library, but uses **seconds instead of
+    milliseconds** for waiting as SWF does not support subsecond granularity as well as to make it consistent with the
+    rest of botoflow.
 
     **Examples:**
 
     .. code-block:: python
-       :caption: Retry forever
+       :caption: Retry forever:
 
-       @retry
+       @retry_activity
        @activity(version='1.0', start_to_close_timeout=float('inf'))
        def never_give_up_never_surrender_activity():
-           print "Retry forever ignoring Exceptions, don't wait between retries"
-
+           print("Retry forever ignoring Exceptions, don't "
+                 "wait between retries")
 
     .. code-block:: python
-       :caption: Retry only a certain number of times
+       :caption: Order of the activity decorators does not matter:
 
-       @retry(stop_max_attempt_number=7)
+       @activity(version='1.0', start_to_close_timeout=float('inf'))
+       @retry_activity
+       def never_give_up_never_surrender_activity():
+           print("Retry forever ignoring Exceptions, don't "
+                 "wait between retries and don't care about order")
+
+    .. code-block:: python
+       :caption: Retry only a certain number of times:
+
+       @retry_activity(stop_max_attempt_number=7)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def stop_after_7_attempts_activity():
-           print "Stopping after 7 attempts"
+           print("Stopping after 7 attempts")
 
     .. code-block:: python
        :caption: Stop retrying after 10 seconds
 
-       @retry(stop_max_delay=10*SECONDS)
+       @retry_activity(stop_max_delay=10*SECONDS)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def stop_after_10_s_activity():
-           print "Stopping after 10 seconds"
+           print("Stopping after 10 seconds")
 
     .. code-block:: python
-       :caption: Wait a random amount of time
+       :caption: Wait a random amount of time:
 
-       @retry(wait_random_min=1*SECONDS, wait_random_max=2*SECONDS)
+       @retry_activity(wait_random_min=1*SECONDS,
+                       wait_random_max=2*SECONDS)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def wait_random_1_to_2_s_activity():
-           print "Randomly wait 1 to 2 seconds between retries"
+           print("Randomly wait 1 to 2 seconds between retries")
 
     .. code-block:: python
-       :caption: Wait an exponentially growing amount of time
+       :caption: Wait an exponentially growing amount of time:
 
-       @retry(wait_exponential_multiplier=1*SECONDS, wait_exponential_max=10*SECONDS)
+       @retry_activity(wait_exponential_multiplier=1*SECONDS,
+                       wait_exponential_max=10*SECONDS)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def wait_exponential_1_activity():
-           print "Wait 2^x * 1 second between each retry, up to 10 seconds, then 10 seconds afterwards"
+           print("Wait 2^x * 1 second between each retry, up to 10 "
+                 "seconds, then 10 seconds afterwards")
 
     .. code-block:: python
-       :caption: Retry on exception
+       :caption: Retry on exception:
 
-       @retry(retry_on_exception=retry_on_exception(IOError, OSError))
+       @retry_activity(retry_on_exception=retry_on_exception(IOError, OSError))
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def might_io_os_error():
-           print "Retry forever with no wait if an IOError or OSError occurs, raise any other errors"
+           print("Retry forever with no wait if an IOError or OSError "
+                 "occurs, raise any other errors")
 
     .. code-block:: python
-       :caption: Custom exception retryer
+       :caption: Custom exception retryer:
 
        def retry_if_io_error(exception):
-       \"\"\"Return True if we should retry (in this case when it's an IOError), False otherwise\"\"\"
-       if isinstance(exception, ActivityTaskFailedError):
-           return isinstance(exception.cause, IOError)
+       \"\"\"Return True if we should retry (in this case when it's an IOError),
+             False otherwise
+       \"\"\"
+           if isinstance(exception, ActivityTaskFailedError):
+               return isinstance(exception.cause, IOError)
 
-       @retry(retry_on_exception=retry_if_io_error)
+       @retry_activity(retry_on_exception=retry_if_io_error)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def might_io_error():
-           print "Retry forever with no wait if an IOError occurs, raise any other errors"
+           print("Retry forever with no wait if an IOError occurs, "
+                 "raise any other errors")
 
     .. code-block:: python
-       :caption: Custom retryer based on result
+       :caption: Custom retryer based on result:
 
        def retry_if_result_none(result):
-       \"\"\"Return True if we should retry (in this case when result is None), False otherwise\"\"\"
+       \"\"\"Return True if we should retry (in this case when result is None),
+             False otherwise
+       \"\"\"
            return result is None
 
-       @retry(retry_on_result=retry_if_result_none)
+       @retry_activity(retry_on_result=retry_if_result_none)
        @activity(version='1.0', start_to_close_timeout=10*MINUTES)
        def might_return_none():
-           print "Retry forever ignoring Exceptions with no wait if return value is None"
+           print("Retry forever ignoring Exceptions with no wait if "
+                 "return value is None")
 
     :param stop_max_attempt_number: Stop retrying after reaching this attempt number. Default is 3 attempts.
     :type stop_max_attempt_number: int

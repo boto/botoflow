@@ -82,7 +82,14 @@ API Reference
    :maxdepth: 3
 	      
    reference/index
-   
+
+Internal Reference
+------------------
+
+.. toctree::
+   :maxdepth: 3
+
+   developer_reference/index
 
 ==================
 Indices and tables

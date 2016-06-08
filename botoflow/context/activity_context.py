@@ -17,16 +17,19 @@ from .context_base import ContextBase
 
 
 class ActivityContext(ContextBase):
-    # TODO document
+    """ActivityContext is accessible from within activities via
+    :py:func:`botoflow.get_context` and provides the ability to
+    retrieve information about the workflow as well as access to the
+    :py:meth:`heartbeat` for heartbeating the execution of activity
+    """
 
     def __init__(self, worker, task):
         """
 
         :param worker:
-        :type worker: awsflow.workers.activity_worker.ActivityWorker
+        :type worker: botoflow.workers.activity_worker.ActivityWorker
         :param task:
-        :type task: awsflow.workers.activity_task.ActivityTask
-        :return:
+        :type task: botoflow.workers.activity_task.ActivityTask
         """
 
         self.worker = worker
@@ -42,7 +45,6 @@ class ActivityContext(ContextBase):
         :raises CancellationError: if uncaught, will record this activity as cancelled
             in SWF history, and bubble up to the decider, where it will cancel the
             workflow.
-        :return:
         """
         result = self.worker.request_heartbeat(self.task, details)
         if result['cancelRequested']:
@@ -50,4 +52,8 @@ class ActivityContext(ContextBase):
 
     @property
     def workflow_execution(self):
+        """
+        :returns: the information about current workflow that the activity is handling
+        :rtype: botoflow.workflow_execution.WorkflowExecution
+        """
         return self.task.workflow_execution

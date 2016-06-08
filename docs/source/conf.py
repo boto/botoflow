@@ -34,6 +34,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
+    'sphinxcontrib.blockdiag',
+    'sphinxcontrib.seqdiag',
 ]
 
 autoclass_content = 'both'
@@ -112,6 +114,8 @@ todo_include_todos = True
 
 intersphinx_mapping = {'python3': ('https://docs.python.org/3', None)}
 
+blockdiag_html_image_format = "SVG"
+seqdiag_html_image_format = "SVG"
 
 # -- Options for HTML output ----------------------------------------------
 

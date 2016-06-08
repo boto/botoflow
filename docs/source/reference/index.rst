@@ -7,18 +7,12 @@ API Reference
 
    constants
    context
-   core
    data_converter
-   decider
-   decisions
-   decorator_descriptors
    decorators
    exceptions
-   history_events
    logging_filters
    options
-   utils
    workers
    workflow_definition
+   workflow_execution
    workflow_starter
-   workflow_types

@@ -1,5 +1,4 @@
-==========
-decorators
+Decorators
 ==========
 
 botoflow.decorators

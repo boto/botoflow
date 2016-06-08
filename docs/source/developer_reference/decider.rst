@@ -1,13 +1,6 @@
-=======
-decider
+Decider
 =======
 
-botoflow.decider
-----------------
-
-.. automodule:: botoflow.decider
-   :members:
-   :undoc-members:
 
 botoflow.decider.decider
 ------------------------

@@ -13,7 +13,24 @@
 
 from collections import namedtuple
 
-WorkflowExecution = namedtuple('WorkflowExecution', 'workflow_id run_id')
+
+class WorkflowExecution(namedtuple('WorkflowExecution', 'workflow_id run_id')):
+    """Contains workflow execution information provided by SWF.
+
+    .. py:attribute:: workflow_id
+
+        Either provided or randomly generated Workflow ID. There can only be one workflow running with the same
+        Workflow ID.
+
+        :rtype: str
+
+    .. py:attribute:: run_id
+
+        SWF generated and provided Run ID associated with a particular workflow execution
+
+        :rtype: str
+
+    """
 
 
 def workflow_execution_from_swf_event(event):
