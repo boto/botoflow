@@ -112,7 +112,8 @@ pygments_style = 'colorful'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-intersphinx_mapping = {'python3': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {'python3': ('https://docs.python.org/3', None),
+                       'botocore': ('https://botocore.readthedocs.io/en/latest', None)}
 
 blockdiag_html_image_format = "SVG"
 seqdiag_html_image_format = "SVG"
