@@ -11,8 +11,15 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-"""Internal: for use by decorators
+"""Descriptors allow us to manipulate Python functions/methods at a much deeper level.
+
+This is extremely useful for our workflow and activity decorators as descriptors allow us to perform different
+actions depending on whether the call was made from the class or instance. Thereby allowing things like calling
+activities from the workflow execution as if they were classmethod*s*.
+
+To learn more about descriptors and using them, please check the official Python documentation: :ref:`descriptors`.
 """
+
 import functools
 from .context import get_context, StartWorkflowContext, DecisionContext
 from .core import async

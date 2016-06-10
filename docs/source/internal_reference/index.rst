@@ -1,11 +1,14 @@
 Internal Reference
 ==================
 
-Internal reference documentation for botoflow developers.
+.. note::
+
+   Internal reference documentation for botoflow developers.
 
 .. toctree::
    :maxdepth: 4
 
+   activity_retrying
    core
    decider
    decisions

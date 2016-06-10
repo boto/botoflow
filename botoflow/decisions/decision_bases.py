@@ -10,15 +10,33 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+"""
+Decision bases are base classes for various decision classes, essentially grouping and reusing common bits between
+actual decisions.
+
+"""
+
 
 class DecisionBase(object):
+    """Every decision or decision base should inherit from this class
+
+    .. py:data:: decision
+
+        Contains a dictionary of decision attributes
+    """
+
     def __init__(self):
-        self.decision = dict()
+        self.decision = {}
 
 
 class ActivityDecisionBase(DecisionBase):
+    """Base for Activity decisions
+    """
 
     def __init__(self, decision_id):
+        """
+        :param str decision_id: Decision ID
+        """
         super(ActivityDecisionBase, self).__init__()
         self.decision_id = decision_id
 
@@ -28,7 +46,14 @@ class ActivityDecisionBase(DecisionBase):
 
 
 class RequestCancelExternalWorkflowDecisionBase(DecisionBase):
+    """Base for requesting a cancellation of external workflow
+    """
+
     def __init__(self, workflow_id, run_id):
+        """
+        :param str workflow_id: Workflow ID
+        :param str run_id: Run ID
+        """
         super(RequestCancelExternalWorkflowDecisionBase, self).__init__()
         self.decision_id = (workflow_id, run_id)
 
@@ -39,7 +64,12 @@ class RequestCancelExternalWorkflowDecisionBase(DecisionBase):
 
 
 class RecordMarkerDecisionBase(DecisionBase):
+    """Record marker decision base"""
+
     def __init__(self, decision_id):
+        """
+        :param str decision_id: Decision ID
+        """
         super(RecordMarkerDecisionBase, self).__init__()
         self.decision_id = decision_id
 
@@ -49,7 +79,15 @@ class RecordMarkerDecisionBase(DecisionBase):
 
 
 class SignalExternalWorkflowExecutionDecisionBase(DecisionBase):
+    """Signalling for external workflow
+    """
+
     def __init__(self, workflow_id, run_id, signal_name):
+        """
+        :param str workflow_id: Workflow ID
+        :param str run_id: Run ID
+        :param str signal_name: name of the signal to execute
+        """
         super(SignalExternalWorkflowExecutionDecisionBase, self).__init__()
         self.decision_id = (workflow_id, run_id, signal_name)
 
@@ -61,7 +99,15 @@ class SignalExternalWorkflowExecutionDecisionBase(DecisionBase):
 
 
 class StartChildWorkflowExecutionDecisionBase(DecisionBase):
+    """Starting child workflow base
+    """
+
     def __init__(self, workflow_type_name, workflow_type_version, workflow_id):
+        """
+        :param str workflow_type_name: Workflow type name
+        :param str workflow_type_version: version of the workflow
+        :param str workflow_id: Workflow ID
+        """
         super(StartChildWorkflowExecutionDecisionBase, self).__init__()
         self.decision_id = (workflow_type_name, workflow_type_version,
                             workflow_id)
@@ -74,8 +120,13 @@ class StartChildWorkflowExecutionDecisionBase(DecisionBase):
 
 
 class TimerDecisionBase(DecisionBase):
+    """Timer decisions base
+    """
 
     def __init__(self, decision_id):
+        """
+        :param str decision_id: Decision ID
+        """
         super(TimerDecisionBase, self).__init__()
         self.decision_id = decision_id
 
@@ -85,6 +136,7 @@ class TimerDecisionBase(DecisionBase):
 
 
 class WorkflowDecisionBase(DecisionBase):
+    """Workflow decision base"""
 
     def __init__(self):
         super(WorkflowDecisionBase, self).__init__()

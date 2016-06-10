@@ -89,7 +89,7 @@ Internal Reference
 .. toctree::
    :maxdepth: 3
 
-   developer_reference/index
+   internal_reference/index
 
 ==================
 Indices and tables

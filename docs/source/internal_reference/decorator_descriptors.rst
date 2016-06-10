@@ -1,5 +1,4 @@
-=====================
-decorator_descriptors
+Decorator Descriptors
 =====================
 
 botoflow.decorator_descriptors
