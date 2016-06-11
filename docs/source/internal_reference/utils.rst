@@ -1,11 +1,6 @@
 =====
-utils
+Utils
 =====
-
-**INTERNAL**
-
-botoflow.utils
---------------
 
 .. automodule:: botoflow.utils
    :members:

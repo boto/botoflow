@@ -1,28 +1,19 @@
+History Events
 ==============
-history_events
-==============
 
-INTERNAL
 
-botoflow.history_events
------------------------
-
-.. automodule:: botoflow.history_events
-   :members:
-   :undoc-members:
-
-botoflow.history_events.event_bases
------------------------------------
+Event Bases
+-----------
 
 .. automodule:: botoflow.history_events.event_bases
-   :members:
-   :undoc-members:
+  :members:
+  :undoc-members:
 
-botoflow.history_events.events
-------------------------------
+Events
+------
 
 .. automodule:: botoflow.history_events.events
-   :members:
-   :undoc-members:
+  :members:
+  :undoc-members:
 
 
