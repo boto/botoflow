@@ -18,16 +18,8 @@ h1 {
     margin: 15px;
 }
 
-li ul li {
-    list-style-image: url('ul_bullet.png');
-}
-
-li.toctree-l1 {
-    list-style-image: url('ul_bullet.png');
-}
-
-li.toctree-l2 {
-    list-style-image: url('li_bullet.png');
+li {
+    list-style-image: url('li_bullet.gif');
 }
 
 a:hover {
@@ -71,4 +63,18 @@ div.body h4 {
 
 div.body h5 {
     font-family: 'Arial', 'Georgia', serif;
+}
+
+dt {
+    font-weight: normal;
+    font-size: 16px;
+    margin: 15px 0px 10px 0px;
+}
+
+dt code.descname {
+    font-weight: bold;
+}
+
+body {
+    font-size: 15px;
 }

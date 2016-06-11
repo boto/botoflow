@@ -127,7 +127,7 @@ start a new workflow execution.
 
     seqdiag flow {
         edge_length = 250;
-	
+
         Application   -->> WorkflowLogic [label = "HelloWorldWorkflow.hello_world()"];
         WorkflowLogic -->> Activity      [label = "HelloWorldActivities.get_name()"];
         WorkflowLogic <<-- Activity      [label = "return name"];
