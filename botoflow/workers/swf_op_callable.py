@@ -1,8 +1,10 @@
-from  .. import swf_exceptions
+from .. import swf_exceptions
 
 
 class SWFOp(object):
-    """Callable"""
+    """Callable wrapper for SWF Operations that inspects the replies and raises appropriate
+    :py:mod:`botoflow.swf_exceptions`.
+    """
 
     def __init__(self, endpoint, op):
         self.endpoint = endpoint

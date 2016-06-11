@@ -23,6 +23,7 @@ from .base_worker import BaseWorker
 
 log = logging.getLogger(__name__)
 
+
 def get_workflow_entrypoint(definition_class, workflow_name, workflow_version):
     """Get the entry point information from *workflow_class*.
 
@@ -34,7 +35,7 @@ def get_workflow_entrypoint(definition_class, workflow_name, workflow_version):
     :type definition_class: child class of botoflow.workflow_definition.WorkflowDefinition
     :param str workflow_name: The name of the workflow
     :param str workflow_version: The version of the workflow
-    :return: Return a tuple of (*definition_class*, *workflow_type", *entrypoint_func_name") 
+    :return: Return a tuple of (*definition_class*, *workflow_type*, *entrypoint_func_name*)
     """
     return extract_workflows_dict([definition_class])[workflow_name, workflow_version]
 

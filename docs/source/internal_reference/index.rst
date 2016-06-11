@@ -16,3 +16,4 @@ Internal Reference
    history_events
    utils
    workflow_types
+   workers_internal
