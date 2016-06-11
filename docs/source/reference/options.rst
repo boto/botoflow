@@ -1,9 +1,5 @@
-=======
-options
-=======
-
-botoflow.options
-----------------
+Options Contexts
+================
 
 .. automodule:: botoflow.options
    :members:
