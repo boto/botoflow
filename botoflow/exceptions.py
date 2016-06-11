@@ -17,14 +17,14 @@ import traceback
 from .core.exceptions import CancelledError
 
 
-class AWSFlowError(Exception):
+class BotoflowError(Exception):
     """
-    base flow exception class
+    Base flow exception class
     """
     pass
 
 
-class ScheduleActivityTaskFailedError(AWSFlowError):
+class ScheduleActivityTaskFailedError(BotoflowError):
     """This exception is thrown if Amazon SWF fails to schedule an activity
     task. This could happen due to various reasons - for example, the activity
     was deprecated, or an Amazon SWF limit on your account has been
@@ -35,7 +35,7 @@ class ScheduleActivityTaskFailedError(AWSFlowError):
     pass
 
 
-class StartChildWorkflowExecutionFailedError(AWSFlowError):
+class StartChildWorkflowExecutionFailedError(BotoflowError):
     """This exception is thrown if Amazon SWF fails to start a child workflow
     execution. This could happen due to various reasons - for example, the type
     of child workflow specified was deprecated, or a Amazon SWF limit on your

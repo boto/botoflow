@@ -7,11 +7,11 @@ from botoflow.core.decorators import async
 from botoflow.core.base_future import BaseFuture, return_
 from botoflow.core.future import AllFuture, AnyFuture, Future
 from botoflow.core.exceptions import CancellationError
-from botoflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import BotoflowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('botoflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(BotoflowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

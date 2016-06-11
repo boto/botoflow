@@ -1,9 +1,6 @@
 ===============
-logging_filters
+Logging Filters
 ===============
-
-botoflow.logging_filters
-------------------------
 
 .. automodule:: botoflow.logging_filters
    :members:

@@ -11,12 +11,12 @@ from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker, Acti
 from botoflow.workflow_execution import WorkflowExecution
 from botoflow.core import CancelledError
 from botoflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
-from botoflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import BotoflowFilter
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
 
 
-logging.getLogger().addFilter(AWSFlowFilter)
+logging.getLogger().addFilter(BotoflowFilter)
 logging.getLogger('botocore').setLevel(logging.ERROR)
 
 

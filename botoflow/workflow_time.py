@@ -65,7 +65,7 @@ def is_replaying():
     (False) new decisions.
 
     This could be useful for filtering out logs for transitions that have
-    already completed. See: ``botoflow.logging_filters.AWSFlowFilter``.
+    already completed. See: ``botoflow.logging_filters.BotoflowFilter``.
 
     :returns: True if the current state in the workflow being replayed.
     :rtype: bool

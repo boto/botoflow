@@ -30,7 +30,7 @@ class RetryingActivities(object):
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger().addFilter(logging_filters.AWSFlowFilter())
+logging.getLogger().addFilter(logging_filters.BotoflowFilter())
 
 
 class TestRetryingActivitiesWorkflows(SWFMixIn, unittest.TestCase):

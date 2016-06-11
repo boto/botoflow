@@ -7,12 +7,12 @@ from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
                       ActivityWorker, WorkflowStarter, workflow_options)
 from botoflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
 from various_activities import BunchOfActivities
-from botoflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import BotoflowFilter
 
 from utils import SWFMixIn
 
 
-logging.getLogger().addFilter(AWSFlowFilter)
+logging.getLogger().addFilter(BotoflowFilter)
 logging.getLogger('botocore').setLevel(logging.ERROR)
 
 

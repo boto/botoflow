@@ -6,11 +6,11 @@ from collections import namedtuple
 import botoflow.core.base_future as futuremod
 from botoflow.core.async_event_loop import AsyncEventLoop
 from botoflow.core.async_task import AsyncTask
-from botoflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import BotoflowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('botoflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(BotoflowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 

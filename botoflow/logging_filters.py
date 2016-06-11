@@ -16,24 +16,24 @@ import logging
 import botoflow
 
 
-class AWSFlowFilter(logging.Filter):
+class BotoflowFilter(logging.Filter):
     """You can use this filter with Python's `logging` module to filter out
     botoflow logs that are being replayed by the decider.
 
     For example::
 
         import logging
-        from botoflow.logging_filters import AWSFlowFilter
+        from botoflow.logging_filters import BotoflowFilter
 
         logging.basicConfig(level=logging.DEBUG,
             format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
 
-        logging.getLogger('botoflow').addFilter(AWSFlowFilter())
+        logging.getLogger('botoflow').addFilter(BotoflowFilter())
 
     """
 
     def __init__(self, name='', filter_replaying=True):
-        super(AWSFlowFilter, self).__init__(name)
+        super(BotoflowFilter, self).__init__(name)
         self._filter_replaying = filter_replaying
 
     def filter(self, record):

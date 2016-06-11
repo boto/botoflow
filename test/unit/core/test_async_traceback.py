@@ -9,11 +9,11 @@ import six
 from botoflow.core.async_event_loop import AsyncEventLoop
 from botoflow.core.decorators import async, task
 from botoflow.core.async_traceback import format_exc, print_exc
-from botoflow.logging_filters import AWSFlowFilter
+from botoflow.logging_filters import BotoflowFilter
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(filename)s:%(lineno)d (%(funcName)s) - %(message)s')
-logging.getLogger('botoflow').addFilter(AWSFlowFilter())
+logging.getLogger('botoflow').addFilter(BotoflowFilter())
 
 pytestmark = pytest.mark.usefixtures('core_debug')
 
