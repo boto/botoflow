@@ -3,7 +3,7 @@ import time
 import unittest
 
 from botoflow import (WorkflowDefinition, execute, return_, ThreadedActivityExecutor, GenericWorkflowWorker, ActivityWorker,
-                      WorkflowStarter)
+                      workflow_starter)
 
 from botoflow.utils import extract_workflows_dict
 from utils import SWFMixIn
@@ -46,7 +46,7 @@ class TestGenericWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ThreadedActivityExecutor(ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 

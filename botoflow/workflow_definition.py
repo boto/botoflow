@@ -10,15 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-__all__ = ('WorkflowDefinition', )
-
+import six
 from copy import copy
 
-import six
 from botoflow import get_context, async, return_
 from botoflow.context import DecisionContext
 from botoflow.exceptions import CancelledError
+
+__all__ = ('WorkflowDefinition', )
 
 
 class _WorkflowDefinitionMeta(type):
@@ -83,18 +82,18 @@ class _WorkflowDefinitionMeta(type):
 
 
 class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
-    """Every workflow implementation needs to be a subclass of this class.
+    """Every workflow implementation must be a subclass of :py:class:`~botoflow.workflow_definition.WorkflowDefinition`.
 
     Usually there should be no need to instantiate the class manually, as
-    instead, the @execute method is called to start the workflow (you can think
-    of ths as having factory class methods).
+    instead, the :py:func:`@execute <botoflow.decorators.execute>` method is called to start the workflow
+    *(you can think of ths as having factory class methods in a sense)*.
 
-    Here's an example workflow implementation that has an @execute decorated
-    method and a @signal:
+    Here's an example workflow implementation that has an :py:func:`@execute <botoflow.decorators.execute>` decorated
+    method and a :py:func:`@signal <botoflow.decorators.signal>`:
 
     .. code-block:: python
 
-        from botoflow import execute, Return, WorkflowDefinition
+        from botoflow import execute, return_, WorkflowDefinition
         from botoflow.constants import MINUTES
 
         from my_activities import MyActivities
@@ -108,19 +107,25 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
                 result = yield MyActivities.activity1(some_input)
 
                 # return the result from the workflow
+                # in Python3 you can "return result" normally instead
                 return_(result)
 
             @signal()  # has to have () parentheses
             def signal1(self, signal_input):
                 self.signal_input = signal_input
 
-    As with the @async decorated methods, returning values from the workflow is
-    a little bit inconvenient on Python 2 as instead of using the familiar
-    return keyword, the return value is "raised" like this: `raise
-    Return("Value")`.
+    .. note::
+
+      As with the :py:func:`@async <botoflow.core.decorators.async>` decorated methods, returning values from the
+      workflow is a little bit inconvenient on Python 2 as it does not allow returning from generator functions (see
+      :pep:`0380`). Instead of using the familiar ``return`` keyword, the return value is *raised* like this: ``raise
+      Return("Value")``.
     """
 
     def __init__(self, workflow_execution):
+        """
+        :param ~botoflow.workflow_execution.WorkflowExecution workflow_execution: Associated workflow execution.
+        """
         self.workflow_execution = workflow_execution
         self.workflow_state = ""
         self._workflow_result = None
@@ -128,7 +133,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
     @property
     def workflow_execution(self):
         """Will contain the
-        :py:class:`botoflow.workflow_execution.WorkflowExecution` named tuple
+        :py:class:`~botoflow.workflow_execution.WorkflowExecution` named tuple
         of the currently running workflow.
 
         An example of the workflow_execution after starting a workflow:
@@ -141,12 +146,15 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
 
             # start the workflow with a random workflow_id
             with wf_worker:
-                instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
-                print instance.workflow_execution
-                # prints:
-                # WorkflowExecution(
-                #      workflow_id='73faf493fece67fefb1142739611c391a03bc23b',
-                #      run_id='12Eg0ETHpm17rSWssUZKqAvEZVd5Ap0RELs8kE7U6igB8=')
+                instance = ExampleWorkflow.execute(arg1=1, arg2=2)
+                print(instance.workflow_execution)
+
+        Prints something like the following:
+
+        .. code-block:: python
+
+            WorkflowExecution(workflow_id='73faf493fece67fefb1142739611c391a03bc23b',
+                              run_id='12Eg0ETHpm17rSWssUZKqAvEZVd5Ap0RELs8kE7U6igB8=')
 
         """
         return self.__workflow_execution
@@ -160,13 +168,16 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         """This property is used to retrieve current workflow state.
         The property is expected to perform read only access of the workflow
         implementation object and is invoked synchronously which disallows
-        use of any asynchronous operations (like calling it with `yield`).
+        use of any asynchronous operations (like calling it with ``yield``).
 
         The latest state reported by the workflow execution is returned to
         you through visibility calls to the Amazon SWF service and in the
         Amazon SWF console.
 
-        Example of setting the state between `yield` s:
+        To learn more about workflow execution state, please check out the official documentation on
+        `SWF Workflow History <http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-about-workflow-history.html>`_.
+
+        Example of setting the state between ``yield`` s:
 
         .. code-block:: python
 
@@ -190,11 +201,10 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
         workflow execution.
 
         The main use-case is when you have subworkflows, which results you'd
-        like to `yield` on and still be able to call signals on that
+        like to ``yield`` on and still be able to call signals on that
         sub-workflow.
 
-        :returns: `botoflow.core.future.Future`, or None if the workflow has
-            not been started.
+        :returns: `~botoflow.core.future.Future`, or None if the workflow has not been started.
         """
         return self._workflow_result
 
@@ -210,11 +220,10 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
 
         :param details: of request; is recorded in SWF history
         :type details: str
-        :return: cancel Future that is empty until the message was succesfully delivered
-            to target execution. Does not indicate whether the target execution accepted
-            the request or not.
-        :rtype: awsflow.core.Future
-        :raises CancelledError: if workflow to cancel is of current context
+        :return: cancel :py:class:`~botoflow.core.future.Future` that is empty until the message was succesfully
+            delivered to target execution. Does not indicate whether the target execution accepted the request or not.
+        :rtype: botoflow.core.future.Future
+        :raises botoflow.core.exceptions.CancelledError: if workflow to cancel is of current context
         """
         context = self._get_decision_context(self.cancel.__name__)
         if self.workflow_execution == context._workflow_execution:
@@ -223,7 +232,9 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
 
     @async
     def cancellation_handler(self):
-        """Override to take cleanup actions before workflow cancels"""
+        """Override this to take cleanup actions before workflow execution cancels.
+
+        """
         return_(None)
 
     def _get_decision_context(self, calling_func):

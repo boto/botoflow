@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from botoflow import WorkflowWorker, ActivityWorker, WorkflowStarter
+from botoflow import WorkflowWorker, ActivityWorker, workflow_starter
 from multiprocessing_workflows import OneMultiWorkflow, TwoMultiWorkflow
 from various_activities import BunchOfActivities
 from utils import SWFMixIn
@@ -15,7 +15,7 @@ class TestMultiWorkflows(SWFMixIn, unittest.TestCase):
             OneMultiWorkflow, TwoMultiWorkflow)
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneMultiWorkflow.execute(arg1=1, arg2=2)
             self.workflow_executions.append(instance.workflow_execution)
             instance = TwoMultiWorkflow.execute(arg1=1, arg2=2)

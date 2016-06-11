@@ -25,13 +25,12 @@ import logging
 from .context import StartWorkflowContext, get_context, set_context
 from .utils import random_sha1_hash
 from .swf_exceptions import swf_exception_wrapper
-from .exceptions import (
-    WorkflowFailedError, WorkflowTimedOutError, WorkflowTerminatedError)
+from .exceptions import WorkflowFailedError, WorkflowTimedOutError, WorkflowTerminatedError
 
 log = logging.getLogger(__name__)
 
 
-class WorkflowStarter(object):
+class workflow_starter(object):
     """Use this context manager to start a new workflow execution
 
     Example:
@@ -40,16 +39,16 @@ class WorkflowStarter(object):
 
         # start the workflow using botocore session and ExampleWorkflow class
         # with a random workflow_id
-        with WorkflowStarter(session, "us-east-1", "SOMEDOMAIN", "DEFAULT_TASKLIST"):
-            instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
-            print instance.workflow_execution.workflow_id
+        with workflow_starter(session, "us-east-1", "SOMEDOMAIN", "DEFAULT_TASKLIST"):
+            instance = ExampleWorkflow.execute(arg1=1, arg2=2)
+            print(instance.workflow_execution.workflow_id)
             # will print the workflow execution ID
     """
 
     def __init__(self, session, aws_region, domain, default_task_list):
         """
 
-        :param session: BotoCore session.
+        :param session: Botocore session.
         :type session: botocore.session.Session
         :param aws_region:
         :type aws_region: str
@@ -78,6 +77,17 @@ class WorkflowStarter(object):
         set_context(self._other_context)
 
     def wait_for_completion(self, workflow_instance, poll_sleep_time, attempt_count=None):
+        """This convenience method will block until the workflow completes or ``attempt_count`` is reached.
+
+        .. code-block:: python
+
+            with workflow_starter(session, "us-east-1", "SOMEDOMAIN", "DEFAULT_TASKLIST") as starter:
+                instance = ExampleWorkflow.execute(arg1=1, arg2=2)
+                # check every two minutes if the workflow completed and since we have not set
+                # the attempt_count, we will poll for as long as the workflow is running
+                result = starter.wait_for_completion(instance, poll_sleep_time, 2*MINUTES)
+
+        """
         workflow_execution = workflow_instance.workflow_execution
         data_converter = workflow_instance._data_converter
 

@@ -3,8 +3,8 @@ import time
 import unittest
 
 from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
-                     ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
-                     workflow_time, workflow_types, WorkflowStarter, workflow)
+                      ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
+                      workflow_time, workflow_types, workflow_starter, workflow)
 
 from botoflow.exceptions import (ActivityTaskFailedError, WorkflowFailedError)
 from utils import SWFMixIn
@@ -19,7 +19,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             def execute(self, arg1):
                 return_(arg1)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list) as starter:
+        with workflow_starter(self.session, self.region, self.domain, self.task_list) as starter:
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -50,7 +50,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, NoActivitiesFailureWorkflow)
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list) as starter:
+        with workflow_starter(self.session, self.region, self.domain, self.task_list) as starter:
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -79,7 +79,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
         worker = ThreadedWorkflowExecutor(WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, NoActivitiesWorkflow))
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -116,7 +116,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ThreadedActivityExecutor(ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -148,7 +148,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityTimedWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -180,7 +180,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityTimedWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -209,7 +209,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -240,7 +240,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWithTimerWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -281,7 +281,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             self.session, self.region, self.domain, 'abracadabra',
             OneActivityCustomTaskList()))
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityDefaultTaskListWorkflow.execute(
                 arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
@@ -331,7 +331,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = TryExceptFinallyWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -376,7 +376,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = TryExceptFinallyWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -410,7 +410,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = BunchOfActivitiesWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -442,7 +442,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = NextPageTokenWorkflow.execute(repeat=21, arg1=1)
             self.workflow_execution = instance.workflow_execution
 
@@ -478,7 +478,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = AllFutureWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -519,7 +519,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, SleepingActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = AnyFutureWorkflow.execute(arg1=5, arg2=1)
             self.workflow_execution = instance.workflow_execution
 
@@ -547,7 +547,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, NoActivitiesWorkflow)
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1=1)
             self.workflow_execution = instance.workflow_execution
 
@@ -581,7 +581,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, SubClassWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SubClassWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -603,7 +603,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, SubClassWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SubClassWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -632,7 +632,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, SubMultiverWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SubMultiverWorkflow.start_wf()
             self.workflow_execution = instance.workflow_execution
 
@@ -642,7 +642,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         hist = self.get_workflow_execution_history()
         self.assertEqual(len(hist), 5)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SubMultiverWorkflow.start_wf_v2()
             self.workflow_execution = instance.workflow_execution
 

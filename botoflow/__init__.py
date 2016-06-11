@@ -22,5 +22,5 @@ from .decorators import workflow, execute, activity, manual_activity, activities
 from .activity_retrying import retry_on_exception
 from .options import workflow_options, activity_options
 from .workflow_definition import WorkflowDefinition
-from .workflow_starter import WorkflowStarter
+from .workflow_starter import workflow_starter
 from . import workflow_types as types

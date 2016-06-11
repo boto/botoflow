@@ -5,7 +5,7 @@ from botocore import session
 
 from botoflow.data_converter import JSONDataConverter
 
-from botoflow import (WorkflowWorker, ActivityWorker, WorkflowStarter, ThreadedActivityExecutor)
+from botoflow import (WorkflowWorker, ActivityWorker, workflow_starter, ThreadedActivityExecutor)
 from various_activities import BunchOfActivities
 
 log = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class SWFMixIn(object):
         return wf_worker, act_worker
 
     def start_workflow(self, workflow_class, *args, **kwargs):
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = workflow_class.execute(*args, **kwargs)
             self.workflow_execution = instance.workflow_execution
             return instance.workflow_execution

@@ -17,7 +17,7 @@ import botoflow
 
 
 class BotoflowFilter(logging.Filter):
-    """You can use this filter with Python's `logging` module to filter out
+    """You can use this filter with Python's :py:mod:`logging` module to filter out
     botoflow logs that are being replayed by the decider.
 
     For example::

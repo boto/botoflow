@@ -3,7 +3,7 @@ import time
 import unittest
 
 from botoflow import (workflow_time, WorkflowDefinition, WorkflowWorker,
-                      signal, execute, return_, WorkflowStarter,
+                      signal, execute, return_, workflow_starter,
                       Future)
 from utils import SWFMixIn
 
@@ -52,7 +52,7 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
             self.session, self.region, self.domain, self.task_list,
             SignalledWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SignalledWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -76,7 +76,7 @@ class TestSignalledWorkflows(SWFMixIn, unittest.TestCase):
             self.session, self.region, self.domain, self.task_list,
             SignalledManyInputWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = SignalledManyInputWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 

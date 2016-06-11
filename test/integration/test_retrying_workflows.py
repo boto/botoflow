@@ -6,7 +6,7 @@ from calendar import timegm
 
 from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
-                      workflow_types, logging_filters, WorkflowStarter, workflow, activities, retry_activity,
+                      workflow_types, logging_filters, workflow_starter, workflow, activities, retry_activity,
                       retry_on_exception, swf_exceptions)
 
 from botoflow.exceptions import ActivityTaskTimedOutError, ActivityTaskFailedError
@@ -50,7 +50,7 @@ class TestRetryingActivitiesWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, RetryingActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = ActivityRetryOnTimeoutWorkflow.execute(sleep=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -93,7 +93,7 @@ class TestRetryingActivitiesWorkflows(SWFMixIn, unittest.TestCase):
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, RetryingActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = ActivityRetryOnExceptionWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 

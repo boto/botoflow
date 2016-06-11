@@ -4,7 +4,7 @@ import unittest
 import logging
 
 from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker,
-                      ActivityWorker, WorkflowStarter, workflow_options)
+                      ActivityWorker, workflow_starter, workflow_options)
 from botoflow.exceptions import ChildWorkflowTimedOutError, ChildWorkflowFailedError
 from various_activities import BunchOfActivities
 from botoflow.logging_filters import BotoflowFilter
@@ -74,7 +74,7 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
             MasterWorkflow, ChildWorkflow)
         act_worker = ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities())
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = MasterWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 
@@ -98,7 +98,7 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         wf_worker = WorkflowWorker(
             self.session, self.region, self.domain, self.task_list,
             TimingOutMasterWorkflow, TimingOutChildWorkflow)
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = TimingOutMasterWorkflow.execute()
             self.workflow_execution = instance.workflow_execution
 
@@ -124,7 +124,7 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
             self.session, self.region, self.domain, child_tasklist,
             RaisingChildWorkflow)
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = MasterWorkflowWithException.execute(child_tasklist)
             self.workflow_execution = instance.workflow_execution
 

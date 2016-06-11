@@ -1,9 +1,6 @@
 ================
-workflow_starter
+Workflow Starter
 ================
-
-botoflow.workflow_starter
-------------------------
 
 .. automodule:: botoflow.workflow_starter
    :members:

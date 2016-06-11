@@ -3,7 +3,7 @@ import unittest
 
 
 from botoflow import (
-    MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, WorkflowStarter,
+    MultiprocessingActivityExecutor, MultiprocessingWorkflowExecutor, workflow_starter,
     WorkflowWorker, ActivityWorker)
 from multiprocessing_workflows import (
     NoActivitiesWorkflow, NoActivitiesFailureWorkflow, OneActivityWorkflow)
@@ -17,7 +17,7 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
 
         worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, NoActivitiesWorkflow))
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -37,7 +37,7 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
 
         worker = MultiprocessingWorkflowExecutor(WorkflowWorker(
             self.session, self.region, self.domain, self.task_list, NoActivitiesFailureWorkflow))
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = NoActivitiesFailureWorkflow.execute(arg1="TestExecution")
             self.workflow_execution = instance.workflow_execution
 
@@ -60,7 +60,7 @@ class TestMultiprocessingWorkers(SWFMixIn, unittest.TestCase):
         act_worker = MultiprocessingActivityExecutor(ActivityWorker(
             self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
             self.workflow_execution = instance.workflow_execution
 

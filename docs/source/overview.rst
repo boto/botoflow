@@ -110,16 +110,16 @@ You can start an instance of this workflow using the following code snippet:
 
     session = botocore.session.get_session()
 
-    with WorkflowStarter(session, aws_region='us-east-1',
+    with workflow_starter(session, aws_region='us-east-1',
                          domain='domain1', task_list='tasklist1'):
         HelloWorldWorkflow.hello_world()  # starts the workflow
 
 Here we use :py:func:`~botocore.session.get_session` from botocore
 *(for authentication as well as low-level communication with SWF
 service)* and pass it to our
-:py:class:`~botoflow.workflow_starter.WorkflowStarter`.  Then we call
+:py:class:`~botoflow.workflow_starter.workflow_starter`.  Then we call
 ``HelloWorldWorkflow.hello_world()`` in the
-:py:class:`~botoflow.workflow_starter.WorkflowStarter` context to
+:py:class:`~botoflow.workflow_starter.workflow_starter` context to
 start a new workflow execution.
 
 

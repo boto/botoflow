@@ -87,7 +87,7 @@ def execute(version,
     """This decorator indicates the entry point of the workflow.
 
     The entry point of the workflow can be invoked remotely by your application
-    using :py:class`~botoflow.workflow_starter.WorkflowStarter` or direct API call from ``boto3`` or
+    using :py:class`~botoflow.workflow_starter.workflow_starter` or direct API call from ``boto3`` or
     `AWS CLI <http://docs.aws.amazon.com/cli/latest/reference/swf/start-workflow-execution.html>`_.
 
     :param str version: Required version of the workflow type. Maximum length

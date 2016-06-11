@@ -6,7 +6,7 @@ from threading import Thread
 
 from botoflow import (WorkflowDefinition, execute, return_,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker,
-                      WorkflowStarter)
+                      workflow_starter)
 
 from botoflow.manual_activity_completion_client import ManualActivityCompletionClient
 from utils import SWFMixIn
@@ -32,7 +32,7 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
         act_executor = ThreadedActivityExecutor(ActivityWorker(
             self.session, self.region, self.domain, self.task_list, ManualActivities()))
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneManualActivityWorkflow.execute(template='instructions.tmpl')
             self.workflow_execution = instance.workflow_execution
 
@@ -84,7 +84,7 @@ class TestManualActivities(SWFMixIn, unittest.TestCase):
             self.session, self.region, self.domain, self.task_list,
             BunchOfActivities(), ManualActivities())
 
-        with WorkflowStarter(self.session, self.region, self.domain, self.task_list):
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
             instance = OneManualOneAutomaticActivityWorkflow.execute(template='instructions.tmpl')
             self.workflow_execution = instance.workflow_execution
 

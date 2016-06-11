@@ -7,7 +7,7 @@ import unittest
 from threading import Thread
 
 from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker, ActivityWorker,
-                      WorkflowStarter, async, workflow_time, workflow_options)
+                      workflow_starter, async, workflow_time, workflow_options)
 from botoflow.workflow_execution import WorkflowExecution
 from botoflow.core import CancelledError
 from botoflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
@@ -391,7 +391,7 @@ class TestExternalExecutionCancelWorkflows(SWFMixIn, unittest.TestCase):
             [source_wf, target_wf])
 
         target_execution = self.start_workflow(target_wf)
-        with WorkflowStarter(self.session, self.region, self.domain, 'source_task_list'):
+        with workflow_starter(self.session, self.region, self.domain, 'source_task_list'):
             instance = source_wf.execute(*target_execution)
             source_execution = instance.workflow_execution
 
