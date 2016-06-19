@@ -2,6 +2,6 @@
 Workflow Starter
 ================
 
-.. automodule:: botoflow.workflow_starter
+.. automodule:: botoflow.workflow_starting
    :members:
    :undoc-members:

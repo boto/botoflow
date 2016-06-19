@@ -22,11 +22,11 @@ class StartWorkflowContext(ContextBase):
 
     .. py:attribute:: workflow_starter
 
-        :rtype: botoflow.workflow_starter.workflow_starter
+        :rtype: botoflow.workflow_starting.workflow_starter
 
     """
 
-    def __init__(self, workflow_starter):
-        self.workflow_starter = workflow_starter
+    def __init__(self, worker):
+        self.worker = worker
 
         self._workflow_options_overrides = dict()
