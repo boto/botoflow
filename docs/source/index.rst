@@ -65,7 +65,6 @@ Setting up Development Environment
 	      
    setting_up_dev_env
 
-
 Feature Details
 ---------------
 
@@ -73,8 +72,7 @@ Feature Details
    :maxdepth: 2
 	      
    feature_details
-
-
+   
 API Reference
 -------------
 
@@ -90,6 +88,14 @@ Internal Reference
    :maxdepth: 3
 
    internal_reference/index
+
+Change Log
+----------
+
+.. toctree::
+   :maxdepth: 2
+
+   changelog
 
 ==================
 Indices and tables
