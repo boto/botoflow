@@ -33,5 +33,4 @@ class ActivityTask(object):
             task_dict['workflowExecution']['workflowId'],
             task_dict['workflowExecution']['runId'])
 
-
     # TODO implement __repr__

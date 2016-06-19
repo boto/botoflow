@@ -63,7 +63,7 @@ class GenericWorkflowWorker(BaseWorker):
         Callable that returns workflow information. This function takes
         (*workflow_name*, *workflow_version*) and returns a tuple of
         (*workflow_definition*, *workflow_type_object*, *function_name*).
-        (see also :py:func:`~.get_workflow_entrypoint`) 
+        (see also :py:func:`~.get_workflow_entrypoint`)
 
     This worker also acts as a context manager for starting new workflow
     executions. See the following example on how to start a workflow:
@@ -78,7 +78,7 @@ class GenericWorkflowWorker(BaseWorker):
         newdict = BaseWorker.__getstate__(self)
         del newdict['_decider']
         return newdict
-    
+
     def __setstate__(self, newdict):
         BaseWorker.__setstate__(self, newdict)
         self.__dict__ = newdict
@@ -88,7 +88,7 @@ class GenericWorkflowWorker(BaseWorker):
         get_workflow = self._get_workflow_finder()
         self._decider = Decider(self, self.domain, self.task_list,
                                 get_workflow, self.identity)
-    
+
     def _get_workflow_finder(self):
         return self._get_workflow
 
@@ -164,7 +164,7 @@ class WorkflowWorker(GenericWorkflowWorker):
         super(WorkflowWorker, self).__init__(session, aws_region, domain, task_list, None)
 
         self._register_all_workflows()
-    
+
     def __getstate__(self):
         newdict = super(WorkflowWorker, self).__getstate__()
         del newdict['_workflows']
@@ -183,4 +183,3 @@ class WorkflowWorker(GenericWorkflowWorker):
 
     def _setup_workflow_definitions(self):
         self._workflows = extract_workflows_dict(self._workflow_definitions)
-

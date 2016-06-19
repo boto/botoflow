@@ -197,5 +197,3 @@ class ChildWorkflowExecutionHandler(object):
             raise RuntimeError("Unexpected event/state: %s", event)
 
         del self._open_child_workflows[workflow_id]  # child workflow done
-
-

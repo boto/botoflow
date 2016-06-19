@@ -32,11 +32,11 @@ def _task(daemon=False):
 
     def __task(func):
         def inner_task(*args, **kwargs):
-            task = AsyncTask(func, args, kwargs, daemon)
-            task.context.except_func = inner_task.except_func
-            task.context.finally_func = inner_task.finally_func
-            task.context.set_stack(traceback.extract_stack())
-            task.execute()
+            async_task = AsyncTask(func, args, kwargs, daemon)
+            async_task.context.except_func = inner_task.except_func
+            async_task.context.finally_func = inner_task.finally_func
+            async_task.context.set_stack(traceback.extract_stack())
+            async_task.execute()
 
         inner_task.except_func = None
         inner_task.finally_func = None
@@ -146,6 +146,8 @@ def _async(daemon=False):
         :return:
         :rtype: awsflow.core.future.Future
         """
+
+        # noinspection PyShadowingNames
         def ___async(func):
             return AsyncDecorator(func, daemon)
 

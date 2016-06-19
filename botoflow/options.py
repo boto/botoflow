@@ -11,12 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ('activity_options', 'workflow_options')
-
-import six
-
 from .context import get_context
 from .utils import str_or_NONE
+
+__all__ = ('activity_options', 'workflow_options')
 
 
 # noinspection PyPep8Naming
@@ -86,7 +84,7 @@ class activity_options(object):
         self._prev_opts = context._activity_options_overrides
         context._activity_options_overrides = self._overrides
 
-    # noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal,PyShadowingBuiltins
     def __exit__(self, type, err, tb):
         get_context()._activity_options_overrides = self._prev_opts
 

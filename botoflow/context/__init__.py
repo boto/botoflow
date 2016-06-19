@@ -13,13 +13,14 @@
 
 # XXX docs
 
-__all__ = ('get_context', 'set_context', 'StartWorkflowContext',
-           'ActivityContext', 'DecisionContext')
 
 from .context_base import ContextBase
 from .start_workflow_context import StartWorkflowContext
 from .activity_context import ActivityContext
 from .decision_context import DecisionContext
+
+__all__ = ('get_context', 'set_context', 'StartWorkflowContext',
+           'ActivityContext', 'DecisionContext')
 
 
 get_context = ContextBase.get_context

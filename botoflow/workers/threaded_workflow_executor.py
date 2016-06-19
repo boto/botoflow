@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 class ThreadedWorkflowExecutor (ThreadedExecutor):
-    """This is a threaded workflow executor. 
+    """This is a threaded workflow executor.
 
     It will execute a :py:class:`~WorkflowWorker` in multiple threads.
 
@@ -55,6 +55,7 @@ class ThreadedWorkflowExecutor (ThreadedExecutor):
 
         start_condition = threading.Condition()
 
+        # noinspection PyShadowingNames
         def run_decider(self):
             self._thread_queue.get()
             thread = threading.current_thread()

@@ -30,8 +30,10 @@ def print_exc(limit=None, file=None):
     if file is None:
         file = sys.stderr
 
-    for line in format_exc(limit):
-        file.write(line)
+    formatted_exc = format_exc(limit)
+    if formatted_exc is not None:
+        for line in formatted_exc:
+            file.write(line)
 
 
 def format_exc(limit=None, exception=None, tb_list=None):

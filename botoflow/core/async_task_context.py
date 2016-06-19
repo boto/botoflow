@@ -27,6 +27,7 @@ DEBUG = False
 log = logging.getLogger(__name__)
 
 
+# noinspection PyPep8Naming
 def AsyncTask(func, *args, **kwargs):
     # avoid looping imports
     from .async_task import AsyncTask

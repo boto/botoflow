@@ -49,8 +49,10 @@ class ThreadedActivityExecutor (ThreadedExecutor):
         # we use this semaphore to ensure we have at most poller_tasks running
         poller_semaphore = threading.Semaphore(pollers)
 
+        # noinspection PyShadowingNames
         def run_poller_worker(self):
             self._thread_queue.get()
+            # noinspection PyShadowingNames
             thread = threading.current_thread()
             log.debug("Poller/worker %s started", thread.name)
             try:

@@ -125,5 +125,3 @@ class MultiprocessingExecutor(object):
     @classmethod
     def _process_manager(cls):
         return process_manager()
-
-

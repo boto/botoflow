@@ -11,11 +11,11 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ('time', 'sleep', 'is_replaying')
-
 from time import mktime
 
 from .context import get_context, DecisionContext
+
+__all__ = ('time', 'sleep', 'is_replaying')
 
 
 def time():

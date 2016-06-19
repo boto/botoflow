@@ -31,11 +31,10 @@ def _set_swf_options(obj, opts_key, options):
     if not hasattr(obj, 'swf_options'):
         obj.swf_options = dict()
 
-    if not opts_key in obj.swf_options:
+    if opts_key not in obj.swf_options:
         obj.swf_options[opts_key] = options
     else:  # union
-        obj.swf_options[opts_key] = dict(options.items()
-                                         + obj.swf_options[opts_key].items())
+        obj.swf_options[opts_key] = dict(options.items() + obj.swf_options[opts_key].items())
     return obj
 
 
@@ -116,7 +115,7 @@ def execute(version,
         serializing/deserializing data when sending requests to and receiving
         results from workflow executions of this workflow type.  Set to `None`
         by default, which indicates that the JsonDataConverter should be used.
-    :type data_converter: :py:class:`~awsflow.data_converter.abstract_data_converter.AbstractDataConverter`
+    :type data_converter: :py:class:`~botoflow.data_converter.abstract_data_converter.AbstractDataConverter`
     :param description: Textual description of the workflow definition. By
         default will use the docstring of the workflow definition class if
         available. The maximum length is 1024 characters, so a long docstring
@@ -155,19 +154,36 @@ def activities(task_list=USE_WORKER_TASK_LIST,
                data_converter=None):
     """This decorator can be used to declare a set of activity types.
     Each method on the class annotated with this decorator represents an
-    activity type. An interface cannot have both @workflow and @activities
+    activity type. An interface cannot have both ``@workflow`` and ``@activities``
     decorators.
 
-    :param str activity_name_prefix: Specifies the prefix of the name of the
-        activity types declared in the interface. If set to empty string (which
-        is the default), the name of the class followed by '.' is used as the
-        prefix.
-
+    :param str task_list: Specifies the default task list to be registered with Amazon SWF for this set of activities.
+        The default can be overridden using :py:func`~botoflow.options_overrides.activity_options` when calling the
+        activity. Set to :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by default. This is a special value which
+        indicates that the task list used by the worker, which is performing the registration, should be used.
+    :param str activity_name_prefix: Specifies the prefix of the name of the activity types declared in the interface.
+        If set to empty string (which is the default), the name of the class followed by '.' is used as the prefix.
+    :param heartbeat_timeout: Specifies the defaultTaskHeartbeatTimeout registered with Amazon SWF for this activity
+        type. Activity workers must provide heartbeat within this duration; otherwise, the task will be timed out. Set
+        to `None` by default, which is a special value that indicates this timeout should be disabled. See Amazon SWF
+        API reference for more details.
+    :type heartbeat_timeout: int or None
+    :param schedule_to_start_timeout: Specifies the defaultTaskScheduleToStartTimeout registered with
+        Amazon SWF for this activity type. This is the maximum time a task of this activity type is allowed
+        to wait before it is assigned to a worker. It is required either here or in :py:func:`.activities`.
+    :type schedule_to_start_timeout: int or None
+    :param start_to_close_timeout: Specifies the defaultTaskStartToCloseTimeout registered with Amazon SWF for this
+        activity type. This timeout determines the maximum time a worker can take to process an activity task of this
+        type.
+    :type start_to_close_timeout: int or None
+    :param schedule_to_close_timeout: Specifies the defaultScheduleToCloseTimeout registered with
+        Amazon SWF for this activity type. This timeout determines the total duration that the task can
+        stay in open state. Set to `None` by default, which indicates this timeout should be disabled.
+    :type schedule_to_close_timeout: int or None
     :param data_converter: Specifies the type of the DataConverter to use for
-        serializing/deserializing data when creating tasks of this activity
-        type and its results. Set to `None` by default, which indicates that
-        the JsonDataConverter should be used.
-    :type data_converter: :py:class:`~awsflow.data_converter.abstract_data_converter.AbstractDataConverter`
+        serializing/deserializing data when creating tasks of this activity type and its results.
+        Set to `None` by default, which indicates that the JsonDataConverter should be used.
+    :type data_converter: :py:class:`~botoflow.data_converter.abstract_data_converter.AbstractDataConverter`
     """
 
     def _activities(cls):
@@ -275,6 +291,7 @@ def activity(version,
         skip_registration=skip_registration,
         manual=manual)
 
+    # noinspection PyShadowingNames
     def _activity(func):
         # assume class for now XXX find a safer way
         if not isinstance(func, types.FunctionType):
@@ -462,8 +479,8 @@ def manual_activity(version,
                     name=None,
                     task_list=USE_WORKER_TASK_LIST,
                     heartbeat_timeout=None,
-                    schedule_to_start_timeout=None,  #indicates not set
-                    start_to_close_timeout=None,    #indicates not set
+                    schedule_to_start_timeout=None,  # indicates not set
+                    start_to_close_timeout=None,  # indicates not set
                     schedule_to_close_timeout=None,
                     description=None,
                     skip_registration=False):

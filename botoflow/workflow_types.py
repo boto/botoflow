@@ -12,8 +12,6 @@
 # permissions and limitations under the License.
 
 
-__all__ = ('WorkflowType', 'ActivityType', 'SignalType')
-
 import abc
 
 from copy import copy
@@ -27,25 +25,27 @@ from .workflow_execution import WorkflowExecution
 from .context import (get_context, DecisionContext,
                       StartWorkflowContext, ActivityContext)
 
+__all__ = ('WorkflowType', 'ActivityType', 'SignalType')
+
 
 class BaseFlowType(object):
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def to_decision_dict(self):
+    def to_decision_dict(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_registration_options_dict(self):
+    def to_registration_options_dict(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _reset_name(self):
+    def _reset_name(self, *args, **kwargs):
         raise NotImplementedError()
 
 
@@ -98,6 +98,7 @@ class WorkflowType(BaseFlowType):
         raise TypeError("Converter {0!r} must be a subclass of {1}"
                         .format(converter, AbstractDataConverter.__name__))
 
+    # noinspection PyShadowingBuiltins
     def to_decision_dict(self, input, workflow_id=None, worker_task_list=None, domain=None):
         task_list = self.task_list
         if task_list == USE_WORKER_TASK_LIST:
@@ -106,8 +107,7 @@ class WorkflowType(BaseFlowType):
         serialized_input = self.data_converter.dumps(input)
 
         decision_dict = {
-            'workflowType': {'version': self.version,
-                              'name': self.name},
+            'workflowType': {'version': self.version, 'name': self.name},
             'taskList': {'name': str_or_NONE(task_list)},
             'childPolicy': str_or_NONE(self.child_policy),
             'executionStartToCloseTimeout': str_or_NONE(
@@ -132,6 +132,7 @@ class WorkflowType(BaseFlowType):
 
         return _decision_dict
 
+    # noinspection PyShadowingBuiltins
     def to_continue_as_new_dict(self, input, worker_task_list):
         decision_dict = self.to_decision_dict(
             input, worker_task_list=worker_task_list)

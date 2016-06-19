@@ -69,7 +69,6 @@ class WorkflowExecutionHandler(object):
 
             return args, kwargs
 
-
     def handle_event(self, event):
         if isinstance(event, WorkflowExecutionStarted):
             self._handle_workflow_execution_started(event)

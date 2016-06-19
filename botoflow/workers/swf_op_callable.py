@@ -30,5 +30,3 @@ class SWFOp(object):
             error = exception(response_data.get('message'),
                               response_data)
         raise error  # exception from SWF Service
-
-

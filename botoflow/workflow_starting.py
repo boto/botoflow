@@ -107,7 +107,7 @@ class workflow_starter(object):
 
             if close_status == 'COMPLETED':
                 return self._load_workflow_execution_result(
-                    workflow_execution,data_converter)
+                    workflow_execution, data_converter)
 
             elif close_status == 'FAILED':
                 return self._load_failed_workflow_execution_result(
@@ -164,8 +164,8 @@ class workflow_starter(object):
                 while True:
                     kwargs = {'domain': self.domain,
                               'execution':
-                                {'workflowId': workflow_execution.workflow_id,
-                                 'runId': workflow_execution.run_id}}
+                                  {'workflowId': workflow_execution.workflow_id,
+                                   'runId': workflow_execution.run_id}}
                     if next_page_token:
                         # if we have a token, request the next page of events
                         kwargs['nextPageToken'] = next_page_token
@@ -198,4 +198,3 @@ class workflow_starter(object):
         with swf_exception_wrapper():
             response = self.client.start_workflow_execution(**decision_dict)
         return decision_dict['workflowId'], response['runId']
-

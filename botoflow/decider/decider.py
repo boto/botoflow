@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 
 class Decider(object):
 
+    # noinspection PyPep8Naming
     def __init__(self, worker, domain, task_list, get_workflow, identity, _Poller=DecisionTaskPoller):
         """
 

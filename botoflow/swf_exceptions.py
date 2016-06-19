@@ -92,6 +92,7 @@ class UnknownResourceError(SWFResponseError):
     """
     pass
 
+
 class UnrecognizedClientException(SWFResponseError):
     """Raised when the client is not authenticated by SWF"""
     pass

@@ -60,6 +60,7 @@ class CompleteWorkflowExecution(WorkflowDecisionBase):
 
 
 class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
+    # noinspection PyShadowingBuiltins
     def __init__(self,
                  child_policy=None,
                  execution_start_to_close_timeout=None,
@@ -162,6 +163,8 @@ class RequestCancelExternalWorkflowExecution(RequestCancelExternalWorkflowDecisi
 
 
 class ScheduleActivityTask(ActivityDecisionBase):
+
+    # noinspection PyShadowingBuiltins
     def __init__(self, activity_id, activity_type_name, activity_type_version,
                  task_list=None, control=None, heartbeat_timeout=None,
                  schedule_to_close_timeout=None,
@@ -216,6 +219,8 @@ class ScheduleActivityTask(ActivityDecisionBase):
 
 
 class SignalExternalWorkflowExecution(SignalExternalWorkflowExecutionDecisionBase):
+
+    # noinspection PyShadowingBuiltins
     def __init__(self, workflow_id, run_id, signal_name,
                  control=None, input=None):
         """
@@ -239,6 +244,8 @@ class SignalExternalWorkflowExecution(SignalExternalWorkflowExecutionDecisionBas
 
 
 class StartChildWorkflowExecution(StartChildWorkflowExecutionDecisionBase):
+
+    # noinspection PyShadowingBuiltins
     def __init__(self, workflow_type, workflow_id, child_policy=None,
                  control=None, execution_start_to_close_timeout=None,
                  input=None, tag_list=None, task_list=None,

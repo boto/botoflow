@@ -250,7 +250,7 @@ class JSONDataConverter(AbstractDataConverter):
     :py:mod:`json` cannot do, but allows you to have a more or less
     human readable view of the data (if you for example were using the
     AWS SWF console to check on the progress of your workflow
-    activities). 
+    activities).
 
     It tries to serialize objects from new-style classes, moreover, it
     tries to follow the pickle's __setstate__ and __getstate__ methods

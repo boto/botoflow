@@ -11,8 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ('RetryError', 'Retrying')
-
 import sys
 from math import ceil
 
@@ -22,6 +20,7 @@ from . import workflow_time
 from .exceptions import ActivityTaskFailedError
 from .core import async, return_
 
+__all__ = ('RetryError', 'Retrying')
 
 RetryError = retrying.RetryError
 
@@ -55,7 +54,8 @@ class Retrying(retrying.Retrying):
                  retry_on_exception=None, retry_on_result=None, wrap_exception=False, stop_func=None, wait_func=None):
 
         super(Retrying, self).__init__(stop=stop_func, wait=wait_func, stop_max_attempt_number=stop_max_attempt_number,
-                                       stop_max_delay=stop_max_delay, wait_fixed=wait_fixed, wait_random_min=wait_random_min,
+                                       stop_max_delay=stop_max_delay, wait_fixed=wait_fixed,
+                                       wait_random_min=wait_random_min,
                                        wait_random_max=wait_random_max, wait_incrementing_start=wait_incrementing_start,
                                        wait_incrementing_increment=wait_incrementing_increment,
                                        wait_exponential_multiplier=wait_exponential_multiplier,
@@ -73,9 +73,12 @@ class Retrying(retrying.Retrying):
         self._wait_random_min = 0 if wait_random_min is None else int(wait_random_min * 1000)
         self._wait_random_max = 1000 if wait_random_max is None else int(wait_random_max * 1000)
         self._wait_incrementing_start = 0 if wait_incrementing_start is None else int(wait_incrementing_start * 1000)
-        self._wait_incrementing_increment = 1000 if wait_incrementing_increment is None else int(wait_incrementing_increment * 1000)
-        self._wait_exponential_multiplier = 1 if wait_exponential_multiplier is None else int(wait_exponential_multiplier * 1000)
-        self._wait_exponential_max = retrying.MAX_WAIT if wait_exponential_max is None else int(wait_exponential_max * 1000)
+        self._wait_incrementing_increment = (1000 if wait_incrementing_increment is None
+                                             else int(wait_incrementing_increment * 1000))
+        self._wait_exponential_multiplier = (1 if wait_exponential_multiplier is None
+                                             else int(wait_exponential_multiplier * 1000))
+        self._wait_exponential_max = (retrying.MAX_WAIT if wait_exponential_max is None
+                                      else int(wait_exponential_max * 1000))
 
     @async
     def call(self, fn, *args, **kwargs):

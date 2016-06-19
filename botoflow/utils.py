@@ -29,7 +29,7 @@ WorkflowDetails = namedtuple('WorkflowDetails',
                              'registration_options')
 
 
-
+# noinspection PyPep8Naming
 def str_or_NONE(value):
     """If the `value` is `None` returns a "NONE"",
     otherwise returns `str(value)`
@@ -40,10 +40,10 @@ def str_or_NONE(value):
 
 
 def random_sha1_hash():
-    hash = hashlib.sha1()
-    hash.update(six.b(str(time.time())))
-    hash.update(six.b(str(random.random())))
-    return hash.hexdigest()
+    hash_ = hashlib.sha1()
+    hash_.update(six.b(str(time.time())))
+    hash_.update(six.b(str(random.random())))
+    return hash_.hexdigest()
 
 
 def extract_workflow_details_from_class(cls):
@@ -89,8 +89,7 @@ def extract_workflows_dict(workflow_definitions):
                             "WorkflowDefinition")
 
         # extract activities info from the class
-        for workflow_type, func_name in \
-            six.iteritems(workflow_definition._workflow_types):
+        for workflow_type, func_name in six.iteritems(workflow_definition._workflow_types):
 
             namever = (workflow_type.name, workflow_type.version)
             workflows[namever] = (workflow_definition, workflow_type,

@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 class MultiprocessingWorkflowExecutor(MultiprocessingExecutor):
     """This is a multiprocessing workflow executor, suitable for handling lots of
-    workflow decisions in parallel on CPython. 
+    workflow decisions in parallel on CPython.
     """
 
     def start(self, pollers=1):

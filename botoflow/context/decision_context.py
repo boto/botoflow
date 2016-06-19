@@ -81,4 +81,3 @@ class DecisionContext(ContextBase):
     @_workflow_instance.setter
     def _workflow_instance(self, value):
         self.__workflow_instance = value
-

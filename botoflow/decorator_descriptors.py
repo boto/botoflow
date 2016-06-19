@@ -130,8 +130,7 @@ class WorkflowExecuteFunc(object):
             pass
 
         if isinstance(context, StartWorkflowContext) \
-           or (isinstance(context, DecisionContext)
-               and context.decider.execution_started):
+           or (isinstance(context, DecisionContext) and context.decider.execution_started):
 
             # called on a class or instance does not matter
             func = functools.partial(workflow_type, (cls, instance))
