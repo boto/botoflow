@@ -2,6 +2,8 @@
 Botoflow - Asynchronous Framework for Amazon SWF
 ================================================
 
+|Version| |Documentation| |Build Status| |Coverage|
+
 Botoflow is an asynchronous framework for `Amazon SWF`_ that helps you
 build SWF applications using Python. You can find the latest, most
 up to date, documentation at `Read the Docs`_ including the "Getting Started Guide".
@@ -11,7 +13,18 @@ Under the hood it uses `botocore`_ low level interface to interact with `Amazon 
 .. _`botocore`: https://github.com/boto/botocore
 .. _`Read the Docs`: https://botoflow.readthedocs.io/en/latest/
 .. _`Amazon SWF`: https://aws.amazon.com/swf/
-
+.. |Version| image:: https://img.shields.io/pypi/v/botoflow.svg
+    :target: https://pypi.python.org/pypi/botoflow
+    :alt: Version
+.. |Documentation| image:: https://readthedocs.org/projects/botoflow/badge/?version=latest
+    :target: https://botoflow.readthedocs.io
+    :alt: Documentation
+.. |Build Status| image:: https://img.shields.io/circleci/project/boto/botoflow.svg
+    :target: https://circleci.com/gh/boto/botoflow
+    :alt: Build Status
+.. |Coverage| image:: https://img.shields.io/codecov/c/github/boto/botoflow.svg?maxAge=2592000
+    :target: https://codecov.io/gh/boto/botoflow
+    :alt: Coverage
 
 Issue tracker
 -------------
