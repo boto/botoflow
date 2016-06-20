@@ -9,3 +9,4 @@ test:
 
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/pytest; cp -av build/xunit/* $CIRCLE_TEST_REPORTS/
+    - bash <(curl -s https://codecov.io/bash)
