@@ -20,6 +20,6 @@ from .activity_retrying import retry_on_exception
 from .options import workflow_options, activity_options
 from .workflow_definition import WorkflowDefinition
 from .workflow_starting import workflow_starter
-from . import workflow_types as types
+from .flow_types import ActivityType, SignalType, WorkflowType
 
 __version__ = '0.7'

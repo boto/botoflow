@@ -16,7 +16,7 @@ import types
 from . import decorator_descriptors
 from .activity_retrying import Retrying
 from .constants import USE_WORKER_TASK_LIST, CHILD_TERMINATE
-from .workflow_types import WorkflowType, ActivityType, SignalType
+from .flow_types import ActivityType, SignalType, WorkflowType
 
 __all__ = ('workflow', 'activities', 'execute', 'activity', 'manual_activity', 'signal', 'retry_activity')
 

@@ -4,7 +4,7 @@ import unittest
 
 from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
-                      workflow_time, workflow_types, workflow_starter, workflow)
+                      workflow_time, flow_types, workflow_starter, workflow)
 
 from botoflow.exceptions import (ActivityTaskFailedError, WorkflowFailedError)
 from utils import SWFMixIn
@@ -171,7 +171,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, arg1, arg2):
                 # create an activity call dynamically
-                sum = workflow_types.ActivityType('1.1', name='BunchOfActivities.sum')
+                sum = flow_types.ActivityType('1.1', name='BunchOfActivities.sum')
                 arg_sum = yield sum(arg1, arg2)
                 return_(arg_sum)
 

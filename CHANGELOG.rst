@@ -12,6 +12,8 @@ Change Log
 * ``WorkflowStarter`` is now ``workflow_starter`` as context managers
   should be snake case and it's better to do this now, before 1.0
   release.
+* Renamed ``botoflow.workflow_types`` module to ``botoflow.flow_types`` package.
+* Removed ``botoflow.types`` alias. Use ``botoflow.flow_types``.
   
 **Miscellaneous**
 

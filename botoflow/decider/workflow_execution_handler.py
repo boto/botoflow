@@ -23,7 +23,7 @@ from ..decisions import (CompleteWorkflowExecution, DecisionList, FailWorkflowEx
 from ..exceptions import CancelledError
 from ..history_events import (WorkflowExecutionStarted, WorkflowExecutionSignaled,
                               WorkflowExecutionCancelRequested)
-from ..workflow_types import WorkflowType
+from ..flow_types import WorkflowType
 
 log = logging.getLogger(__name__)
 

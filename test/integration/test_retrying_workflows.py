@@ -6,7 +6,7 @@ from calendar import timegm
 
 from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
-                      workflow_types, logging_filters, workflow_starter, workflow, activities, retry_activity,
+                      flow_types, logging_filters, workflow_starter, workflow, activities, retry_activity,
                       retry_on_exception, swf_exceptions)
 
 from botoflow.exceptions import ActivityTaskTimedOutError, ActivityTaskFailedError

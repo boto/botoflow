@@ -13,7 +13,7 @@ Internal Reference
    decider
    decisions
    decorator_descriptors
+   flow_types
    history_events
    utils
-   workflow_types
    workers_internal
