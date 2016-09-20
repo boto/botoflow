@@ -38,7 +38,7 @@ signal method gets invoked when a signal with a matching name is received by
 the workflow execution. For example, the `MyWorkflow` declares a signal method,
 `signal1`, decorated with @ :py:func:`~botoflow.decorators.signal`.
 
-The @ :py:func:`~botoflow.decorators.signal` decoratr is required on signal
+The @ :py:func:`~botoflow.decorators.signal` decorator is required on signal
 methods. Signals cannot `return` (if you return a value from a signal, it will
 be ignored). A workflow may have zero or more signal methods defined in it.
 

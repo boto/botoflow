@@ -12,9 +12,9 @@ Here are some of the main reasons for considering Amazon SWF and botoflow framew
   *By designing autonomous distributed components, developers get the
   flexibility to deploy and scale out parts of the application
   independently as load increases.*
-  
+
 * Consumption of cloud services.
-  
+
   *As application developers take advantage of cloud computing, they
   need to bridge their existing on-premise assets with new assets in
   the cloud.*
@@ -62,7 +62,7 @@ which returns a greeting message that is printed to the console.
 
         @activity('1.0')
         def print_greeting(self, name):
-            print "Hello {}!".format(name)
+            print("Hello {}!".format(name))
 
 
     class HelloWorldWorkflow(WorkflowDefinition):
@@ -70,7 +70,7 @@ which returns a greeting message that is printed to the console.
         @execute(version='1.0', execution_start_to_close_timeout=1*MINUTES)
         def hello_world(self):
             name = yield HelloWorldActivities.get_name()
-            yield HelloWorldActivities.print_hello(name)
+            yield HelloWorldActivities.print_greeting(name)
 
 The example above defines a workflow and two activities. Workflows and
 activities are the basic building blocks in botoflow:
@@ -138,7 +138,7 @@ start a new workflow execution.
 Non-Blocking Code Using Tasks
 -----------------------------
 
-Note that in the previous example, the ``get_ame`` activity was returning a ``str``
+Note that in the previous example, the ``get_name`` activity was returning a ``str``
 but when called from within the workflow, it returns
 :py:class:`~botoflow.core.future.Future`. When you call this method from within
 the workflow, it **returns immediately**. This is because *it only schedules a task*
