@@ -46,7 +46,7 @@ powerful programming model layered on `Amazon SWF`_.
 Hello World!
 ------------
 
-Full example can be found here: https://github.com/boto/botoflow/blob/master/examples/helloworld
+Full example can be found here: `examples/helloworld <https://github.com/boto/botoflow/tree/master/examples/helloworld>`_
 
 The following example shows a distributed program written using
 botoflow framework. This program *asynchronously calls a remote method*,
