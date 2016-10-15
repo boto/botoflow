@@ -36,6 +36,7 @@ Change Log
 * Mark some tests in test_async_traceback as xfail for Python 3.5.0
   specifically (works fine on 3.5.1).
 * Add ``botoflow.__version__``.
+* ``examples`` directory and ``helloworld`` example. Thanks to @l2ol33rt for contribution.
 
 
 0.7 (2016-04-15)
