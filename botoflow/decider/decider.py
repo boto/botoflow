@@ -94,11 +94,12 @@ class Decider(object):
 
         # some events might come in in the middle of decision events, we
         # reorder them to look like they came in after or replaying won't work
-        decision_started = False
-        reordered_events = list()
-        decision_start_to_completion_events = list()
-        decision_completion_to_start_events = list()
+        # these events are between DecisionTaskStarted and DecisionTaskCompleted and must be reordered to be
+        # after the events that follow DecisionTaskCompleted
+        decision_start_to_completion_events = []
+        decision_completion_to_start_events = []
         concurrent_to_decision = True
+        decision_started = False
         last_decision_index = -1
 
         decision_task = self._poller.poll()
@@ -111,6 +112,8 @@ class Decider(object):
         non_replay_event_id = decision_task.previous_started_event_id
         context.workflow_execution = workflow_execution
 
+        # TODO refactor into smaller functions as cyclomatic complexity index for this is
+        # certainly off the scale
         try:
             try:
                 prev_context = get_context()
@@ -135,16 +138,17 @@ class Decider(object):
                         decision_start_to_completion_events.append(event)
                     else:
                         if isinstance(event, DecisionEventBase):
-                            last_decision_index = len(
-                                decision_completion_to_start_events)
+                            last_decision_index = len(decision_completion_to_start_events)
                         decision_completion_to_start_events.append(event)
 
                 if decision_started:
-                    if last_decision_index > -1:
-                        reordered_events = decision_completion_to_start_events
 
                     reordered_events = itertools.chain(
-                        reordered_events, decision_start_to_completion_events)
+                        decision_completion_to_start_events[0:last_decision_index + 1],
+                        decision_start_to_completion_events,
+                        decision_completion_to_start_events[last_decision_index + 1:])
+                    last_decision_index = -1
+
                     for ord_event in reordered_events:
                         if ord_event.id >= non_replay_event_id:
                             get_context()._replaying = False
@@ -159,9 +163,9 @@ class Decider(object):
                                 self._process_decisions()
                             return  # cancel decision was made; do not collect further decisions
 
-                    reordered_events = list()
-                    decision_completion_to_start_events = list()
-                    decision_start_to_completion_events = list()
+                    decision_completion_to_start_events = []
+                    decision_start_to_completion_events = []
+                    concurrent_to_decision = True
                     decision_started = False
 
             self._process_decisions()

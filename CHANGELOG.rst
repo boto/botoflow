@@ -14,7 +14,12 @@ Change Log
   release.
 * Renamed ``botoflow.workflow_types`` module to ``botoflow.flow_types`` package.
 * Removed ``botoflow.types`` alias. Use ``botoflow.flow_types``.
-  
+
+**Bugfixes**
+
+* Fix a **critical** bug in decider history event ordering, which could affect
+  any workflows that execute activities/child workflows concurrently.
+
 **Miscellaneous**
 
 * It's open sourced!
