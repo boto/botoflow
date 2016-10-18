@@ -42,6 +42,11 @@ class BaseWorker(object):
         self._domain = domain
         self._task_list = task_list
 
+        # set user agent to botoflow
+        # import here to avoid import cycles
+        from .. import __version__
+        session.user_agent_name = 'botoflow'
+        session.user_agent_version = __version__
         self._fix_endpoint()
 
     def __repr__(self):
