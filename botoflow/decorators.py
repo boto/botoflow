@@ -197,10 +197,11 @@ def activities(task_list=USE_WORKER_TASK_LIST,
                 if hasattr(_func, 'swf_options'):  # decorated
                     _set_swf_options(_func, 'activity_name_prefix',
                                      activity_name_prefix)
-                    _set_swf_options(_func, 'data_converter',
-                                     data_converter)
 
                     activity_type = _func.swf_options['activity_type']
+
+                    if data_converter is not None:
+                        activity_type.data_converter = data_converter
 
                     activity_type._set_activities_value(
                         'task_list', task_list)
