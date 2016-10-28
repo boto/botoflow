@@ -102,9 +102,14 @@ class ThrottlingException(SWFResponseError):
     pass
 
 
+class ValidationException(SWFResponseError):
+    pass
+
+
 class InternalFailureError(SWFResponseError):
     """Raised when there's an internal SWF failure"""
     pass
+
 
 # SWF __type/fault string to botoflow exception mapping
 _swf_fault_exception = {
@@ -115,10 +120,11 @@ _swf_fault_exception = {
     'WorkflowExecutionAlreadyStartedFault': WorkflowExecutionAlreadyStartedError,
     'TypeDeprecatedFault': TypeDeprecatedError,
     'TypeAlreadyExistsFault': TypeAlreadyExistsError,
-    'cOperationNotPermittedFault': OperationNotPermittedError,
+    'OperationNotPermittedFault': OperationNotPermittedError,
     'UnknownResourceFault': UnknownResourceError,
     'SWFResponseError': SWFResponseError,
     'ThrottlingException': ThrottlingException,
+    'ValidationException': ValidationException,
     'UnrecognizedClientException': UnrecognizedClientException,
     'InternalFailure': InternalFailureError
 }
@@ -133,4 +139,4 @@ def swf_exception_wrapper():
         err_msg = err.response['Error'].get(
             'Message', 'No error message provided...')
 
-        raise _swf_fault_exception[err_type](err_msg)
+        raise _swf_fault_exception.get(err_type, SWFResponseError)(err_msg)
