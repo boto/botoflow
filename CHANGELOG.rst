@@ -19,6 +19,8 @@ Change Log
 
 * Fix a **critical** bug in decider history event ordering, which could affect
   any workflows that execute activities/child workflows concurrently.
+* ``@activities`` decorator was ignoring ``data_converter`` option. Thanks @glharding.
+* Better wrapping of errors from SWF. Thanks @glharding.
 
 **Miscellaneous**
 
