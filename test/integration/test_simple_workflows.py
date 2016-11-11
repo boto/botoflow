@@ -2,7 +2,7 @@
 import time
 import unittest
 
-from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
+from botoflow import (WorkflowDefinition, execute, return_, coroutine, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options,
                       workflow_time, flow_types, workflow_starter, workflow)
 
@@ -306,7 +306,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, arg1, arg2):
-                @async
+                @coroutine
                 def do_try_except():
                     arg_sum = 0
                     try:
@@ -352,7 +352,7 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
 
             @execute(version='1.1', execution_start_to_close_timeout=60)
             def execute(self, arg1, arg2):
-                @async
+                @coroutine
                 def do_try_except():
                     arg_sum = 0
                     try:

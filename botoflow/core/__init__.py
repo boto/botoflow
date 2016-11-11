@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from .decorators import async, async_daemon, task, daemon_task
+from .decorators import coroutine, daemon_coroutine, task, daemon_task
 from .async_event_loop import AsyncEventLoop
 from .async_context import get_async_context
 from .base_future import BaseFuture, Return, return_

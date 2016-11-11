@@ -15,7 +15,7 @@ import traceback
 import logging
 
 from ..context import get_context
-from ..core import async
+from ..core import coroutine
 from ..core import async_traceback
 
 from ..decisions import (CompleteWorkflowExecution, DecisionList, FailWorkflowExecution,
@@ -123,7 +123,7 @@ class WorkflowExecutionHandler(object):
 
         args, kwargs = self._load_input(event)
 
-        @async
+        @coroutine
         def handle_execute():
             try:
                 self._future = execute_method(*args, **kwargs)

@@ -14,7 +14,7 @@
 import logging
 import six
 
-from ..core import Future, async, return_, CancelledError, get_async_context
+from ..core import Future, coroutine, return_, CancelledError, get_async_context
 from ..core.async_task_context import AsyncTaskContext
 from ..utils import camel_keys_to_snake_case
 from ..context import get_context
@@ -81,7 +81,7 @@ class ChildWorkflowExecutionHandler(object):
             'workflowInstance': workflow_instance,
             'workflowStartedFuture': workflow_started_future}
 
-        @async
+        @coroutine
         def wait_workflow_start():
             try:
                 _workflow_instance = yield workflow_started_future
@@ -89,7 +89,7 @@ class ChildWorkflowExecutionHandler(object):
             except GeneratorExit:
                 pass
 
-        @async
+        @coroutine
         def wait_child_workflow_complete():
             try:
                 result = yield workflow_future

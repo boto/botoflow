@@ -1,7 +1,7 @@
 import pytest
 from mock import patch
 
-from botoflow import WorkflowDefinition, execute, activities, activity, return_, Future, async
+from botoflow import WorkflowDefinition, execute, activities, activity, return_, Future, coroutine
 from botoflow.test.workflow_testing_context import WorkflowTestingContext
 
 
@@ -33,11 +33,11 @@ class SimpleWorkflow(WorkflowDefinition):
 
         return_(retval)
 
-    @async
+    @coroutine
     def sync_method(self, x, y):
         return_(x+y)
 
-    @async
+    @coroutine
     def async_method(self, x, y):
         result = yield BunchOfActivities.sum(x, y)
         return_(result)

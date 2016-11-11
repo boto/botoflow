@@ -14,6 +14,7 @@ Change Log
   release.
 * Renamed ``botoflow.workflow_types`` module to ``botoflow.flow_types`` package.
 * Removed ``botoflow.types`` alias. Use ``botoflow.flow_types``.
+* ``@async`` is now ``@coroutine`` to closer align with ``asyncio`` naming. See #1 for details.
 
 **Bugfixes**
 

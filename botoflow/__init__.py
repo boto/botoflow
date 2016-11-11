@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from .core import async, Return, return_, Future
+from .core import coroutine, Return, return_, Future
 from .context import get_context, set_context
 from .workers import (GenericWorkflowWorker, WorkflowWorker, ActivityWorker, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, MultiprocessingWorkflowExecutor, MultiprocessingActivityExecutor)

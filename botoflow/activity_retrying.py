@@ -18,7 +18,7 @@ import retrying
 
 from . import workflow_time
 from .exceptions import ActivityTaskFailedError
-from .core import async, return_
+from .core import coroutine, return_
 
 __all__ = ('RetryError', 'Retrying')
 
@@ -80,7 +80,7 @@ class Retrying(retrying.Retrying):
         self._wait_exponential_max = (retrying.MAX_WAIT if wait_exponential_max is None
                                       else int(wait_exponential_max * 1000))
 
-    @async
+    @coroutine
     def call(self, fn, *args, **kwargs):
         start_time = int(round(workflow_time.time() * 1000))
         attempt_number = 1

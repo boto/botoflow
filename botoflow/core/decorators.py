@@ -59,7 +59,7 @@ task = _task(daemon=False)
 daemon_task = _task(daemon=True)
 
 
-class AsyncDecorator(object):
+class CoroutineDecorator(object):
 
     def __init__(self, func, daemon):
         self.future = None
@@ -134,12 +134,12 @@ class AsyncDecorator(object):
         return future
 
 
-def _async(daemon=False):
+def _coroutine(daemon=False):
 
     # This is a specially constructed decorator that can accept act with or
-    # without parentheses the same: @async == @async()
+    # without parentheses the same: @coroutine == @coroutine()
 
-    def __async(func=None):
+    def __coroutine(func=None):
         """
 
         :type func: __builtin__.function or __builtin__.NoneType
@@ -148,15 +148,15 @@ def _async(daemon=False):
         """
 
         # noinspection PyShadowingNames
-        def ___async(func):
-            return AsyncDecorator(func, daemon)
+        def ___coroutine(func):
+            return CoroutineDecorator(func, daemon)
 
         if func is None:
-            return ___async
+            return ___coroutine
         else:
-            return ___async(func)
-    return __async
+            return ___coroutine(func)
+    return __coroutine
 
 # shortcuts
-async = _async(daemon=False)
-async_daemon = _async(daemon=True)
+coroutine = _coroutine(daemon=False)
+daemon_coroutine = _coroutine(daemon=True)

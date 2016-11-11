@@ -7,7 +7,7 @@ import sys
 import six
 
 from botoflow.core.async_event_loop import AsyncEventLoop
-from botoflow.core.decorators import async, task
+from botoflow.core.decorators import coroutine, task
 from botoflow.core.async_traceback import format_exc, print_exc
 from botoflow.logging_filters import BotoflowFilter
 
@@ -89,11 +89,11 @@ class TestTraceback(unittest.TestCase):
     @pytest.mark.xfail(sys.version_info >= (3,5,0),
                        reason="Some kind of brokennes on 3.5.0 specifically")
     def test_async(self):
-        @async
+        @coroutine
         def raises():
             raise RuntimeError("TestErr")
 
-        @async
+        @coroutine
         def main():
             try:
                 yield raises()

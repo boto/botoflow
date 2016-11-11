@@ -22,7 +22,7 @@ To learn more about descriptors and using them, please check the official Python
 
 import functools
 from .context import get_context, StartWorkflowContext, DecisionContext
-from .core import async
+from .core import coroutine
 from .test import WorkflowTestingContext
 
 
@@ -95,7 +95,7 @@ class ActivityFunc(object):
             raise NotImplementedError(
                 "Activity {0} must be stubbed/mocked when unit-testing "
                 "decider. You cannot run actual activities when testing "
-                "WorkflowDefinition/@async methods".format(activity_type.name))
+                "WorkflowDefinition/@coroutine methods".format(activity_type.name))
 
         if instance is None:
             return self.func
@@ -139,6 +139,6 @@ class WorkflowExecuteFunc(object):
 
         else:
             # async function
-            func = functools.partial(async(self.func), instance)
+            func = functools.partial(coroutine(self.func), instance)
             functools.update_wrapper(func, self.func)
             return func

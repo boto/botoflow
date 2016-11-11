@@ -4,7 +4,7 @@ except ImportError:
     from mock import MagicMock
 
 
-from botoflow.core import AsyncEventLoop, BaseFuture, Future, async, return_
+from botoflow.core import AsyncEventLoop, BaseFuture, Future, coroutine, return_
 from botoflow.decider.activity_future import ActivityFuture
 
 
@@ -18,7 +18,7 @@ def test_activity_future():
         m_activity_task_handler = MagicMock()
         activity_future = ActivityFuture(future, m_activity_task_handler, 1)
 
-        @async
+        @coroutine
         def main():
             result = yield activity_future
             return_(result)
@@ -42,7 +42,7 @@ def test_activity_future_cancel():
         m_activity_task_handler.request_cancel_activity_task.return_value = cancel_future
         activity_future = ActivityFuture(future, m_activity_task_handler, 1)
 
-        @async
+        @coroutine
         def main():
             cancel_future.cancel()
             result = yield activity_future.cancel()
@@ -67,7 +67,7 @@ def test_activity_future_cancel_failed():
         m_activity_task_handler.request_cancel_activity_task.return_value = cancel_future
         activity_future = ActivityFuture(future, m_activity_task_handler, 1)
 
-        @async
+        @coroutine
         def main():
             cancel_future.set_exception(RuntimeError())
             yield activity_future.cancel()

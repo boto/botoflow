@@ -7,7 +7,7 @@ import unittest
 from threading import Thread
 
 from botoflow import (WorkflowDefinition, execute, return_, WorkflowWorker, ActivityWorker,
-                      workflow_starter, async, workflow_time, workflow_options)
+                      workflow_starter, coroutine, workflow_time, workflow_options)
 from botoflow.workflow_execution import WorkflowExecution
 from botoflow.core import CancelledError
 from botoflow.exceptions import RequestCancelExternalWorkflowExecutionFailedError
@@ -268,7 +268,7 @@ class TestWorkflowRaisedCancels(SWFMixIn, unittest.TestCase):
                 self.cancel(details)
                 return_(True)
 
-            @async
+            @coroutine
             def cancellation_handler(self):
                 yield self.activities_client.cleanup_state_activity()
 

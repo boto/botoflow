@@ -4,7 +4,7 @@ import unittest
 
 from calendar import timegm
 
-from botoflow import (WorkflowDefinition, execute, return_, async, activity, ThreadedWorkflowExecutor,
+from botoflow import (WorkflowDefinition, execute, return_, coroutine, activity, ThreadedWorkflowExecutor,
                       ThreadedActivityExecutor, WorkflowWorker, ActivityWorker, activity_options, workflow_time,
                       flow_types, logging_filters, workflow_starter, workflow, activities, retry_activity,
                       retry_on_exception, swf_exceptions)

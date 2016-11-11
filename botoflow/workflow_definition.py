@@ -13,7 +13,7 @@
 import six
 from copy import copy
 
-from botoflow import get_context, async, return_
+from botoflow import get_context, coroutine, return_
 from botoflow.context import DecisionContext
 from botoflow.exceptions import CancelledError
 
@@ -230,7 +230,7 @@ class WorkflowDefinition(six.with_metaclass(_WorkflowDefinitionMeta, object)):
             raise CancelledError(details)
         return context.decider._request_cancel_external_workflow_execution(self.workflow_execution)
 
-    @async
+    @coroutine
     def cancellation_handler(self):
         """Override this to take cleanup actions before workflow execution cancels.
 

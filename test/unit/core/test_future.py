@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from botoflow.core.async_event_loop import AsyncEventLoop
-from botoflow.core.decorators import async
+from botoflow.core.decorators import coroutine
 from botoflow.core.base_future import BaseFuture, return_
 from botoflow.core.future import AllFuture, AnyFuture, Future
 from botoflow.core.exceptions import CancellationError
@@ -23,16 +23,16 @@ class TestAsync(unittest.TestCase):
         self.finally_called = False
 
     def test_simple(self):
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def count_generator():
             if False: yield
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             future = count_generator()
             for i in range(3):
@@ -47,16 +47,16 @@ class TestAsync(unittest.TestCase):
         self.assertEqual(4, self.counter)
 
     def test_simple_async_with_parens(self):
-        @async()
+        @coroutine()
         def count():
             self.counter += 1
 
-        @async()
+        @coroutine()
         def count_generator():
             if False: yield
             self.counter += 1
 
-        @async()
+        @coroutine()
         def main():
             future = count_generator()
             for i in range(3):
@@ -77,16 +77,16 @@ class TestAsync(unittest.TestCase):
             def __init__(self):
                 self.counter = 0
 
-            @async
+            @coroutine
             def count(self):
                 self.counter += 1
 
-            @async
+            @coroutine
             def count_generator(self):
                 if False: yield
                 self.counter += 1
 
-            @async
+            @coroutine
             def main(self):
                 future = self.count_generator()
                 for i in range(3):
@@ -105,7 +105,7 @@ class TestAsync(unittest.TestCase):
     def test_external_future(self):
         future = BaseFuture()
 
-        @async
+        @coroutine
         def main():
             result = yield future
             self.counter += result
@@ -121,17 +121,17 @@ class TestAsync(unittest.TestCase):
         self.assertEqual(1, self.counter)
 
     def test_two_futures(self):
-        @async
+        @coroutine
         def returns():
             if False: yield
             return_(1)
 
-        @async
+        @coroutine
         def count_generator():
             result = yield returns()
             self.counter += result
 
-        @async
+        @coroutine
         def main():
             yield count_generator()
 
@@ -143,11 +143,11 @@ class TestAsync(unittest.TestCase):
         self.assertEqual(1, self.counter)
 
     def test_raise_return(self):
-        @async
+        @coroutine
         def returns():
             return_("result")
 
-        @async
+        @coroutine
         def main():
             result = yield returns()
             if result == 'result':
@@ -161,15 +161,15 @@ class TestAsync(unittest.TestCase):
         self.assertEqual(1, self.counter)
 
     def test_implicit_cancel(self):
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             yield raises()
             yield count()
@@ -183,19 +183,19 @@ class TestAsync(unittest.TestCase):
 
     def test_catch(self):
 
-        @async
+        @coroutine
         def raises():
             raise RuntimeError("TestErr")
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def echo(inp):
             return inp
 
-        @async
+        @coroutine
         def main():
             try:
                 future = count()
@@ -219,15 +219,15 @@ class TestAsync(unittest.TestCase):
 
     def test_explicit_cancel(self):
         # FIXME does not work if the futures are of the same type
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def cancel_me():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             future = cancel_me()
             future.cancel()
@@ -245,16 +245,16 @@ class TestAsync(unittest.TestCase):
     @pytest.mark.xfail
     def test_async(self):
         # FIXME
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def raises():
             self.counter += 1
             raise RuntimeError("TestError")
 
-        @async
+        @coroutine
         def main():
             yield count()
             future = raises()
@@ -265,7 +265,7 @@ class TestAsync(unittest.TestCase):
             except RuntimeError:
                 self.counter += 1
 
-        @async
+        @coroutine
         def other():
             import pdb; pdb.set_trace()
             assert 'Should not run, should be cancelled'
@@ -288,15 +288,15 @@ class TestAsync(unittest.TestCase):
         self.assertEqual(4, self.counter)
 
     def test_cancel(self):
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             fut1 = raises()
             fut2 = count()
@@ -342,15 +342,15 @@ class TestAllFuture(unittest.TestCase):
         self.assertEqual(type(all_future.exception()), RuntimeError)
 
     def test_cancel(self):
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             yield (raises(), count())
 
@@ -365,15 +365,15 @@ class TestAllFuture(unittest.TestCase):
         """
         Test that only futures "in" All get cancelled if one of them fails
         """
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             count()
             try:
@@ -389,7 +389,7 @@ class TestAllFuture(unittest.TestCase):
         self.assertEqual(2, self.counter)
 
     def test_no_futures_yield_empty_tuple(self):
-        @async
+        @coroutine
         def main():
             results = yield []
             return_(results)
@@ -433,15 +433,15 @@ class TestAnyFuture(unittest.TestCase):
         self.assertEqual(type(any_future.exception()), RuntimeError)
 
     def test_cancel(self):
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             yield AnyFuture(raises(), count())
 
@@ -457,15 +457,15 @@ class TestAnyFuture(unittest.TestCase):
         """
         Test that only futures "in" Any get cancelled if one of them fails
         """
-        @async
+        @coroutine
         def raises():
             raise RuntimeError()
 
-        @async
+        @coroutine
         def count():
             self.counter += 1
 
-        @async
+        @coroutine
         def main():
             count()
             try:
@@ -486,7 +486,7 @@ class TestAnyFuture(unittest.TestCase):
         self.assertEqual(3, self.counter)
 
     def test_no_futures_yield_empty_tuple(self):
-        @async
+        @coroutine
         def main():
             results = yield AnyFuture()
             return_(results)

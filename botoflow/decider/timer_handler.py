@@ -14,7 +14,7 @@
 import six
 import logging
 
-from ..core import Future, async, CancelledError
+from ..core import Future, coroutine, CancelledError
 from ..decisions import StartTimer
 from ..history_events import (StartTimerFailed, TimerFired, TimerStarted, TimerCanceled)
 log = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class TimerHandler(object):
         six.next(handler)  # arm
         self._open_timers[decision_id] = {'future': timer_future, 'handler': handler}
 
-        @async
+        @coroutine
         def wait_for_timer():
             yield timer_future
 

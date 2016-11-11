@@ -181,7 +181,7 @@ that is used to schedule the task for the `create_thumbnail` activity.
             # wait for all the images to be processed
             yield processing_futures
 
-        @async
+        @coroutine
         def process_image(self, image_url):
             worker_task_list, image_name = ImageActivities.download_image(image_url)
 
