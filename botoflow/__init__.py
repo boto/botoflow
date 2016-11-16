@@ -22,4 +22,4 @@ from .workflow_definition import WorkflowDefinition
 from .workflow_starting import workflow_starter
 from .flow_types import ActivityType, SignalType, WorkflowType
 
-__version__ = '0.7'
+__version__ = '0.8'
