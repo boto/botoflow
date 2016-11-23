@@ -16,3 +16,4 @@ API Reference
    workflow_definition
    workflow_execution
    workflow_starter
+   workflow_time
