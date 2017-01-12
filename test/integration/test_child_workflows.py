@@ -59,6 +59,13 @@ class MasterWorkflowWithException(WorkflowDefinition):
                 return_(2)
         return_(1)
 
+class MasterWorkflowWithPriority(WorkflowDefinition):
+    @execute(version='1.2', execution_start_to_close_timeout=60)
+    def execute(self, arg1, arg2, priority):
+        with workflow_options(task_priority=priority):
+            instance = yield ChildWorkflow.execute(arg1, arg2)
+        arg_sum = yield instance.workflow_result
+        return_(arg_sum)
 
 class RaisingChildWorkflow(WorkflowDefinition):
     @execute(version='1.0', execution_start_to_close_timeout=60)
@@ -93,6 +100,31 @@ class TestChildWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+
+    def test_two_workflows_priority(self):
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list,
+            MasterWorkflowWithPriority, ChildWorkflow)
+        act_worker = ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities())
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
+            instance = MasterWorkflowWithPriority.execute(arg1=1, arg2=2, priority=100)
+            self.workflow_execution = instance.workflow_execution
+
+        for i in range(3):
+            wf_worker.run_once()
+
+        act_worker.run_once()
+
+        for i in range(2):
+            wf_worker.run_once()
+
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 14)
+        self.assertEqual(hist[4]['eventType'], 'StartChildWorkflowExecutionInitiated')
+        self.assertEqual(hist[4]['startChildWorkflowExecutionInitiatedEventAttributes']['taskPriority'], '100')
 
     def test_child_workflow_timed_out(self):
         wf_worker = WorkflowWorker(
