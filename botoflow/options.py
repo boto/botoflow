@@ -45,7 +45,7 @@ class activity_options(object):
 
     def __init__(self, task_list=_NOT_SET, version=_NOT_SET, name=_NOT_SET, heartbeat_timeout=_NOT_SET,
                  schedule_to_start_timeout=_NOT_SET, start_to_close_timeout=_NOT_SET,
-                 schedule_to_close_timeout=_NOT_SET):
+                 schedule_to_close_timeout=_NOT_SET, task_priority=_NOT_SET):
         """Override activity task options
 
         :param str task_list: Specifies the task list to be registered with Amazon SWF for this activity type.
@@ -60,6 +60,8 @@ class activity_options(object):
             determines the maximum time a worker can take to process an activity task of this type.
         :param int schedule_to_close_timeout: Specifies the schedule to close timeout for this activity type. This
             timeout determines the total duration that the task can stay in open state.
+        :param int task_priority: Specifies the priority of the task. If not specified uses the default task priority.
+            higher numbers indicate higher priority.
         """
         self._overrides = dict()
 
@@ -78,6 +80,8 @@ class activity_options(object):
             self._overrides['start_to_close_timeout'] = str_or_NONE(start_to_close_timeout)
         if schedule_to_close_timeout != _NOT_SET:
             self._overrides['schedule_to_close_timeout'] = str_or_NONE(schedule_to_close_timeout)
+        if task_priority != _NOT_SET:
+            self._overrides['task_priority'] = str_or_NONE(task_priority)
 
     def __enter__(self):
         context = get_context()
@@ -110,7 +114,8 @@ class workflow_options(object):
     def __init__(self, task_list=_NOT_SET, workflow_id=_NOT_SET, version=_NOT_SET,
                  execution_start_to_close_timeout=_NOT_SET,
                  task_start_to_close_timeout=_NOT_SET, child_policy=_NOT_SET,
-                 name=_NOT_SET, data_converter=_NOT_SET, tag_list=_NOT_SET):
+                 name=_NOT_SET, data_converter=_NOT_SET, tag_list=_NOT_SET,
+                 task_priority=_NOT_SET):
         """Override workflow execution options
 
         :param str task_list: The task list for the decision tasks for executions of this workflow type.
@@ -126,6 +131,8 @@ class workflow_options(object):
             sending requests to and receiving results from workflow executions of this workflow type.
         :type data_converter: awsflow.data_converter.abstract_data_converter.AbstractDataConverter
         :param list tag_list: List of tags to associate with the workflow.
+        :param int task_priority: Specifies the priority of the task. If not specified uses the default task priority.
+            higher numbers indicate higher priority.
         """
         self._overrides = dict()
 
@@ -148,6 +155,8 @@ class workflow_options(object):
             self._overrides['data_converter'] = str_or_NONE(data_converter)
         if tag_list != _NOT_SET:
             self._overrides['tag_list'] = [str_or_NONE(tag) for tag in tag_list]
+        if task_priority != _NOT_SET:
+            self._overrides['task_priority'] = str_or_NONE(task_priority)
 
     def __enter__(self):
         context = get_context()

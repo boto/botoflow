@@ -301,6 +301,33 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
 
+    def test_one_activity_options_overrides_priority(self):
+        class OneActivityWorkflow(WorkflowDefinition):
+
+            @execute(version='1.1', execution_start_to_close_timeout=60)
+            def execute(self, arg1, arg2):
+                with activity_options(task_priority=66):
+                    arg_sum = yield BunchOfActivities.sum(arg1, arg2)
+                return_(arg_sum)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityWorkflow)
+        act_worker = ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities())
+
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        act_worker.run_once()
+        wf_worker.run_once()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[4]['activityTaskScheduledEventAttributes']['taskPriority'], '66')
+
     def test_try_except_finally_activity(self):
         class TryExceptFinallyWorkflow(WorkflowDefinition):
 

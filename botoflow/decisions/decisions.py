@@ -65,6 +65,7 @@ class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
                  input=None,
                  tag_list=None,
                  task_list=None,
+                 task_priority=None,
                  task_start_to_close_timeout=None,
                  version=None):
         """
@@ -85,6 +86,8 @@ class ContinueAsNewWorkflowExecution(WorkflowDecisionBase):
             attrs['tagList'] = tag_list
         if task_list is not None:
             attrs['taskList'] = task_list
+        if task_priority is not None:
+            attrs['taskPriority'] = task_priority
         if task_start_to_close_timeout is not None:
             attrs['taskStartToCloseTimeout'] = task_start_to_close_timeout
         if version is not None:
@@ -160,6 +163,7 @@ class ScheduleActivityTask(ActivityDecisionBase):
                  task_list=None, control=None, heartbeat_timeout=None,
                  schedule_to_close_timeout=None,
                  schedule_to_start_timeout=None, start_to_close_timeout=None,
+                 task_priority=None,
                  input=None):
         """
         schedules an activity task
@@ -175,6 +179,9 @@ class ScheduleActivityTask(ActivityDecisionBase):
         :type activity_type_version: string
         :param activity_type_version: The version of the type of the
             activity being scheduled.
+
+        :type task_priority: string
+        :param task_priority: If set, specifies the priority of the task
 
         :type task_list: string
         :param task_list: If set, specifies the name of the task list in
@@ -205,6 +212,8 @@ class ScheduleActivityTask(ActivityDecisionBase):
             attrs['scheduleToStartTimeout'] = schedule_to_start_timeout
         if start_to_close_timeout is not None:
             attrs['startToCloseTimeout'] = start_to_close_timeout
+        if task_priority is not None:
+            attrs['taskPriority'] = task_priority
         if input is not None:
             attrs['input'] = input
 
@@ -239,7 +248,7 @@ class StartChildWorkflowExecution(StartChildWorkflowExecutionDecisionBase):
     def __init__(self, workflow_type, workflow_id, child_policy=None,
                  control=None, execution_start_to_close_timeout=None,
                  input=None, tag_list=None, task_list=None,
-                 task_start_to_close_timeout=None):
+                 task_start_to_close_timeout=None, task_priority=None):
         """
         requests that a child workflow execution be started and records a
         StartChildWorkflowExecutionInitiated event in the history.  The child
@@ -266,6 +275,8 @@ class StartChildWorkflowExecution(StartChildWorkflowExecutionDecisionBase):
             attrs['taskList'] = task_list
         if task_start_to_close_timeout is not None:
             attrs['taskStartToCloseTimeout'] = task_start_to_close_timeout
+        if task_priority is not None:
+            attrs['taskPriority'] = task_priority
 
 
 class StartTimer(TimerDecisionBase):

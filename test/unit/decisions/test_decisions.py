@@ -28,13 +28,13 @@ def test_complete_workflow_execution():
 def test_continue_as_new_workflow_execution():
     decision = decisions.ContinueAsNewWorkflowExecution(
         child_policy="child_policy", execution_start_to_close_timeout="5", input="input", tag_list=['tag', 'list'],
-        task_list="task_list", task_start_to_close_timeout="3", version="1.0").decision
+        task_list="task_list", task_start_to_close_timeout="3", version="1.0", task_priority='100').decision
 
     assert decision['decisionType'] == 'ContinueAsNewWorkflowExecution'
     assert decision['continueAsNewWorkflowExecutionDecisionAttributes'] == {
         'childPolicy': 'child_policy', 'executionStartToCloseTimeout': '5', 'input': 'input',
         'tagList': ['tag', 'list'], 'taskList': 'task_list', 'taskStartToCloseTimeout': '3',
-        'workflowTypeVersion': '1.0'}
+        'workflowTypeVersion': '1.0', 'taskPriority': '100'}
 
     decision = decisions.ContinueAsNewWorkflowExecution().decision
     assert 'childPolicy' not in decision['continueAsNewWorkflowExecutionDecisionAttributes']
@@ -81,13 +81,14 @@ def test_schedule_activity_tasl():
         task_list="task_list", control="control", heartbeat_timeout="3",
         schedule_to_close_timeout="4",
         schedule_to_start_timeout="5", start_to_close_timeout="6",
+        task_priority="100",
         input="input").decision
 
     assert decision['decisionType'] == 'ScheduleActivityTask'
     assert decision['scheduleActivityTaskDecisionAttributes'] == {
         'activityId': 'activity_id', 'activityType': {'name': 'name', 'version': '1.0'}, 'taskList': 'task_list',
         'control': 'control', 'heartbeatTimeout': '3', 'scheduleToCloseTimeout': '4', 'scheduleToStartTimeout': '5',
-        'startToCloseTimeout': '6', 'input': 'input'}
+        'startToCloseTimeout': '6', 'taskPriority': '100', 'input': 'input'}
 
     decision = decisions.ScheduleActivityTask(
         activity_id="activity_id", activity_type_name="name", activity_type_version="1.0").decision
@@ -117,13 +118,13 @@ def test_start_child_workflow_execution():
     decision = decisions.StartChildWorkflowExecution(
         workflow_type={'name': 'name', 'version': '1.0'}, workflow_id='workflow_id',
         child_policy="child_policy", control='control', execution_start_to_close_timeout="5", input="input",
-        tag_list=['tag', 'list'], task_list="task_list", task_start_to_close_timeout="3").decision
+        tag_list=['tag', 'list'], task_list="task_list", task_start_to_close_timeout="3", task_priority='100').decision
 
     assert decision['decisionType'] == 'StartChildWorkflowExecution'
     assert decision['startChildWorkflowExecutionDecisionAttributes'] == {
         'workflowType': {'name': 'name', 'version': '1.0'}, 'workflowId': 'workflow_id', 'childPolicy': 'child_policy',
         'control': 'control', 'executionStartToCloseTimeout': '5', 'input': 'input',
-        'tagList': ['tag', 'list'], 'taskList': 'task_list', 'taskStartToCloseTimeout': '3'}
+        'tagList': ['tag', 'list'], 'taskList': 'task_list', 'taskStartToCloseTimeout': '3', 'taskPriority': '100'}
 
     decision = decisions.StartChildWorkflowExecution(
         workflow_type={'name': 'name', 'version': '1.0'}, workflow_id='workflow_id').decision
