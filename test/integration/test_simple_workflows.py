@@ -133,6 +133,40 @@ class TestSimpleWorkflows(SWFMixIn, unittest.TestCase):
         self.assertEqual(self.serializer.loads(
             hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
 
+    def test_one_priority_activity_and_worker(self):
+        class OneActivityWorkflow(WorkflowDefinition):
+            def __init__(self, workflow_execution):
+                super(OneActivityWorkflow, self).__init__(workflow_execution)
+                self.activities_client = BunchOfActivities()
+
+            @execute(version='1.1', execution_start_to_close_timeout=60, task_priority=20)
+            def execute(self, arg1, arg2):
+                arg_sum = yield self.activities_client.priority_sum(arg1, arg2)
+                return_(arg_sum)
+
+        wf_worker = WorkflowWorker(
+            self.session, self.region, self.domain, self.task_list, OneActivityWorkflow)
+
+        act_worker = ThreadedActivityExecutor(ActivityWorker(
+            self.session, self.region, self.domain, self.task_list, BunchOfActivities()))
+
+        with workflow_starter(self.session, self.region, self.domain, self.task_list):
+            instance = OneActivityWorkflow.execute(arg1=1, arg2=2)
+            self.workflow_execution = instance.workflow_execution
+
+        wf_worker.run_once()
+        act_worker.start(1, 4)
+        act_worker.stop()
+        wf_worker.run_once()
+        act_worker.join()
+        time.sleep(1)
+
+        hist = self.get_workflow_execution_history()
+        self.assertEqual(len(hist), 11)
+        self.assertEqual(hist[-1]['eventType'], 'WorkflowExecutionCompleted')
+        self.assertEqual(self.serializer.loads(
+            hist[-1]['workflowExecutionCompletedEventAttributes']['result']), 3)
+
     def test_one_activity_timed(self):
 
         class OneActivityTimedWorkflow(WorkflowDefinition):

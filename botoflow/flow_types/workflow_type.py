@@ -25,6 +25,7 @@ class WorkflowType(BaseFlowType):
     _continue_as_new_keys = (('taskStartToCloseTimeout', 'task_start_to_close_timeout'),
                              ('childPolicy', 'child_policy'),
                              ('taskList', 'task_list'),
+                             ('taskPriority', 'task_priority'),
                              ('executionStartToCloseTimeout', 'execution_start_to_close_timeout'),
                              ('version', 'version'),
                              ('input', 'input'))
@@ -35,6 +36,7 @@ class WorkflowType(BaseFlowType):
                  version,
                  execution_start_to_close_timeout,
                  task_list=USE_WORKER_TASK_LIST,
+                 task_priority=None,
                  task_start_to_close_timeout=30,  # as in java flow
                  child_policy=CHILD_TERMINATE,
                  description="",
@@ -45,6 +47,7 @@ class WorkflowType(BaseFlowType):
         self.version = version
         self.name = name
         self.task_list = task_list
+        self.task_priority = task_priority
         self.child_policy = child_policy
         self.execution_start_to_close_timeout = execution_start_to_close_timeout
         self.task_start_to_close_timeout = task_start_to_close_timeout
@@ -86,6 +89,9 @@ class WorkflowType(BaseFlowType):
             'taskStartToCloseTimeout': str_or_NONE(
                 self.task_start_to_close_timeout),
             'input': serialized_input}
+
+        if self.task_priority is not None:
+            decision_dict['taskPriority'] = str_or_NONE(self.task_priority)
 
         # for child workflows
         if workflow_id is not None and self.workflow_id is None:
@@ -135,6 +141,9 @@ class WorkflowType(BaseFlowType):
                 self.task_start_to_close_timeout),
             'description': str_or_NONE(self.description)
         }
+
+        if self.task_priority is not None:
+            registration_options['defaultTaskPriority'] = str_or_NONE(self.task_priority)
         return registration_options
 
     def _reset_name(self, name, force=False):
