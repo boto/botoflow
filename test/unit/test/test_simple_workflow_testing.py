@@ -5,7 +5,8 @@ from botoflow import WorkflowDefinition, execute, activities, activity, return_,
 from botoflow.test.workflow_testing_context import WorkflowTestingContext
 
 
-@activities(schedule_to_start_timeout=60,
+@activities(task_priority=100,
+            schedule_to_start_timeout=60,
             start_to_close_timeout=60)
 class BunchOfActivities(object):
     @activity(version='1.1')

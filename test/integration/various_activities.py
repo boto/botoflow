@@ -13,6 +13,10 @@ class MySpecialCancelledError(CancelledError):
 @activities(schedule_to_start_timeout=60,
             start_to_close_timeout=60)
 class BunchOfActivities(object):
+    @activity(version='1.1', task_priority=100)
+    def priority_sum(self, x, y):
+        return x + y
+
     @activity(version='1.1')
     def sum(self, x, y):
         return x + y

@@ -78,6 +78,7 @@ def workflow(name):
 def execute(version,
             execution_start_to_close_timeout,
             task_list=USE_WORKER_TASK_LIST,
+            task_priority=None,
             task_start_to_close_timeout=30,  # as in java flow
             child_policy=CHILD_TERMINATE,
             data_converter=None,
@@ -103,6 +104,10 @@ def execute(version,
         :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by default. This is
         a special value which indicates that the task list used by the worker,
         which is performing the registration, should be used.
+    :param int task_priority: The default priority for decision tasks for
+        executions of this workflow type. The default can be overridden using
+        :py:func`~botoflow.options_overrides.workflow_options` when starting a
+        workflow execution. If unset AWS SWF defaults this to 0.
     :param int task_start_to_close_timeout: Specifies the
         defaultTaskStartToCloseTimeout registered with Amazon SWF for the
         workflow type. This specifies the time a single decision task for a
@@ -129,6 +134,7 @@ def execute(version,
         task_list=task_list,
         execution_start_to_close_timeout=execution_start_to_close_timeout,
         task_start_to_close_timeout=task_start_to_close_timeout,
+        task_priority=task_priority,
         child_policy=child_policy,
         data_converter=data_converter,
         description=description,
@@ -146,6 +152,7 @@ def execute(version,
 
 
 def activities(task_list=USE_WORKER_TASK_LIST,
+               task_priority=None,
                activity_name_prefix="",
                heartbeat_timeout=None,
                schedule_to_start_timeout=None,
@@ -161,6 +168,7 @@ def activities(task_list=USE_WORKER_TASK_LIST,
         The default can be overridden using :py:func`~botoflow.options_overrides.activity_options` when calling the
         activity. Set to :py:data:`~botoflow.constants.USE_WORKER_TASK_LIST` by default. This is a special value which
         indicates that the task list used by the worker, which is performing the registration, should be used.
+    :param int task_priority: The default priority for this set of activities. If unset AWS SWF defaults this to 0.
     :param str activity_name_prefix: Specifies the prefix of the name of the activity types declared in the interface.
         If set to empty string (which is the default), the name of the class followed by '.' is used as the prefix.
     :param heartbeat_timeout: Specifies the defaultTaskHeartbeatTimeout registered with Amazon SWF for this activity
@@ -206,6 +214,8 @@ def activities(task_list=USE_WORKER_TASK_LIST,
                     activity_type._set_activities_value(
                         'task_list', task_list)
                     activity_type._set_activities_value(
+                        'task_priority', task_priority)
+                    activity_type._set_activities_value(
                         'heartbeat_timeout', heartbeat_timeout)
                     activity_type._set_activities_value(
                         'schedule_to_start_timeout', schedule_to_start_timeout)
@@ -222,6 +232,7 @@ def activities(task_list=USE_WORKER_TASK_LIST,
 def activity(version,
              name=None,
              task_list=USE_WORKER_TASK_LIST,
+             task_priority=None,
              heartbeat_timeout=None,
              schedule_to_start_timeout=None,  # indicates not set
              start_to_close_timeout=None,  # indicates not set
@@ -246,6 +257,8 @@ def activity(version,
         default. This is a special value which indicates that the task list
         used by the worker, which is performing the registration, should be
         used.
+    :param int task_priority: The default priority for this set of activities.
+        If unset AWS SWF defaults this to 0.
     :param heartbeat_timeout: Specifies the defaultTaskHeartbeatTimeout
         registered with Amazon SWF for this activity type. Activity workers
         must provide heartbeat within this duration; otherwise, the task will
@@ -284,6 +297,7 @@ def activity(version,
         version,
         name=name,
         task_list=task_list,
+        task_priority=task_priority,
         heartbeat_timeout=heartbeat_timeout,
         schedule_to_start_timeout=schedule_to_start_timeout,
         start_to_close_timeout=start_to_close_timeout,
@@ -479,6 +493,7 @@ def retry_activity(stop_max_attempt_number=None, stop_max_delay=None, wait_fixed
 def manual_activity(version,
                     name=None,
                     task_list=USE_WORKER_TASK_LIST,
+                    task_priority=None,
                     heartbeat_timeout=None,
                     schedule_to_start_timeout=None,  # indicates not set
                     start_to_close_timeout=None,  # indicates not set
@@ -502,6 +517,8 @@ def manual_activity(version,
         default. This is a special value which indicates that the task list
         used by the worker, which is performing the registration, should be
         used.
+    :param int task_priority: The default priority for this set of activities.
+        If unset AWS SWF defaults this to 0.
     :param heartbeat_timeout: Specifies the defaultTaskHeartbeatTimeout
         registered with Amazon SWF for this activity type. Activity workers
         must provide heartbeat within this duration; otherwise, the task will
@@ -535,7 +552,7 @@ def manual_activity(version,
         be registered with Amazon SWF.
     """
 
-    return activity(version, name, task_list, heartbeat_timeout,
+    return activity(version, name, task_list, task_priority, heartbeat_timeout,
                     schedule_to_start_timeout, start_to_close_timeout,
                     schedule_to_close_timeout,
                     description, skip_registration, manual=True)

@@ -30,6 +30,7 @@ class ActivityType(BaseFlowType):
                  version,
                  name=None,
                  task_list=USE_WORKER_TASK_LIST,
+                 task_priority=None,
                  heartbeat_timeout=None,
                  schedule_to_start_timeout=None,
                  start_to_close_timeout=None,
@@ -42,6 +43,7 @@ class ActivityType(BaseFlowType):
         self.version = version
         self.name = name
         self.task_list = task_list
+        self.task_priority = task_priority
         self.heartbeat_timeout = heartbeat_timeout
         self.schedule_to_start_timeout = schedule_to_start_timeout
         self.start_to_close_timeout = start_to_close_timeout
@@ -121,6 +123,8 @@ class ActivityType(BaseFlowType):
             'schedule_to_close_timeout': str_or_NONE(
                 self.schedule_to_close_timeout),
         }
+        if self.task_priority is not None:
+            decision_dict['taskPriority'] = str_or_NONE(self.task_priority)
         return decision_dict
 
     def to_registration_options_dict(self, domain, worker_task_list):
@@ -146,6 +150,9 @@ class ActivityType(BaseFlowType):
                 self.schedule_to_close_timeout),
             'description': str_or_NONE(self.description)
         }
+
+        if self.task_priority is not None:
+            registration_options['defaultTaskPriority'] = str_or_NONE(self.task_priority)
         return registration_options
 
     def __call__(self, *args, **kwargs):
