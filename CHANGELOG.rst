@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+0.9 (WIP)
+
+**Improvements**
+
+* Add support for setting task priorities. Thanks @paulcollinsiii for PR. #9
+
+
 0.8 (2016-11-16)
 ---------
 
