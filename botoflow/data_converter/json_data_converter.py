@@ -205,7 +205,7 @@ def _flow_obj_decoder(dct):
         cls = getattr(module, attr_name)
 
     # if an import error is raised
-    except ImportError:
+    except (ImportError, AttributeError):
         # try and rescue objects with exception information by bundling them
         # into a ImportError
         if '__exc' in dct:
