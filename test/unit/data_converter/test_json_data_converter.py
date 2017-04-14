@@ -175,6 +175,15 @@ def test_unimportable_exception(serde):
     assert 'unknown_module.MyUnknownException: some error message' == r.message
     assert 'someparam' == r.other
 
+
+def test_importable_module_but_no_exception(serde):
+    raw = '{"__obj":["botoflow.utils:MyUnknownException",{"other":"someparam"}],"__exc":[["some error message"],"some error message"]}'
+    r = serde.loads(raw)
+    assert isinstance(r, ImportError)
+    assert 'botoflow.utils.MyUnknownException: some error message' == r.message
+    assert 'someparam' == r.other
+
+
 def test_unimportable_object(serde):
     raw = '{"__obj":["unknown_module:MyUnknownObject",{"other":"someparam"}]}'
     with pytest.raises(ImportError):
