@@ -139,6 +139,22 @@ class RequestCancelActivityTask(ActivityDecisionBase):
         attrs['activityId'] = activity_id
 
 
+class ScheduleLambdaFunction(ActivityDecisionBase):
+    def __init__(self, activity_id, lambda_name, control=None,
+                 start_to_close_timeout=None, input=None):
+        super(ScheduleLambdaFunction, self).__init__(activity_id)
+        self.decision['decisionType'] = 'ScheduleLambdaFunction'
+        attrs = self.decision['scheduleLambdaFunctionDecisionAttributes'] = {}
+        attrs['id'] = activity_id
+        attrs['name'] = lambda_name
+        if control is not None:
+            attrs['control'] = control
+        if start_to_close_timeout is not None:
+            attrs['startToCloseTimeout'] = start_to_close_timeout
+        if input is not None:
+            attrs['input'] = input
+
+
 class RequestCancelExternalWorkflowExecution(RequestCancelExternalWorkflowDecisionBase):
     def __init__(self, workflow_id, run_id, control=None):
         """

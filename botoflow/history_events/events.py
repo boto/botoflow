@@ -70,6 +70,26 @@ class ActivityTaskTimedOut(ActivityEventBase):
     attribute_key = 'activityTaskTimedOutEventAttributes'
 
 
+class LambdaFunctionScheduled(ActivityEventBase, DecisionEventBase):
+    attribute_key = 'lambdaFunctionScheduledEventAttributes'
+
+
+class StartLambdaFunctionFailed(ActivityEventBase, DecisionEventBase):
+    attribute_key = 'startLambdaFunctionFailedEventAttributes'
+
+
+class LambdaFunctionStarted(ActivityEventBase, DecisionEventBase):
+    attribute_key = 'lambdaFunctionStartedEventAttributes'
+
+
+class LambdaFunctionFailed(ActivityEventBase, DecisionEventBase):
+    attribute_key = 'lambdaFunctionFailedEventAttributes'
+
+
+class LambdaFunctionCompleted(ActivityEventBase, DecisionEventBase):
+    attribute_key = 'lambdaFunctionCompletedEventAttributes'
+
+
 class CancelWorkflowExecutionFailed(WorkflowEventBase, DecisionEventBase):
     attribute_key = 'cancelWorkflowExecutionFailedEventAttributes'
 
