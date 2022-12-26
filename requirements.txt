@@ -7,5 +7,5 @@ pytest==2.9.2
 pytest-catchlog>=1.1
 pytest-cov>=2.2
 coverage>=4
-wheel==0.24.0
+wheel==0.38.1
 -e git://github.com/boto/botocore.git@develop#egg=botocore
